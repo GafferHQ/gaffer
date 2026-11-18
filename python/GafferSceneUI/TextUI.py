@@ -39,6 +39,7 @@ import IECore
 import Gaffer
 import GafferUI
 import GafferScene
+from GafferUI.i18n import _
 
 ##########################################################################
 # Metadata
@@ -49,31 +50,31 @@ Gaffer.Metadata.registerNode(
 	GafferScene.Text,
 
 	"description",
-	"""
+	_("""
 	Creates an object containing a polygon representation
 	of an arbitrary string of text.
-	""",
+	"""),
 
 	plugs = {
 
 		"text" : {
 
 			"description" :
-			"""
+			_("""
 			The text to output. This is triangulated into a mesh
 			representation using the specified font.
-			""",
+			"""),
 
 		},
 
 		"font" : {
 
 			"description" :
-			"""
+			_("""
 			The font to use - this should be a .ttf font file which
 			is located on the paths specified by the IECORE_FONT_PATHS
 			environment variable.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
 			"path:bookmarks" : "font",

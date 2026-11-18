@@ -36,27 +36,28 @@
 
 import Gaffer
 import GafferImage
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.CopyChannels,
 
 	"description",
-	"""
+	_("""
 	Copies channels from the secondary input images
 	onto the primary input image and outputs the result.
-	""",
+	"""),
 
 	plugs = {
 
 		"channels" : {
 
 			"description" :
-			"""
+			_("""
 			The names of the channels to copy. Names should be
 			separated by spaces and can use Gaffer's standard
 			wildcards.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferImageUI.ChannelMaskPlugValueWidget",
 

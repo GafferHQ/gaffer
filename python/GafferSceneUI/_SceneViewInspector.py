@@ -45,6 +45,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 import GafferSceneUI
 
 from Qt import QtWidgets
@@ -112,7 +113,7 @@ class _SceneViewInspector( GafferUI.Widget ) :
 					orientation = GafferUI.ListContainer.Orientation.Horizontal,
 					spacing = 8
 				) :
-					GafferUI.Label( "<h4 style=\"color: rgba( 255, 255, 255, 120 );\">Inspector</h4>" )
+					GafferUI.Label( "<h4 style=\"color: rgba( 255, 255, 255, 120 );\">{}</h4>".format( _("Inspector") ) )
 					GafferUI.Spacer( imath.V2i( 1 ) )
 					self.__busyWidget = GafferUI.BusyWidget( size = 20, busy = False )
 					hideButton = GafferUI.Button( image="deleteSmall.png", hasFrame=False )
@@ -287,10 +288,9 @@ class _InspectorSection( GafferUI.ListContainer ) :
 
 		self.setVisible( visible )
 		if visible :
-			self.__label.setText( "{} {}{}".format(
+			self.__label.setText( "{} {}".format(
 				numValues,
-				self.__labelText,
-				"s" if numValues != 1 else ""
+				_( self.__labelText )
 			) )
 
 ## \todo Figure out how this relates to the DiffRow in the SceneInspector.
@@ -309,6 +309,7 @@ class _InspectorWidget( GafferUI.Widget ) :
 			if "_" in name :
 				name = IECore.CamelCase.fromSpaced( name.replace( "_", " " ) )
 			name = IECore.CamelCase.toSpaced( name )
+			name = _( name )
 
 			label = GafferUI.Label( text = "<h5>{}</h5>".format( name ) )
 			label._qtWidget().setMaximumWidth( 140 )

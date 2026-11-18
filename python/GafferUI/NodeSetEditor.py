@@ -39,6 +39,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 from Qt import QtCore
 
@@ -197,7 +198,7 @@ class NodeSetEditor( GafferUI.Editor ) :
 	def _titleFormat( self, _prefix = None, _maxNodes = 2, _reverseNodes = False, _ellipsis = True ) :
 
 		if _prefix is None :
-			result = [ IECore.CamelCase.toSpaced( self.__class__.__name__ ) ]
+			result = [ _( IECore.CamelCase.toSpaced( self.__class__.__name__ ) ) ]
 		else :
 			result = [ _prefix ]
 

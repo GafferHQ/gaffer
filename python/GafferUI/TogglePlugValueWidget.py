@@ -36,6 +36,7 @@
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 from GafferUI.PlugValueWidget import sole
 
@@ -87,8 +88,8 @@ class TogglePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		if result :
 			result += "\n\n"
-		result += "## Actions\n\n"
-		result += "- Click to toggle to/from default value\n"
+		result += "## " + _("Actions") + "\n\n"
+		result += "- " + _("Click to toggle to/from default value") + "\n"
 
 		return result
 

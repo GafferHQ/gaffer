@@ -39,6 +39,7 @@ import functools
 import Gaffer
 import GafferUI
 import GafferScene
+from GafferUI.i18n import _
 
 ##########################################################################
 # Metadata
@@ -49,18 +50,18 @@ Gaffer.Metadata.registerNode(
 	GafferScene.DeleteSets,
 
 	"description",
-	"""
+	_("""
 	A node which removes object sets.
-	""",
+	"""),
 
 	plugs = {
 
 		"names" : {
 
 			"description" :
-			"""
+			_("""
 			Space separated list of set names to be removed.
-			""",
+			"""),
 
 			"ui:scene:acceptsSetNames" : True,
 
@@ -69,9 +70,9 @@ Gaffer.Metadata.registerNode(
 		"invertNames" : {
 
 			"description" :
-			"""
+			_("""
 			When on, matching names are kept, and non-matching names are removed.
-			""",
+			"""),
 
 		},
 

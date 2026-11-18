@@ -36,25 +36,26 @@
 
 import Gaffer
 import GafferArnold
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferArnold.ArnoldShaderBall,
 
 	"description",
-	"""
+	_("""
 	Generates scenes suitable for rendering shader balls with Arnold.
-	""",
+	"""),
 
 	plugs = {
 
 		"environment" : {
 
 			"description" :
-			"""
+			_("""
 			An environment map used for lighting. Should be in latlong
 			format.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
 			"path:leaf" : True,
@@ -66,12 +67,12 @@ Gaffer.Metadata.registerNode(
 		"threads" : {
 
 			"description" :
-			"""
+			_("""
 			The number of threads used by Arnold to render the
 			shader ball. A value of 0 uses all cores, and negative
 			values reserve cores for other uses - to be used by
 			the rest of the UI for instance.
-			"""
+			""")
 
 		},
 

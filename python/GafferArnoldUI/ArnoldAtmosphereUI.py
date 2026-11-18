@@ -36,17 +36,18 @@
 
 import Gaffer
 import GafferArnold
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferArnold.ArnoldAtmosphere,
 
 	"description",
-	"""
+	_("""
 	Assigns a global atmosphere shader that applies to all objects in
 	the scene. This is stored as an "ai:atmosphere" option in Gaffer's
 	globals, and translated onto the `options.atmosphere` parameter
 	in Arnold.
-	""",
+	"""),
 
 )

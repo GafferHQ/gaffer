@@ -44,6 +44,7 @@ from Qt import QtWidgets
 from GafferUI.PlugValueWidget import sole
 
 from . import _Algo
+from GafferUI.i18n import _
 
 class _CellPlugValueWidget( GafferUI.PlugValueWidget ) :
 
@@ -76,11 +77,11 @@ class _CellPlugValueWidget( GafferUI.PlugValueWidget ) :
 				self.__applyFixedWidths( plugValueWidget )
 				self.__row.append( plugValueWidget )
 			else :
-				self.__row.append( GafferUI.Label( "Unable to edit multiple plugs of this type" ) )
+				self.__row.append( GafferUI.Label( _("Unable to edit multiple plugs of this type") ) )
 				addCellEnabledSwitch = True
 
 		else :
-			self.__row.append( GafferUI.Label( "Unable to edit plugs with mixed types" ) )
+			self.__row.append( GafferUI.Label( _("Unable to edit plugs with mixed types") ) )
 			addCellEnabledSwitch = True
 
 		if addCellEnabledSwitch :

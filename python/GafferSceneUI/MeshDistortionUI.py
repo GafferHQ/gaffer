@@ -36,71 +36,72 @@
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.MeshDistortion,
 
 	"description",
-	"""
+	_("""
 	Measures how much a mesh has been distorted from a reference shape.
 	The distortion is calculated by comparing edge lengths between the
 	reference and deformed shapes. Compressed areas have negative distortion
 	values, stretched areas have positive distortion values, and areas with
 	no deformation have distortion values of zero. The calculated distortion
 	is output as primitive variables on the mesh.
-	""",
+	"""),
 
 	plugs = {
 
 		"position" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the primitive variable which contains the deformed vertex
 			positions for the mesh.
-			""",
+			"""),
 
 		},
 
 		"referencePosition" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the primitive variable which contains the undeformed vertex
 			positions for the mesh.
-			""",
+			"""),
 
 		},
 
 		"uvSet" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the primitive variable which contains the UV set used to
 			calculate UV distortion.
-			""",
+			"""),
 
 		},
 
 		"distortion" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the primitive variable created to store the distortion
 			values. This will contain a float per vertex.
-			""",
+			"""),
 
 		},
 
 		"uvDistortion" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the primitive variable created to store the UV distortion
 			values. This will contain a V2f with separate distortion values for the
 			U and V directions.
-			""",
+			"""),
 
 		},
 

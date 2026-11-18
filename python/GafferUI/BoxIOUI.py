@@ -37,18 +37,19 @@
 import IECore
 
 import Gaffer
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	Gaffer.BoxIO,
 
 	"description",
-	"""
+	_("""
 	Convenience node for representing promoted plugs
 	visually in the internal node graph of a Box. Don't
 	create BoxIO nodes directly, instead use the BoxIn
 	and BoxOut derived classes.
-	""",
+	"""),
 
 	"nodeGadget:minWidth", 0.0,
 	"nodeGadget:shape", "oval",
@@ -58,10 +59,10 @@ Gaffer.Metadata.registerNode(
 		"name" : {
 
 			"description" :
-			"""
+			_("""
 			The name given to the external plug that
 			this node represents.
-			""",
+			"""),
 
 			"nodule:type" : ""
 

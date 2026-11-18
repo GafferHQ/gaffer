@@ -48,6 +48,7 @@ import GafferImage
 import GafferImageUI
 
 from GafferUI.PlugValueWidget import sole
+from GafferUI.i18n import _
 
 # General OpenColorIOConfigPlug UI metadata
 
@@ -100,29 +101,29 @@ Gaffer.Metadata.registerNode(
 		"openColorIO.config" : {
 
 			"description" :
-			"""
+			_("""
 			The OpenColorIO config to use.
 
 			> Note : An OpenColorIOContext node can be used to override the config within specific parts
 			of the node graph, or to perform wedging across several contexts.
-			""",
+			"""),
 
 		},
 
 		"openColorIO.workingSpace" : {
 
 			"description" :
-			"""
+			_("""
 			The color space in which Gaffer performs image processing. ImageReaders will automatically load
 			images into this space, and ImageWriters will automatically convert images from this space.
-			""",
+			"""),
 
 		},
 
 		"openColorIO.variables" : {
 
 			"description" :
-			"""
+			_("""
 			Variables used to customise the default
 			[OpenColorIO context](https://opencolorio.readthedocs.io/en/latest/guides/authoring/overview.html#environment).
 			OpenColorIO refers to these variously as "string vars", "context vars" or
@@ -130,20 +131,20 @@ Gaffer.Metadata.registerNode(
 
 			> Note : An OpenColorIOContext node can be used to define variables within specific parts
 			of the node graph, or to perform wedging across several variable values.
-			""",
+			"""),
 
 		},
 
 		"openColorIO.displayTransform" : {
 
-			"label" : "UI Display Transform",
+			"label" : _("UI Display Transform"),
 			"description" :
-			"""
+			_("""
 			The colour transform used for showing colours in the UI - in swatches and colour pickers etc.
 			This is a combination of an OpenColorIO Display and an OpenColorIO View.
 
 			> Note : The Viewer has its own display transform configured in the Viewer itself.
-			""",
+			"""),
 
 		},
 
@@ -227,12 +228,12 @@ class DisplayTransformPlugValueWidget( GafferUI.PlugValueWidget ) :
 			try :
 				config = GafferImage.OpenColorIOAlgo.currentConfig()
 			except :
-				result.append( "/Invalid Config", { "active" : False } )
+				result.append( "/" + _("Invalid Config"), { "active" : False } )
 				return result
 
 		# View section
 
-		result.append( "/__ViewDivider__", { "divider" : True, "label" : "View" } )
+		result.append( "/__ViewDivider__", { "divider" : True, "label" : _("View") } )
 
 		display = self.__currentDisplay if self.__currentDisplay in config.getDisplays() else config.getDefaultDisplay()
 		for view in config.getViews( display ) :
@@ -247,7 +248,7 @@ class DisplayTransformPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		# Display section
 
-		result.append( "/__DisplayDivider__", { "divider" : True, "label" : "Display" } )
+		result.append( "/__DisplayDivider__", { "divider" : True, "label" : _("Display") } )
 
 		for display in config.getDisplays() :
 			view = self.__currentView if self.__currentView in config.getViews( display ) else config.getDefaultView( display )
@@ -260,13 +261,13 @@ class DisplayTransformPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		# Default section
 
-		result.append( "/__OptionsDivider__", { "divider" : True, "label" : "Options" } )
+		result.append( "/__OptionsDivider__", { "divider" : True, "label" : _("Options") } )
 
 		result.append(
 			f"/Follow Default Display And View", {
 				"command" : functools.partial( Gaffer.WeakMethod( self.__setToDefault ) ),
 				"checkBox" : self.__currentValue == "__default__",
-				"description" : "Always uses the default display and view for the current config. Useful when changing configs often, or using context-sensitive configs."
+				"description" : _("Always uses the default display and view for the current config. Useful when changing configs often, or using context-sensitive configs.")
 			}
 		)
 

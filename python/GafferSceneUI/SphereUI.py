@@ -37,6 +37,7 @@
 import Gaffer
 import GafferScene
 import GafferUI
+from GafferUI.i18n import _
 
 ##########################################################################
 # Metadata
@@ -47,9 +48,9 @@ Gaffer.Metadata.registerNode(
 	GafferScene.Sphere,
 
 	"description",
-	"""
+	_("""
 	Produces scenes containing a sphere.
-	""",
+	"""),
 
 	"layout:activator:typeIsMesh", lambda node : node["type"].getValue() == GafferScene.Sphere.Type.Mesh,
 
@@ -58,9 +59,9 @@ Gaffer.Metadata.registerNode(
 		"type" : {
 
 			"description" :
-			"""
+			_("""
 			The type of object to produce. May be a SpherePrimitive or a Mesh.
-			""",
+			"""),
 
 			"preset:Primitive" : GafferScene.Sphere.Type.Primitive,
 			"preset:Mesh" : GafferScene.Sphere.Type.Mesh,
@@ -72,50 +73,50 @@ Gaffer.Metadata.registerNode(
 		"radius" : {
 
 			"description" :
-			"""
+			_("""
 			Radius of the sphere.
-			""",
+			"""),
 
 		},
 
 		"zMin" : {
 
 			"description" :
-			"""
+			_("""
 			Limits the extent of the sphere along the lower pole.
 			Valid values are in the range [-1,1] and should always
 			be less than zMax.
-			""",
+			"""),
 
 		},
 
 		"zMax" : {
 
 			"description" :
-			"""
+			_("""
 			Limits the extent of the sphere along the upper pole.
 			Valid values are in the range [-1,1] and should always
 			be greater than zMin.
-			""",
+			"""),
 
 		},
 
 		"thetaMax" : {
 
 			"description" :
-			"""
+			_("""
 			Limits the extent of the sphere around the pole axis.
 			Valid values are in the range [0,360].
-			""",
+			"""),
 
 		},
 
 		"divisions" : {
 
 			"description" :
-			"""
+			_("""
 			Controls tesselation of the sphere when type is Mesh.
-			""",
+			"""),
 
 			"layout:activator" : "typeIsMesh",
 

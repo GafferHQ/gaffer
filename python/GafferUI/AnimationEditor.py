@@ -36,6 +36,7 @@
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 from GafferUI.PlugValueWidget import sole
 
@@ -338,7 +339,7 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 		# build context menu
 		menuDefinition = IECore.MenuDefinition()
 
-		menuDefinition.append( "/KeysHeader", { "divider" : True, "label" : "Selected Keys" } )
+		menuDefinition.append( "/" + _("KeysHeader"), { "divider" : True, "label" : _("Selected Keys") } )
 
 		for mode in sorted( Gaffer.Animation.Interpolation.values.values() ) :
 			menuDefinition.append(
@@ -368,7 +369,7 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 				}
 			)
 
-		menuDefinition.append( "/CurvesHeader", { "divider" : True, "label" : "Selected Curves" } )
+		menuDefinition.append( "/" + _("CurvesHeader"), { "divider" : True, "label" : _("Selected Curves") } )
 
 		for direction in sorted( Gaffer.Animation.Direction.values.values() ) :
 			extrapolation = None if emptyEditableCurves else self.__curveEditor.curveWidget().getExtrapolationForEditableCurves( direction )
@@ -429,8 +430,8 @@ class _CurveEditor( GafferUI.TabbedContainer ) :
 		self.__curveWidget = _CurveWidget()
 
 		# set tab ordering
-		self.append( self.__keyWidget, "Key" )
-		self.append( self.__curveWidget, "Curve" )
+		self.append( self.__keyWidget, _("Key") )
+		self.append( self.__curveWidget, _("Curve") )
 
 		# set up signals
 		self.__curveGadget.selectedKeys().memberAddedSignal().connect(
@@ -508,12 +509,12 @@ class _KeyWidget( GafferUI.GridContainer ) :
 			tieModeToolTip += "\n* %s%s" % ( mode.name, " : %s" % description if description is not None else "" )
 
 		# create labels
-		frameLabel = GafferUI.Label( text="Frame", toolTip=frameToolTip )
-		valueLabel = GafferUI.Label( text="Value", toolTip=valueToolTip )
-		interpolationLabel = GafferUI.Label( text="Interpolation", toolTip=interpolationToolTip )
-		tieModeLabel = GafferUI.Label( text="Tie Mode", toolTip=tieModeToolTip )
-		slopeLabel = GafferUI.Label( text="Slope", toolTip=( slopeToolTip % "" ) )
-		scaleLabel = GafferUI.Label( text="Scale", toolTip=( scaleToolTip % "" ) )
+		frameLabel = GafferUI.Label( text=_("Frame"), toolTip=frameToolTip )
+		valueLabel = GafferUI.Label( text=_("Value"), toolTip=valueToolTip )
+		interpolationLabel = GafferUI.Label( text=_("Interpolation"), toolTip=interpolationToolTip )
+		tieModeLabel = GafferUI.Label( text=_("Tie Mode"), toolTip=tieModeToolTip )
+		slopeLabel = GafferUI.Label( text=_("Slope"), toolTip=( slopeToolTip % "" ) )
+		scaleLabel = GafferUI.Label( text=_("Scale"), toolTip=( scaleToolTip % "" ) )
 
 		# create editors
 		# NOTE: initial value type (e.g. int or float) determines validated value type of widget
@@ -931,7 +932,7 @@ class _CurveWidget( GafferUI.GridContainer ) :
 			extrapolationToolTip += "\n* %s%s" % ( mode.name, " : %s" % description if description is not None else "" )
 
 		# create labels
-		extrapolationLabel = GafferUI.Label( text="Extrapolation", toolTip=( extrapolationToolTip % "" ) )
+		extrapolationLabel = GafferUI.Label( text=_("Extrapolation"), toolTip=( extrapolationToolTip % "" ) )
 
 		# create editors
 		self.__extrapolationEditor = (

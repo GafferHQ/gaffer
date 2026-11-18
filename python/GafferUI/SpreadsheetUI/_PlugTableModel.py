@@ -40,6 +40,7 @@ import imath
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 from Qt import QtCore
 from Qt import QtGui
@@ -174,7 +175,7 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 			if orientation == QtCore.Qt.Horizontal :
 
 				if section < 2 :
-					label = ( "Name", "Enabled" )[ section ]
+					label = ( _("Name"), _("Enabled") )[ section ]
 				else :
 					cellPlug = self.__rowsPlug.defaultRow()["cells"][ section - 2 ]
 					label = Gaffer.Metadata.value( cellPlug, "spreadsheet:columnLabel" )

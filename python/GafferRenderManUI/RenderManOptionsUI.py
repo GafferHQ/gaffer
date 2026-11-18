@@ -44,6 +44,7 @@ import GafferUI
 import GafferRenderMan
 
 from GafferUI.PlugValueWidget import sole
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
@@ -100,12 +101,12 @@ class _GPUConfigPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__currentValue = sole( values ) or []
 
 		if not self.__currentValue :
-			self.__menuButton.setText( "None" )
+			self.__menuButton.setText( _("None") )
 		else :
 			devices = self.__devices()
 			self.__menuButton.setText(
 				", ".join( [
-					"{} ({})".format( i, devices.get( i, "Unavailable" ) )
+					"{} ({})".format( i, devices.get( i, _("Unavailable") ) )
 					for i in self.__currentValue
 				] )
 			)

@@ -38,6 +38,7 @@ import Gaffer
 import GafferUI
 
 import GafferScene
+from GafferUI.i18n import _
 
 ##########################################################################
 # Metadata
@@ -48,20 +49,20 @@ Gaffer.Metadata.registerNode(
 	GafferScene.Parent,
 
 	"description",
-	"""
+	_("""
 	Parents additional child hierarchies into the main scene hierarchy.
-	""",
+	"""),
 
 	plugs = {
 
 		"parent" : {
 
 			"description" :
-			"""
+			_("""
 			The location which the children are parented under. This is
 			ignored when a filter is connected, in which case the children
 			are parented under all the locations matched by the filter.
-			""",
+			"""),
 
 			"userDefault" : "/",
 			# Base class hides this if its not in use, but it's still
@@ -74,9 +75,9 @@ Gaffer.Metadata.registerNode(
 		"children" : {
 
 			"description" :
-			"""
+			_("""
 			The child hierarchies to be parented.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "",
 			"nodule:type" : "GafferUI::CompoundNodule",
@@ -87,18 +88,18 @@ Gaffer.Metadata.registerNode(
 		"parentVariable" : {
 
 			"description" :
-			"""
+			_("""
 			A context variable used to pass the location of the parent to the
 			upstream nodes connected into the `children` plug. This can be used
 			to procedurally vary the children at each different parent location.
-			""",
+			"""),
 
 		},
 
 		"destination" : {
 
 			"description" :
-			"""
+			_("""
 			The location where the children will be placed in the output scene.
 			The default is to place the children under the parent, but they may
 			be relocated anywhere while still inheriting the parent's transform.
@@ -109,7 +110,7 @@ Gaffer.Metadata.registerNode(
 			the source location matched by the filter. This allows the children
 			to be placed relative to the "parent". For example, `${scene:path}/..`
 			will place the children alongside the "parent" rather than under it.
-			""",
+			"""),
 
 		},
 

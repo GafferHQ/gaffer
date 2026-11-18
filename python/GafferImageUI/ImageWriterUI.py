@@ -43,6 +43,7 @@ import GafferUI
 import GafferImageUI
 import GafferImage
 from . import OpenColorIOTransformUI
+from GafferUI.i18n import _
 
 layoutVariableDesc = """
 			Special context variables available for setting layout plugs:
@@ -74,11 +75,11 @@ Gaffer.Metadata.registerNode(
 	GafferImage.ImageWriter,
 
 	"description",
-	"""
+	_("""
 	Writes image files to disk using OpenImageIO. All file
 	types supported by OpenImageIO are supported by the
 	ImageWriter.
-	""",
+	"""),
 
 	"layout:activator:dpx", lambda p : __extension( p ) in ( "dpx", "unknown" ),
 	"layout:activator:field3d", lambda p : __extension( p ) in ( "f3d", "unknown" ),
@@ -99,9 +100,9 @@ Gaffer.Metadata.registerNode(
 		"in" : {
 
 			"description" :
-			"""
+			_("""
 			The image to be written to disk.
-			""",
+			"""),
 
 			"nodule:type" : "GafferUI::StandardNodule",
 
@@ -110,11 +111,11 @@ Gaffer.Metadata.registerNode(
 		"fileName" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the file to be written. File sequences with
 			arbitrary padding may be specified using the '#' character
 			as a placeholder for the frame numbers.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
 			"path:leaf" : True,
@@ -128,11 +129,11 @@ Gaffer.Metadata.registerNode(
 		"channels" : {
 
 			"description" :
-			"""
+			_("""
 			The names of the channels to be written to the file.
 			Names should be separated by spaces and may contain any
 			of Gaffer's standard wildcards.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferImageUI.ChannelMaskPlugValueWidget",
 
@@ -141,12 +142,12 @@ Gaffer.Metadata.registerNode(
 		"colorSpace" : {
 
 			"description" :
-			"""
+			_("""
 			The colour space of the output image, used to convert the input
 			image from the working space. The default behaviour is to automatically
 			determine the colorspace by calling the function registered with
 			`ImageWriter::setDefaultColorSpaceFunction()`.
-			""",
+			"""),
 
 			"presetNames" : OpenColorIOTransformUI.colorSpacePresetNames,
 			"presetValues" : OpenColorIOTransformUI.colorSpacePresetValues,
@@ -161,7 +162,7 @@ Gaffer.Metadata.registerNode(
 		"layout" : {
 
 			"description" :
-			"""
+			_("""
 			Controls where channels are placed in the file, including how they are named.
 			"Single part" writes all channels to the same part ( all interleaved ).
 			"Part per layer" writes a separate part for each layer, so they may be loaded
@@ -184,7 +185,7 @@ Gaffer.Metadata.registerNode(
 			like a mixed layout that is partially EXR spec compliant, and partially Nuke.  Or
 			you could use a expression to group some layers together in the same part.
 
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 			"presetsPlugValueWidget:allowCustom" : True,
@@ -194,12 +195,12 @@ Gaffer.Metadata.registerNode(
 		"layout.partName" : {
 
 			"description" :
-			"""
+			_("""
 			Specifies the name to be stored in EXR's part name metadata.
 
 			If different channels are given different part names, then a multipart
 			file is produced.
-			""" + layoutVariableDesc,
+			""") + layoutVariableDesc,
 
 			# The presets for this are useful in testing and scripting when the UI isn't loaded,
 			# so we register them in src/GafferImage/ImageWriter.cpp
@@ -208,11 +209,11 @@ Gaffer.Metadata.registerNode(
 		"layout.channelName" : {
 
 			"description" :
-			"""
+			_("""
 			Specifies the channel name to be given to EXR.  To match the standard, this should just
 			be exactly the Gaffer channel name.  But some other software like Nuke omits the layer prefix,
 			and assumes that the part name will be prefixed to the channel.
-			""" + layoutVariableDesc,
+			""") + layoutVariableDesc,
 
 			# The presets for this are useful in testing and scripting when the UI isn't loaded,
 			# so we register them in src/GafferImage/ImageWriter.cpp
@@ -221,28 +222,28 @@ Gaffer.Metadata.registerNode(
 
 		"matchDataWindows" : {
 			"description" :
-			"""
+			_("""
 			For multi-view images, sets the data windows to be the same for all views, by expanding them
 			all to include the union of all views.  Wastes disk space and processing time, but is
 			required by Nuke for multi-view images.
-			"""
+			""")
 		},
 
 		"out" : {
 
 			"description" :
-			"""
+			_("""
 			A pass-through of the input image.
-			""",
+			"""),
 
 		},
 
 		"dpx" : {
 
 			"description" :
-			"""
+			_("""
 			Format options specific to DPX files.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 			"layout:section" : "Settings.DPX",
@@ -253,9 +254,9 @@ Gaffer.Metadata.registerNode(
 		"dpx.dataType" : {
 
 			"description" :
-			"""
+			_("""
 			The data type to be written to the DPX file.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 			"preset:8-bit" : "uint8",
@@ -268,9 +269,9 @@ Gaffer.Metadata.registerNode(
 		"field3d" : {
 
 			"description" :
-			"""
+			_("""
 			Format options specific to Field3D files.
-			""",
+			"""),
 
 			"nodule:type" : "",
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
@@ -282,9 +283,9 @@ Gaffer.Metadata.registerNode(
 		"field3d.mode" : {
 
 			"description" :
-			"""
+			_("""
 			The write mode for the Field3D file - scanline or tiled data.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 			"preset:Scanline" : GafferImage.ImageWriter.Mode.Scanline,
@@ -295,9 +296,9 @@ Gaffer.Metadata.registerNode(
 		"field3d.dataType" : {
 
 			"description" :
-			"""
+			_("""
 			The data type to be written to the Field3D file.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 			"preset:Half" : "half",
@@ -309,9 +310,9 @@ Gaffer.Metadata.registerNode(
 		"fits" : {
 
 			"description" :
-			"""
+			_("""
 			Format options specific to FITS files.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 			"layout:section" : "Settings.FITS",
@@ -322,9 +323,9 @@ Gaffer.Metadata.registerNode(
 		"fits.dataType" : {
 
 			"description" :
-			"""
+			_("""
 			The data type to be written to the FITS file.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 			"preset:8-bit" : "uint8",
@@ -338,9 +339,9 @@ Gaffer.Metadata.registerNode(
 		"iff" : {
 
 			"description" :
-			"""
+			_("""
 			Format options specific to IFF files.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 			"layout:section" : "Settings.IFF",
@@ -351,9 +352,9 @@ Gaffer.Metadata.registerNode(
 		"iff.mode" : {
 
 			"description" :
-			"""
+			_("""
 			The write mode for the IFF file - scanline or tiled data.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 			"preset:Scanline" : GafferImage.ImageWriter.Mode.Scanline,
@@ -364,9 +365,9 @@ Gaffer.Metadata.registerNode(
 		"jpeg" : {
 
 			"description" :
-			"""
+			_("""
 			Format options specific to Jpeg files.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 			"layout:section" : "Settings.Jpeg",
@@ -377,21 +378,21 @@ Gaffer.Metadata.registerNode(
 		"jpeg.compressionQuality" : {
 
 			"description" :
-			"""
+			_("""
 			The compression quality for the Jpeg file to be written.
 			A value between 0 (low quality, high compression) and
 			100 (high quality, low compression).
-			""",
+			"""),
 
 		},
 
 		"jpeg.chromaSubSampling" : {
 
 			"description" :
-			"""
+			_("""
 			The chroma sub sampling used to write the jpeg file.
 			Note that the file will be stored as YCbCr instead of RGB.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 			"preset:Default (4:2:0)" : "",
@@ -404,9 +405,9 @@ Gaffer.Metadata.registerNode(
 		"jpeg2000" : {
 
 			"description" :
-			"""
+			_("""
 			Format options specific to Jpeg2000 files.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 			"layout:section" : "Settings.Jpeg2000",
@@ -417,9 +418,9 @@ Gaffer.Metadata.registerNode(
 		"jpeg2000.dataType" : {
 
 			"description" :
-			"""
+			_("""
 			The data type to be written to the Jpeg2000 file.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 			"preset:8-bit" : "uint8",
@@ -430,9 +431,9 @@ Gaffer.Metadata.registerNode(
 		"openexr" : {
 
 			"description" :
-			"""
+			_("""
 			Format options specific to OpenEXR files.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 			"layout:section" : "Settings.OpenEXR",
@@ -445,9 +446,9 @@ Gaffer.Metadata.registerNode(
 		"openexr.mode" : {
 
 			"description" :
-			"""
+			_("""
 			The write mode for the OpenEXR file - scanline or tiled data.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 			"preset:Scanline" : GafferImage.ImageWriter.Mode.Scanline,
@@ -458,9 +459,9 @@ Gaffer.Metadata.registerNode(
 		"openexr.compression" : {
 
 			"description" :
-			"""
+			_("""
 			The compression method to use when writing the OpenEXR file.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 			"preset:None" : "none",
@@ -479,10 +480,10 @@ Gaffer.Metadata.registerNode(
 		"openexr.dwaCompressionLevel" : {
 
 			"description" :
-			"""
+			_("""
 			The compression level used when writing files with DWAA or DWAB compression.
 			Higher values decrease file size at the expense of image quality.
-			""",
+			"""),
 
 			"layout:activator" : "compressionIsDWA",
 
@@ -491,13 +492,13 @@ Gaffer.Metadata.registerNode(
 		"openexr.dataType" : {
 
 			"description" :
-			"""
+			_("""
 			The data type to be written to the OpenEXR file.  If you want to use different
 			data types for different channels, you can drive this with an expression or spreadsheet,
 			which may use the same context variables as the layout plugs ( the useful ones are
 			`${imageWriter:channelName}`, `${imageWriter:layerName}` and `${imageWriter:baseName}`,
 			for the whole channel name, and for the prefix and suffix respectively ).
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 			"preset:Float" : "float",
@@ -510,12 +511,12 @@ Gaffer.Metadata.registerNode(
 		"openexr.depthDataType" : {
 
 			"description" :
-			"""
+			_("""
 			Overriding the data type for depth channels is useful because many of the things depth is used
 			for require greater precision.  This is a simple override which sets Z and ZBack to float precision.
 			If you want to do something more complex, set this to `Use Default`, and connect an expression or
 			spreadsheet to the `Data Type` plug.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 			"preset:Override to Float" : "float",
@@ -526,9 +527,9 @@ Gaffer.Metadata.registerNode(
 		"png" : {
 
 			"description" :
-			"""
+			_("""
 			Format options specific to PNG files.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 			"layout:section" : "Settings.PNG",
@@ -539,9 +540,9 @@ Gaffer.Metadata.registerNode(
 		"png.compression" : {
 
 			"description" :
-			"""
+			_("""
 			The compression method to use when writing the PNG file.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 			"preset:Default" : "default",
@@ -555,19 +556,19 @@ Gaffer.Metadata.registerNode(
 		"png.compressionLevel" : {
 
 			"description" :
-			"""
+			_("""
 			The compression level of the PNG file. This is a value between
 			0 (no compression) and 9 (most compression).
-			""",
+			"""),
 
 		},
 
 		"rla" : {
 
 			"description" :
-			"""
+			_("""
 			Format options specific to RLA files.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 			"layout:section" : "Settings.RLA",
@@ -578,9 +579,9 @@ Gaffer.Metadata.registerNode(
 		"rla.dataType" : {
 
 			"description" :
-			"""
+			_("""
 			The data type to be written to the RLA file.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 			"preset:8-bit" : "uint8",
@@ -592,9 +593,9 @@ Gaffer.Metadata.registerNode(
 		"sgi" : {
 
 			"description" :
-			"""
+			_("""
 			Format options specific to SGI files.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 			"layout:section" : "Settings.SGI",
@@ -605,9 +606,9 @@ Gaffer.Metadata.registerNode(
 		"sgi.dataType" : {
 
 			"description" :
-			"""
+			_("""
 			The data type to be written to the SGI file.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 			"preset:8-bit" : "uint8",
@@ -618,9 +619,9 @@ Gaffer.Metadata.registerNode(
 		"targa" : {
 
 			"description" :
-			"""
+			_("""
 			Format options specific to Targa files.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 			"layout:section" : "Settings.Targa",
@@ -631,9 +632,9 @@ Gaffer.Metadata.registerNode(
 		"targa.compression" : {
 
 			"description" :
-			"""
+			_("""
 			The compression method to use when writing the Targa file.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 			"preset:None" : "none",
@@ -644,9 +645,9 @@ Gaffer.Metadata.registerNode(
 		"tiff" : {
 
 			"description" :
-			"""
+			_("""
 			Format options specific to TIFF files.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 			"layout:section" : "Settings.TIFF",
@@ -657,9 +658,9 @@ Gaffer.Metadata.registerNode(
 		"tiff.mode" : {
 
 			"description" :
-			"""
+			_("""
 			The write mode for the TIFF file - scanline or tiled data.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 			"preset:Scanline" : GafferImage.ImageWriter.Mode.Scanline,
@@ -670,9 +671,9 @@ Gaffer.Metadata.registerNode(
 		"tiff.compression" : {
 
 			"description" :
-			"""
+			_("""
 			The compression method to use when writing the TIFF file.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 			"preset:None" : "none",
@@ -685,9 +686,9 @@ Gaffer.Metadata.registerNode(
 		"tiff.dataType" : {
 
 			"description" :
-			"""
+			_("""
 			The data type to be written to the TIFF file.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 			"preset:8-bit" : "uint8",
@@ -699,9 +700,9 @@ Gaffer.Metadata.registerNode(
 		"webp" : {
 
 			"description" :
-			"""
+			_("""
 			Format options specific to WebP files.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 			"layout:section" : "Settings.WebP",
@@ -712,11 +713,11 @@ Gaffer.Metadata.registerNode(
 		"webp.compressionQuality" : {
 
 			"description" :
-			"""
+			_("""
 			The compression quality for the WebP file to be written.
 			A value between 0 (low quality, high compression) and
 			100 (high quality, low compression).
-			""",
+			"""),
 
 		},
 

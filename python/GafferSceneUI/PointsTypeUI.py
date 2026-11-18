@@ -37,26 +37,27 @@
 import Gaffer
 import GafferUI
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.PointsType,
 
 	"description",
-	"""
+	_("""
 	Changes the render type for PointsPrimitive objects.
 	Depending on the renderer, points may be rendered as
 	particles, spheres, disks, patches or blobbies.
-	""",
+	"""),
 
 	plugs = {
 
 		"type" : {
 
 			"description" :
-			"""
+			_("""
 			The render type to assign.
-			""",
+			"""),
 
 			"preset:Unchanged" : "",
 			"preset:Particle" : "particle",

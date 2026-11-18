@@ -40,6 +40,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 from . import _Algo
 from ._RowsPlugValueWidget import _RowsPlugValueWidget
@@ -88,6 +89,7 @@ def __spreadsheetSubMenu( plug, command, showSections = True ) :
 			"/No Spreadsheets Available",
 			{
 				"active" : False,
+				"label" : _("No Spreadsheets Available"),
 			}
 		)
 		return menuDefinition
@@ -119,13 +121,13 @@ def __spreadsheetSubMenu( plug, command, showSections = True ) :
 			)
 
 	if alreadyConnected and other :
-		menuDefinition.append( "/__ConnectedDivider__", { "divider" : True, "label" : "Connected" } )
+		menuDefinition.append( "/__ConnectedDivider__", { "divider" : True, "label" : _("Connected") } )
 
 	for spreadsheet in alreadyConnected :
 		addItems( spreadsheet )
 
 	if alreadyConnected and other :
-		menuDefinition.append( "/__OtherDivider__", { "divider" : True, "label" : "Other" } )
+		menuDefinition.append( "/__OtherDivider__", { "divider" : True, "label" : _("Other") } )
 
 	for spreadsheet in other :
 		addItems( spreadsheet )
@@ -167,13 +169,15 @@ def __prependSpreadsheetCreationMenuItems( menuDefinition, plugValueWidget ) :
 		menuDefinition.prepend(
 			"/Add to Spreadsheet{}".format( suffix ),
 			{
-				"subMenu" :  functools.partial( __spreadsheetSubMenu, plug, functools.partial( _Algo.addToSpreadsheet, plug ) )
+				"subMenu" :  functools.partial( __spreadsheetSubMenu, plug, functools.partial( _Algo.addToSpreadsheet, plug ) ),
+				"label" : _("Add to Spreadsheet") + suffix,
 			}
 		)
 		menuDefinition.prepend(
 			"/Create Spreadsheet{}...".format( suffix ),
 			{
-				"command" : functools.partial( _Algo.createSpreadsheet, plug )
+				"command" : functools.partial( _Algo.createSpreadsheet, plug ),
+				"label" : _("Create Spreadsheet") + suffix + "...",
 			}
 		)
 
@@ -225,7 +229,8 @@ def __nodeEditorToolMenu( nodeEditor, node, menuDefinition ) :
 		"/Create Spreadsheet...",
 		{
 			"command" : functools.partial( _Algo.createSpreadsheetForNode, node, enabledRowNamesConnection, selectorContextVariablePlug, selectorValue ),
-			"active" : itemsActive
+			"active" : itemsActive,
+			"label" : _("Create Spreadsheet..."),
 		}
 	)
 
@@ -234,7 +239,8 @@ def __nodeEditorToolMenu( nodeEditor, node, menuDefinition ) :
 		"/Connect to Spreadsheet",
 		{
 			"subMenu" :  functools.partial( __spreadsheetSubMenu, enabledRowNamesConnection, connectCommand, showSections = False ),
-			"active" : itemsActive
+			"active" : itemsActive,
+			"label" : _("Connect to Spreadsheet"),
 		}
 	)
 

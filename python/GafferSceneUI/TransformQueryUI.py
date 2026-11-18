@@ -36,15 +36,16 @@
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.TransformQuery,
 
 	"description",
-	"""
+	_("""
 	Queries a particular location in a scene and outputs the transform.
-	""",
+	"""),
 
 	"layout:activator:spaceIsRelative", lambda node : node["space"].getValue() == GafferScene.TransformQuery.Space.Relative,
 
@@ -53,21 +54,21 @@ Gaffer.Metadata.registerNode(
 		"scene" : {
 
 			"description" :
-			"""
+			_("""
 			The scene to query the transform for.
-			"""
+			""")
 
 		},
 
 		"location" : {
 
 			"description" :
-			"""
+			_("""
 			The location within the scene to query the transform at.
 
 			> Note : If the location does not exist then the query will not be
 			> performed and all outputs will be set to their default values.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
 			"scenePathPlugValueWidget:scene" : "scene",
@@ -78,9 +79,9 @@ Gaffer.Metadata.registerNode(
 		"space" : {
 
 			"description" :
-			"""
+			_("""
 			The space to query the transform.
-			""",
+			"""),
 
 			"preset:Local" : GafferScene.TransformQuery.Space.Local,
 			"preset:World" : GafferScene.TransformQuery.Space.World,
@@ -93,12 +94,12 @@ Gaffer.Metadata.registerNode(
 		"relativeLocation" : {
 
 			"description" :
-			"""
+			_("""
 			The location within the scene to query the transform for relative space mode.
 
 			> Note : If the location does not exist then the query will not be
 			> performed and all outputs will be set to their default values.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
 			"scenePathPlugValueWidget:scene" : "scene",
@@ -110,9 +111,9 @@ Gaffer.Metadata.registerNode(
 		"invert" : {
 
 			"description" :
-			"""
+			_("""
 			Invert the result transform.
-			""",
+			"""),
 			"nodule:type" : ""
 
 		},
@@ -120,9 +121,9 @@ Gaffer.Metadata.registerNode(
 		"matrix" : {
 
 			"description" :
-			"""
+			_("""
 			4x4 matrix of the requested transform.
-			""",
+			"""),
 
 			"layout:section" : "Settings.Outputs"
 
@@ -130,27 +131,27 @@ Gaffer.Metadata.registerNode(
 
 		"translate" : {
 			"description" :
-			"""
+			_("""
 			Translation component of requested transform.
-			""",
+			"""),
 
 			"layout:section" : "Settings.Outputs"
 		},
 
 		"rotate" : {
 			"description" :
-			"""
+			_("""
 			Rotation component of requested transform (degrees).
-			""",
+			"""),
 
 			"layout:section" : "Settings.Outputs"
 		},
 
 		"scale" : {
 			"description" :
-			"""
+			_("""
 			Scaling component of requested transform.
-			""",
+			"""),
 
 			"layout:section" : "Settings.Outputs"
 		},

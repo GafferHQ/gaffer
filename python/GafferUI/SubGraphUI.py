@@ -35,14 +35,15 @@
 ##########################################################################
 
 import Gaffer
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	Gaffer.SubGraph,
 
 	"description",
-	"""
+	_("""
 	Holds a nested node graph of its own.
-	""",
+	"""),
 
 )

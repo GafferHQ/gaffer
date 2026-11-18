@@ -36,6 +36,7 @@
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 import imath
 import IECore
 
@@ -52,7 +53,7 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		with column :
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
-				GafferUI.Label( "Display Mode" )
+				GafferUI.Label( _("Display Mode") )
 				drawModeWidget = GafferUI.MultiSelectionMenu( allowMultipleSelection = False, allowEmptySelection = False )
 				drawModeWidget.append( "Ramp" )
 				drawModeWidget.append( "Curves" )
@@ -222,8 +223,8 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__valueLabel.setPlug( None )
 			self.__valueField.setPlug( None )
 
-		self.__positionLabel.label().setText( "Position" )
-		self.__valueLabel.label().setText( "Value" )
+		self.__positionLabel.label().setText( _("Position") )
+		self.__valueLabel.label().setText( _("Value") )
 
 # we don't register this automatically for any plugs, as it takes up a lot of room
 # in the node editor. this means the SplinePlugValueWidget will be used instead, and

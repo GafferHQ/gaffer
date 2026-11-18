@@ -36,18 +36,19 @@
 
 import Gaffer
 import GafferImage
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.DeepState,
 
 	"description",
-	"""
+	_("""
 	Modifies the samples of a deep image so that the composited result
 	stays the same, but there are additional desirable properties,
 	such as being sorted, non-overlapping, or being combined into a
 	single sample.
-	""",
+	"""),
 	"layout:activator:prune", lambda node : node["deepState"].getValue() == GafferImage.DeepState.TargetState.Tidy,
 	"layout:activator:pruneOccluded", lambda node : (
 		node["deepState"].getValue() == GafferImage.DeepState.TargetState.Tidy and node["pruneOccluded"].getValue()
@@ -58,22 +59,22 @@ Gaffer.Metadata.registerNode(
 		"in" : {
 
 			"description" :
-			"""
+			_("""
 			The input image data.
-			""",
+			"""),
 
 		},
 
 		"deepState" : {
 
 			"description" :
-			"""
+			_("""
 			The desired state.
 			"Sorted" merely orders the samples.
 			"Tidy" performs sorting, splitting, and merging, to produce non-overlapping
 			samples, and optionally prunes useless samples.
 			"Flat" composites samples into a single sample per pixel.
-			""",
+			"""),
 
 			"preset:Sorted" : GafferImage.DeepState.TargetState.Sorted,
 			"preset:Tidy" : GafferImage.DeepState.TargetState.Tidy,
@@ -86,11 +87,11 @@ Gaffer.Metadata.registerNode(
 		"pruneTransparent" : {
 
 			"description" :
-			"""
+			_("""
 			When tidying, omits fully transparent samples.  This is usually just an optimization,
 			but it could affect the composited result if you start with purely additive samples that have
 			zero alpha, but still add to the color.
-			""",
+			"""),
 			"layout:activator" : "prune",
 
 		},
@@ -98,10 +99,10 @@ Gaffer.Metadata.registerNode(
 		"pruneOccluded" : {
 
 			"description" :
-			"""
+			_("""
 			When tidying, omits samples which are blocked by samples in front of them ( occluded samples
 			have no effect on the composited result.
-			""",
+			"""),
 			"layout:activator" : "prune",
 
 		},
@@ -109,13 +110,13 @@ Gaffer.Metadata.registerNode(
 		"occludedThreshold" : {
 
 			"description" :
-			"""
+			_("""
 			How blocked does a sample have to be before it is omitted.  By default, only 100% occluded samples
 			are omitted, but if you select 0.99, then samples with only 1% visibility would also be omitted.
 			The composited result is preserved by combining the values of any omitted samples with the last
 			sample generated.  Using a threshold lower than 0.99 before doing a DeepMerge or DeepHoldout
 			could introduce large errors, however.
-			""",
+			"""),
 			"layout:activator" : "pruneOccluded",
 
 		},

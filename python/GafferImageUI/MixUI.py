@@ -37,63 +37,64 @@
 import Gaffer
 import GafferUI
 import GafferImage
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.Mix,
 
 	"description",
-	"""
+	_("""
 	Blends two images together based on a mask.
 	If the mask is 0 you get the first input, if it is 1 you get the second.
-	""",
+	"""),
 
 	plugs = {
 
 		"in.in0" : {
 
 			"description" :
-			"""
+			_("""
 			The B input.
-			""",
+			"""),
 
 		},
 
 		"in.in1" : {
 
 			"description" :
-			"""
+			_("""
 			The A input.
-			""",
+			"""),
 
 		},
 
 		"mask" : {
 
 			"description" :
-			"""
+			_("""
 			The image which contains the mask channel.
-			""",
+			"""),
 			"noduleLayout:section" : "right",
 		},
 
 		"mix" : {
 
 			"description" :
-			"""
+			_("""
 			Control the blend between the two input images.
 			0 to take first input, 1 to take second input.
 			Multiplied together with the mask.
-			""",
+			"""),
 		},
 
 		"maskChannel" : {
 
 			"description" :
-			"""
+			_("""
 			The channel which controls the blend.  Clamped between 0 and 1.
 			0 to take first input, 1 to take second input.
-			""",
+			"""),
 			"plugValueWidget:type" : "GafferImageUI.ChannelPlugValueWidget",
 			"channelPlugValueWidget:imagePlugName" : "mask",
 

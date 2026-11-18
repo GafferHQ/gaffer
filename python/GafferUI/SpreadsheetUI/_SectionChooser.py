@@ -42,6 +42,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 from Qt import QtCore
 from Qt import QtWidgets
@@ -241,9 +242,9 @@ class _SectionChooser( GafferUI.Widget ) :
 		sectionIsCurrent = self._qtWidget().tabText( self._qtWidget().currentIndex() ) == sectionName
 
 		newSectionName = GafferUI.TextInputDialogue(
-			title = "Rename section",
+			title = _("Rename section"),
 			initialText = sectionName,
-			confirmLabel = "Rename",
+			confirmLabel = _("Rename"),
 		).waitForText( parentWindow = self.ancestor( GafferUI.Window ) )
 
 		if not newSectionName or newSectionName == sectionName :
@@ -280,9 +281,9 @@ class _SectionChooser( GafferUI.Widget ) :
 		metadataKey = "spreadsheet:section:{}:description".format( sectionName )
 
 		description = GafferUI.TextInputDialogue(
-			title = "Set Description",
+			title = _("Set Description"),
 			initialText = Gaffer.Metadata.value( self.__rowsPlug, metadataKey ),
-			confirmLabel = "Set",
+			confirmLabel = _("Set"),
 			multiLine = True,
 		).waitForText( parentWindow = self.ancestor( GafferUI.Window ) )
 
@@ -345,7 +346,7 @@ class _SectionChooser( GafferUI.Widget ) :
 
 		for index, name in enumerate( self.sectionNames( self.__rowsPlug ) ) :
 			m.append(
-				"/Switch to/%s" % name,
+				"/" + _("Switch to") + "/%s" % name,
 				{
 					"command" : functools.partial( Gaffer.WeakMethod( self.__setCurrent ), index )
 				}
@@ -356,7 +357,7 @@ class _SectionChooser( GafferUI.Widget ) :
 		readOnly = Gaffer.MetadataAlgo.readOnly( self.__rowsPlug )
 
 		m.append(
-			"/Rename...",
+			"/" + _("Rename..."),
 			{
 				"command" : functools.partial( Gaffer.WeakMethod( self.__renameSection ), sectionName ),
 				"active" : not readOnly,
@@ -364,7 +365,7 @@ class _SectionChooser( GafferUI.Widget ) :
 		)
 
 		m.append(
-			"/Set Description...",
+			"/" + _("Set Description..."),
 			{
 				"command" : functools.partial( Gaffer.WeakMethod( self.__setSectionDescription ), sectionName ),
 				"active" : not readOnly,
@@ -374,7 +375,7 @@ class _SectionChooser( GafferUI.Widget ) :
 		sectionNames = self.sectionNames( self.__rowsPlug )
 		for toSectionName in sectionNames :
 			m.append(
-				"/Move Columns To/{}".format( toSectionName ),
+				"/" + _("Move Columns To") + "/{}".format( toSectionName ),
 				{
 					"command" : functools.partial( Gaffer.WeakMethod( self.__moveSection ), sectionName, toSectionName ),
 					"active" : toSectionName != sectionName and not readOnly,
@@ -384,7 +385,7 @@ class _SectionChooser( GafferUI.Widget ) :
 		m.append( "/__DeleteDivider__", { "divider" : True } )
 
 		m.append(
-			"/Delete",
+			"/" + _("Delete"),
 			{
 				"command" : functools.partial( Gaffer.WeakMethod( self.__deleteSection ), sectionName ),
 				"active" : not readOnly,
@@ -394,7 +395,7 @@ class _SectionChooser( GafferUI.Widget ) :
 		m.append( "/__RemoveDivider__", { "divider" : True } )
 
 		m.append(
-			"/Remove Sectioning",
+			"/" + _("Remove Sectioning"),
 			{
 				"command" : functools.partial( Gaffer.WeakMethod( self.__removeSectioning ) ),
 				"active" : not readOnly,

@@ -37,25 +37,26 @@
 import Gaffer
 import GafferUI
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.Scatter,
 
 	"description",
-	"""
+	_("""
 	Scatters points evenly over the surface of meshes.
 	This can be particularly useful in conjunction with
 	the Instancer, which can then apply instances to
 	each point.
-	""",
+	"""),
 
 	plugs = {
 
 		"parent" : {
 
 			"description" :
-			"""
+			_("""
 			The location of the mesh to scatter the
 			points over. The generated points will
 			be parented under this location. This is
@@ -63,39 +64,39 @@ Gaffer.Metadata.registerNode(
 			which case the filter may specify multiple
 			locations containing meshes to scatter points
 			over.
-			""",
+			"""),
 
 		},
 
 		"name" : {
 
 			"description" :
-			"""
+			_("""
 			The name given to the object generated -
 			this will be placed under the parent in
 			the scene hierarchy.
-			""",
+			"""),
 
 		},
 
 		"density" : {
 
 			"description" :
-			"""
+			_("""
 			The number of points per unit area of the mesh,
 			measured in object space.
-			""",
+			"""),
 
 		},
 
 		"densityPrimitiveVariable" : {
 
 			"description" :
-			"""
+			_("""
 			A float primitive variable used to specify a varying
 			point density across the surface of the mesh. Multiplied
 			with the density setting above.
-			""",
+			"""),
 
 			"divider" : True,
 		},
@@ -103,25 +104,25 @@ Gaffer.Metadata.registerNode(
 		"referencePosition" : {
 
 			"description" :
-			"""
+			_("""
 			If you want to preserve the uv positions of the points while the mesh animates, you can
 			set up an alternate reference position primitive variable ( usually the same as P, but
 			not animated ).  This primitive variable will be used to compute the areas of the faces,
 			and therefore how many points each face receives.
-			""",
+			"""),
 
 		},
 
 		"uv" : {
 
 			"description" :
-			"""
+			_("""
 			The UV set used to distribute points. The size of faces in 3D space is used to determine
 			the number of points on each face, so the UV set should not affect the overall look of
 			the distribution for a particular seed, but using the UVs provides continuity when
 			adjusting density. If polygons that are large in 3D space are small and narrow in UV
 			space for the given UV set, you may encounter performance problems.
-			""",
+			"""),
 
 			"divider" : True,
 		},
@@ -129,22 +130,22 @@ Gaffer.Metadata.registerNode(
 		"primitiveVariables" : {
 
 			"description" :
-			"""
+			_("""
 			Primitive variables to sample from the source mesh and output on the generated points.
 			Supports a Gaffer match pattern, with multiple space seperated variable names, optionally
 			using `*` as a wildcard.
-			""",
+			"""),
 
 		},
 
 		"pointType" : {
 
 			"description" :
-			"""
+			_("""
 			The render type of the points. This defaults to
 			"gl:point" so that the points are rendered in a
 			lightweight manner in the viewport.
-			""",
+			"""),
 
 			"preset:GL Point" : "gl:point",
 			"preset:Particle" : "particle",
@@ -160,7 +161,7 @@ Gaffer.Metadata.registerNode(
 		"destination" : {
 
 			"description" :
-			"""
+			_("""
 			The location where the points primitives will be placed in the output scene.
 			When the destination is evaluated, the `${scene:path}` variable holds
 			the location of the source mesh, so the default value parents the points
@@ -168,7 +169,7 @@ Gaffer.Metadata.registerNode(
 
 			> Tip : `${scene:path}/..` may be used to place the points alongside the
 			> source mesh.
-			""",
+			"""),
 
 		},
 

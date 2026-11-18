@@ -44,6 +44,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 import GafferImage
 import GafferScene
 import GafferImageUI
@@ -322,7 +323,7 @@ class __OutputIndexColumn( Column ) :
 
 	def headerData( self, canceller = None ) :
 
-		return self.CellData( icon = "catalogueOutputHeader.png", toolTip = "Output Index" )
+		return self.CellData( icon = "catalogueOutputHeader.png", toolTip = _("Output Index") )
 
 	def _imageCellData( self, image, catalogue ) :
 
@@ -332,7 +333,7 @@ class __OutputIndexColumn( Column ) :
 				"state:normal" : "catalogueOutput{}.png".format( i ) if i else "",
 				"state:highlighted" : "catalogueOutput{}Highlighted{}.png".format( i or 1, "" if i else "Transparent" ),
 			} ),
-			toolTip = "Click to set this image as Output 1 so it can be referenced from the Viewer or by CatalogueSelect nodes. Right-click to set other output indexes."
+			toolTip = _("Click to set this image as Output 1 so it can be referenced from the Viewer or by CatalogueSelect nodes. Right-click to set other output indexes.")
 		)
 
 	def __buttonPress( self, path, widget, event ) :
@@ -348,7 +349,7 @@ class __OutputIndexColumn( Column ) :
 		if event.button == event.Buttons.Left and event.modifiers == event.Modifiers.None_ :
 			self.__setOutputIndex( image, 1 if image["outputIndex"].getValue() == 0 else 0 )
 		elif event.button == event.Buttons.Right and event.modifiers == event.Modifiers.None_ :
-			self.__popupMenu = GafferUI.Menu( self.__contextMenuDefinition( image ), title = "Output Index" )
+			self.__popupMenu = GafferUI.Menu( self.__contextMenuDefinition( image ), title = _("Output Index") )
 			self.__popupMenu.popup()
 
 		return True
@@ -388,7 +389,7 @@ Gaffer.Metadata.registerNode(
 	GafferScene.Catalogue,
 
 	"description",
-	"""
+	_("""
 	Stores a catalogue of images to be browsed. Images can either be loaded
 	from files or rendered directly into the catalogue.
 
@@ -400,14 +401,14 @@ Gaffer.Metadata.registerNode(
 	- displayPort : `GafferScene.Catalogue.displayDriverServer().portNumber()`
 	- remoteDisplayType : "GafferScene::GafferDisplayDriver"
 	- catalogue:name : The name of the catalogue to render to (optional)
-	""",
+	"""),
 
 	plugs = {
 
 		"images" : {
 
 			"description" :
-			"""
+			_("""
 			Specifies the list of images currently
 			stored in the catalogue.
 
@@ -415,7 +416,7 @@ Gaffer.Metadata.registerNode(
 			using the UI, or use the API to construct
 			Catalogue.Image plugs and parent them
 			here.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "",
 
@@ -424,11 +425,11 @@ Gaffer.Metadata.registerNode(
 		"imageIndex" : {
 
 			"description" :
-			"""
+			_("""
 			Specifies the index of the currently
 			selected image. This forms the output
 			from the catalogue node.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferSceneUI.CatalogueUI.ImageListing",
 			"label" : "",
@@ -439,24 +440,24 @@ Gaffer.Metadata.registerNode(
 		"name" : {
 
 			"description" :
-			"""
+			_("""
 			Used to distinguish between catalogues, so that when
 			multiple catalogues exist, it is possible to send a
 			render to just one of them. Renders are matched
 			to catalogues by comparing the "catalogue:name" parameter
 			from the renderer output with the value of this plug.
-			""",
+			"""),
 
 		},
 
 		"directory" : {
 
 			"description" :
-			"""
+			_("""
 			The directory where completed renders
 			are saved. This allows them to remain
 			in the catalogue for the next session.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
 			"path:leaf" : False,
@@ -466,13 +467,13 @@ Gaffer.Metadata.registerNode(
 		"imageNames" : {
 
 			"description" :
-			"""
+			_("""
 			Output containing all the names of the images in the Catalogue.
 			Possible uses include :
 
 			- Looping over all images using a Wedge and a CatalogueSelect.
 			- Making a ContactSheet using the Collect mode and a CatalogueSelect.
-			""",
+			"""),
 
 			"layout:section" : "Advanced"
 
@@ -761,24 +762,24 @@ class ImageListing( GafferUI.PlugValueWidget ) :
 
 				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) as self.__buttonRow :
 
-					addButton = GafferUI.Button( image = "pathChooser.png", hasFrame = False, toolTip = "Load image" )
+					addButton = GafferUI.Button( image = "pathChooser.png", hasFrame = False, toolTip = _("Load image") )
 					addButton.clickedSignal().connect( Gaffer.WeakMethod( self.__addClicked ) )
 
-					self.__duplicateButton = GafferUI.Button( image = "duplicate.png", hasFrame = False, toolTip = "Duplicate selected image, hold <kbd>alt</kbd> to view copy. [<kbd>Ctrl-D</kbd>]" )
+					self.__duplicateButton = GafferUI.Button( image = "duplicate.png", hasFrame = False, toolTip = _("Duplicate selected image, hold <kbd>alt</kbd> to view copy. [<kbd>Ctrl-D</kbd>]") )
 					self.__duplicateButton.setEnabled( False )
 					self.__duplicateButton.clickedSignal().connect( Gaffer.WeakMethod( self.__duplicateClicked ) )
 
-					self.__exportButton = GafferUI.Button( image = "export.png", hasFrame = False, toolTip = "Export selected image" )
+					self.__exportButton = GafferUI.Button( image = "export.png", hasFrame = False, toolTip = _("Export selected image") )
 					self.__exportButton.setEnabled( False )
 					self.__exportButton.clickedSignal().connect( Gaffer.WeakMethod( self.__exportClicked ) )
 
-					self.__extractButton = GafferUI.Button( image = "extract.png", hasFrame = False, toolTip = "Create CatalogueSelect node for selected image" )
+					self.__extractButton = GafferUI.Button( image = "extract.png", hasFrame = False, toolTip = _("Create CatalogueSelect node for selected image") )
 					self.__extractButton.setEnabled( False )
 					self.__extractButton.clickedSignal().connect( Gaffer.WeakMethod( self.__extractClicked ) )
 
 					GafferUI.Spacer( imath.V2i( 0 ), parenting = { "expand" : True } )
 
-					self.__removeButton = GafferUI.Button( image = "delete.png", hasFrame = False, toolTip = "Remove selected image [<kbd>Delete</kbd>]" )
+					self.__removeButton = GafferUI.Button( image = "delete.png", hasFrame = False, toolTip = _("Remove selected image [<kbd>Delete</kbd>]") )
 					self.__removeButton.setEnabled( False )
 					self.__removeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__removeClicked ) )
 
@@ -788,15 +789,15 @@ class ImageListing( GafferUI.PlugValueWidget ) :
 
 				GafferUI.Spacer( size = imath.V2i( 2 ) )
 
-				GafferUI.Label( "<h4>Image Properties</h4>" )
+				GafferUI.Label( "<h4>" + _("Image Properties") + "</h4>" )
 
 				GafferUI.Spacer( size = imath.V2i( 2 ) )
 
 				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
-					GafferUI.Label( "Name" )
+					GafferUI.Label( _("Name") )
 					self.__nameWidget = GafferUI.NameWidget( graphComponent = None )
 
-				GafferUI.Label( "Description" )
+				GafferUI.Label( _("Description") )
 				self.__descriptionWidget = GafferUI.MultiLineStringPlugValueWidget( plug = None )
 
 		self.__mergeGroupId = 0
@@ -960,7 +961,7 @@ class ImageListing( GafferUI.PlugValueWidget ) :
 			)
 		)
 
-		dialogue = GafferUI.PathChooserDialogue( path, title = "Add image", confirmLabel = "Add", valid = True, leaf = True, bookmarks = bookmarks )
+		dialogue = GafferUI.PathChooserDialogue( path, title = _("Add image"), confirmLabel = _("Add"), valid = True, leaf = True, bookmarks = bookmarks )
 		dialogue.pathChooserWidget().pathListingWidget().setColumns(
 			dialogue.pathChooserWidget().pathListingWidget().getColumns() +
 			[ GafferUI.PathListingWidget.StandardColumn( "Frame Range", "fileSystem:frameRange" )  ]
@@ -1039,7 +1040,7 @@ class ImageListing( GafferUI.PlugValueWidget ) :
 			)
 		)
 
-		dialogue = GafferUI.PathChooserDialogue( path, title = "Export image", confirmLabel = "Export", leaf = True, bookmarks = bookmarks )
+		dialogue = GafferUI.PathChooserDialogue( path, title = _("Export image"), confirmLabel = _("Export"), leaf = True, bookmarks = bookmarks )
 
 		path = dialogue.waitForPath( parentWindow = self.ancestor( GafferUI.Window ) )
 		if not path :
@@ -1200,7 +1201,7 @@ class ImageListing( GafferUI.PlugValueWidget ) :
 		allColumnsSorted = sorted( registeredColumns() )
 
 		menu = IECore.MenuDefinition()
-		menu.append( "/Reset", { "command" : Gaffer.WeakMethod( self.__resetColumns ) } )
+		menu.append( "/" + _("Reset"), { "command" : Gaffer.WeakMethod( self.__resetColumns ) } )
 		menu.append( "/__resetDivider__", { "divider" : True } )
 
 		for column in allColumnsSorted :
@@ -1225,7 +1226,7 @@ class ImageListing( GafferUI.PlugValueWidget ) :
 		if not headerRect.contains( mousePosition[0], mousePosition[1] ) :
 			return False
 
-		self.__popupMenu = GafferUI.Menu( self.__columnContextMenuDefinition(), title = "Columns" )
+		self.__popupMenu = GafferUI.Menu( self.__columnContextMenuDefinition(), title = _("Columns") )
 		self.__popupMenu.popup( parent = self )
 
 		return True

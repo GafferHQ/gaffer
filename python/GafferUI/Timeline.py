@@ -40,6 +40,7 @@ import sys
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 from Qt import QtCore
 from Qt import QtGui
@@ -72,7 +73,7 @@ class Timeline( GafferUI.Editor ) :
 
 			self.__sliderRangeStart = GafferUI.NumericWidget( scriptNode["frameRange"]["start"].getValue() )
 			self.__sliderRangeStart.setFixedCharacterWidth( 4 )
-			self.__sliderRangeStart.setToolTip( "Slider minimum" )
+			self.__sliderRangeStart.setToolTip( _("Slider minimum") )
 			self.__sliderRangeStartChangedConnection = self.__sliderRangeStart.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__sliderRangeChanged ) )
 
 			self.__slider = _TimelineSlider(
@@ -98,12 +99,12 @@ class Timeline( GafferUI.Editor ) :
 
 			self.__frame = GafferUI.NumericWidget( self.__playback.context().getFrame() )
 			self.__frame.setFixedCharacterWidth( 5 )
-			self.__frame.setToolTip( "Current frame" )
+			self.__frame.setToolTip( _("Current frame") )
 			self.__frameChangedConnection = self.__frame.valueChangedSignal().connect( Gaffer.WeakMethod( self.__valueChanged ) )
 
 			self.__sliderRangeEnd = GafferUI.NumericWidget( scriptNode["frameRange"]["end"].getValue() )
 			self.__sliderRangeEnd.setFixedCharacterWidth( 4 )
-			self.__sliderRangeEnd.setToolTip( "Slider maximum" )
+			self.__sliderRangeEnd.setToolTip( _("Slider maximum") )
 			self.__sliderRangeEndChangedConnection = self.__sliderRangeEnd.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__sliderRangeChanged ) )
 
 			self.__scriptRangeEnd = GafferUI.NumericPlugValueWidget( scriptNode["frameRange"]["end"] )

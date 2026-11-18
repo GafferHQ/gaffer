@@ -37,6 +37,7 @@
 import Gaffer
 import GafferUI
 import GafferScene
+from GafferUI.i18n import _
 
 ##########################################################################
 # Metadata
@@ -47,32 +48,32 @@ Gaffer.Metadata.registerNode(
 	GafferScene.Group,
 
 	"description",
-	"""
+	_("""
 	Groups together several input scenes under a new parent.
 	If the input scenes contain locations with identical names,
 	they are automatically renamed to make them unique in the
 	output scene.
-	""",
+	"""),
 
 	plugs = {
 
 		"name" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the group to be created. All the input
 			scenes will be parented under this group.
-			""",
+			"""),
 
 		},
 
 		"sets" : {
 
 			"description" :
-			"""
+			_("""
 			A list of sets to include the group in. The
 			names should be separated by spaces.
-			""",
+			"""),
 
 			"layout:divider" : True,
 
@@ -81,10 +82,10 @@ Gaffer.Metadata.registerNode(
 		"transform" : {
 
 			"description" :
-			"""
+			_("""
 			The transform for the group itself. This will be
 			inherited by the objects parented under it.
-			""",
+			"""),
 
 		},
 

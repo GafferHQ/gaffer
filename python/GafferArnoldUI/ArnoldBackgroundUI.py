@@ -36,16 +36,17 @@
 
 import Gaffer
 import GafferArnold
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferArnold.ArnoldBackground,
 
 	"description",
-	"""
+	_("""
 	Assigns a background shader. This is stored as an "ai:background" option
 	in Gaffer's globals, and translated onto the `options.background` parameter
 	in Arnold.
-	""",
+	"""),
 
 )

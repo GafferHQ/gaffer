@@ -39,13 +39,14 @@ import IECore
 import Gaffer
 import GafferUI
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.UDIMQuery,
 
 	"description",
-	"""
+	_("""
 	Gathering information about what UDIMs are present in meshes matching
 	the input scene and filter, and which meshes they belong to.
 
@@ -68,26 +69,26 @@ Gaffer.Metadata.registerNode(
 			},
 	}
 	```
-	""",
+	"""),
 
 	plugs = {
 
 		"in" : {
 
 			"description" :
-			"""
+			_("""
 			The scene to query UDIMs from.
-			""",
+			"""),
 
 		},
 
 		"filter" : {
 
 			"description" :
-			"""
+			_("""
 			The filter used to control which parts of the scene are
 			processed. A Filter node should be connected here.
-			""",
+			"""),
 
 			"layout:section" : "Filter",
 			"noduleLayout:section" : "right",
@@ -100,10 +101,10 @@ Gaffer.Metadata.registerNode(
 		"uvSet" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the primitive variable which drives the UVs to compute UDIMs from.
 			Should be a Face-Varying or Vertex interpolated V2f.
-			""",
+			"""),
 			"nodule:type" : "",
 
 		},
@@ -111,10 +112,10 @@ Gaffer.Metadata.registerNode(
 		"attributes" : {
 
 			"description" :
-			"""
+			_("""
 			A space separated list of attribute names ( may use wildcards ), to collect from meshes
 			which have UDIMs, and return as part of the output.  Inherited attributes are included.
-			""",
+			"""),
 			"nodule:type" : "",
 
 		},
@@ -122,9 +123,9 @@ Gaffer.Metadata.registerNode(
 		"out" : {
 
 			"description" :
-			"""
+			_("""
 			A 3 level dictionary of results stored in a CompoundObject, as described in the node description.
-			""",
+			"""),
 
 			"nodule:type" : "GafferUI::StandardNodule",
 

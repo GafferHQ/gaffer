@@ -36,13 +36,14 @@
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.Encapsulate,
 
 	"description",
-	"""
+	_("""
 	Encapsulates a portion of the scene by collapsing the hierarchy
 	and replacing it with a procedural which will be evaluated at
 	render time.
@@ -67,6 +68,6 @@ Gaffer.Metadata.registerNode(
 	> - The `usd:purpose` attribute is not inherited - only
 	>   attributes within the encapsulated hierarchy are
 	>   considered.
-	""",
+	"""),
 
 )

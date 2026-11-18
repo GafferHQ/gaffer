@@ -43,6 +43,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 from Qt import QtCore
 from Qt import QtWidgets
@@ -93,17 +94,17 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 				self.__toggleFilterButton = GafferUI.Button( image = "search.png", hasFrame = False )
 				self.__toggleFilterButton.clickedSignal().connect( Gaffer.WeakMethod( self.__toggleFilterButtonClicked ) )
 
-				self.__patternWidget = GafferUI.TextWidget( toolTip = "Row filter pattern" )
+				self.__patternWidget = GafferUI.TextWidget( toolTip = _("Row filter pattern") )
 				self.__patternWidget.setText( Gaffer.Metadata.value( plug, "spreadsheet:rowFilter" ) )
-				self.__patternWidget.setPlaceholderText( "Filter..." )
+				self.__patternWidget.setPlaceholderText( _("Filter...") )
 				# Ignore the width in X so that the widget is sized based on the width dictated by `rowNamesTable`.
 				self.__patternWidget._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Fixed )
 				self.__patternWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__patternEditingFinished ) )
 
-				self.__refreshFilterButton = GafferUI.Button( image = "refresh.png", hasFrame = False, toolTip = "Click to refresh row filter" )
+				self.__refreshFilterButton = GafferUI.Button( image = "refresh.png", hasFrame = False, toolTip = _("Click to refresh row filter") )
 				self.__refreshFilterButton.clickedSignal().connect( Gaffer.WeakMethod( self.__refreshFilterButtonClicked ) )
 
-				self.__defaultLabel = GafferUI.Label( "<h4>Default</h4>", horizontalAlignment = GafferUI.HorizontalAlignment.Right )
+				self.__defaultLabel = GafferUI.Label( _("<h4>Default</h4>"), horizontalAlignment = GafferUI.HorizontalAlignment.Right )
 				self.__defaultLabel._qtWidget().setObjectName( "gafferDefaultRowLabel" )
 				# Ignore the width in X so that the label is sized based on the width dictated by `rowNamesTable`.
 				self.__defaultLabel._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Fixed )
@@ -127,7 +128,7 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 				GafferUI.Spacer( imath.V2i( 1, 4 ), maximumSize = imath.V2i( 1, 4 ) )
 
 				self.__addColumnButton = GafferUI.MenuButton(
-					image="plus.png", hasFrame=False, toolTip = "Click to add column, or drop plug to connect",
+					image="plus.png", hasFrame=False, toolTip = _("Click to add column, or drop plug to connect"),
 					menu = GafferUI.Menu( Gaffer.WeakMethod( self.__addColumnMenuDefinition ) )
 				)
 				self.__addColumnButton.dragEnterSignal().connect( Gaffer.WeakMethod( self.__addColumnButtonDragEnter ) )
@@ -180,7 +181,7 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 			self.__addRowButton = GafferUI.MenuButton(
 				image = "plus.png", hasFrame = False,
-				toolTip = "Click to add row, or drop new row names",
+				toolTip = _("Click to add row, or drop new row names"),
 				menu = GafferUI.Menu( Gaffer.WeakMethod( self.__addRowMenuDefinition ) ),
 				immediate = True,
 				parenting = {
@@ -356,7 +357,7 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __addColumn( self, menu, plugType ) :
 
-		d = GafferUI.TextInputDialogue( initialText = "column", title = "Enter name", confirmLabel = "Add Column" )
+		d = GafferUI.TextInputDialogue( initialText = "column", title = _("Enter name"), confirmLabel = _("Add Column") )
 		name = d.waitForText( parentWindow = menu.ancestor( GafferUI.Window ) )
 		if not name :
 			return
@@ -412,17 +413,17 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 			rowPlug = plug.ancestor( Gaffer.Spreadsheet.RowPlug )
 			if rowPlug == rowPlug.parent().defaultRow() :
-				rowName = "Default"
+				rowName = _("Default")
 			else :
 				with self.context() :
-					rowName = rowPlug["name"].getValue() or "unnamed"
+					rowName = rowPlug["name"].getValue() or _("unnamed")
 
 			columnPlug = self.getPlug().defaultRow()["cells"][plug.getName()]
 			columnName = Gaffer.Metadata.value( columnPlug, "spreadsheet:columnLabel" )
 			if not columnName :
 				columnName = IECore.CamelCase.toSpaced( columnPlug.getName() )
 
-			status = "Row : {}, Column : {}".format(
+			status = _("Row : {}, Column : {}").format(
 				rowName,
 				columnName
 			)
@@ -461,7 +462,7 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__patternWidget.setVisible( self.__rowFilterEnabled )
 		self.__refreshFilterButton.setVisible( self.__rowFilterEnabled )
 		self.__toggleFilterButton.setImage( "searchOn.png" if self.__rowFilterEnabled else "search.png" )
-		self.__toggleFilterButton.setToolTip( "Click to disable row filter" if self.__rowFilterEnabled else "Click to enable row filter" )
+		self.__toggleFilterButton.setToolTip( _("Click to disable row filter") if self.__rowFilterEnabled else _("Click to enable row filter") )
 
 	def __toggleFilterButtonClicked( self, *unused ) :
 

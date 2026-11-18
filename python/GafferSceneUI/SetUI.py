@@ -43,6 +43,7 @@ import GafferUI
 
 import GafferScene
 import GafferSceneUI
+from GafferUI.i18n import _
 
 ## Menu Presentation
 # -----------------
@@ -77,12 +78,12 @@ Gaffer.Metadata.registerNode(
 	GafferScene.Set,
 
 	"description",
-	"""
+	_("""
 	Creates and edits sets of objects. Each set contains a list of paths
 	to locations within the scene. After creation, sets can be used
 	by the SetFilter to limit scene operations to only the members of
 	a particular set.
-	""",
+	"""),
 
 	"layout:activator:pathsInUse", lambda node : node["paths"].getInput() is not None or len( node["paths"].getValue() ),
 
@@ -91,7 +92,7 @@ Gaffer.Metadata.registerNode(
 		"mode" : {
 
 			"description" :
-			"""
+			_("""
 			Create mode creates a new set containing only the
 			specified paths. If a set with the same name already
 			exists, it is replaced.
@@ -103,7 +104,7 @@ Gaffer.Metadata.registerNode(
 			Remove mode removes the specified paths from an
 			existing set. If the set does not exist yet, nothing
 			is done.
-			""",
+			"""),
 
 			"preset:Create" : GafferScene.Set.Mode.Create,
 			"preset:Add" : GafferScene.Set.Mode.Add,
@@ -116,12 +117,12 @@ Gaffer.Metadata.registerNode(
 		"name" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the set that will be created or edited. Multiple sets
 			may be created or modified by entering their names separated by
 			spaces. Wildcards may also be used to match multiple input sets to
 			be modified.
-			""",
+			"""),
 
 			"ui:scene:acceptsSetName" : True,
 
@@ -130,25 +131,25 @@ Gaffer.Metadata.registerNode(
 		"setVariable" : {
 
 			"description" :
-			"""
+			_("""
 			A context variable created to pass the name of the set
 			being processed to the nodes connected to the `filter`
 			plug. This can be used to vary the filter for each set.
-			""",
+			"""),
 
 		},
 
 		"paths" : {
 
 			"description" :
-			"""
+			_("""
 			The paths to be added to or removed from the set.
 
 			> Caution : This plug is deprecated and will be removed
 			in a future release. No validity checks are performed on
 			these paths, so it is possible to accidentally generate
 			invalid sets.
-			""",
+			"""),
 
 			"vectorDataPlugValueWidget:dragPointer" : "objects",
 			"layout:visibilityActivator" : "pathsInUse",
@@ -158,9 +159,9 @@ Gaffer.Metadata.registerNode(
 		"filter" : {
 
 			"description" :
-			"""
+			_("""
 			Defines the locations to be added to or removed from the set.
-			""",
+			"""),
 
 		},
 

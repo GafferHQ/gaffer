@@ -40,6 +40,7 @@ import IECore
 import Gaffer
 import GafferUI
 import GafferScene
+from GafferUI.i18n import _
 
 # Similar to CompoundDataPlugValueWidget, but different enough that the code can't be shared
 class _ContextVariableListWidget( GafferUI.PlugValueWidget ) :
@@ -267,7 +268,7 @@ Gaffer.Metadata.registerNode(
 	GafferScene.Instancer,
 
 	"description",
-	"""
+	_("""
 	Copies from an input scene onto the vertices of a target
 	object, making one copy per vertex. Additional vertex primitive
 	variables on the target object can be used to choose between
@@ -281,7 +282,7 @@ Gaffer.Metadata.registerNode(
 	> supported wherever a variable with `Vertex` interpolation
 	> is expected, provided that the primitive variable has the
 	> same size as the equivalent `Vertex` variable.
-	""",
+	"""),
 
 	"layout:section:Settings.General:collapsed", False,
 	"layout:section:Settings.Transforms:collapsed", False,
@@ -346,11 +347,11 @@ Gaffer.Metadata.registerNode(
 		"parent" : {
 
 			"description" :
-			"""
+			_("""
 			Using the `parent` plug to select the source is now deprecated, please use a filter instead.
 			This plug is still supported for backwards compatibility, but is incompatible with recent features,
 			like accurately reporting variation counts.
-			""",
+			"""),
 
 			"layout:section" : "Settings.General",
 
@@ -359,11 +360,11 @@ Gaffer.Metadata.registerNode(
 		"name" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the location the instances will be
 			generated below. This will be parented directly
 			under the parent location.
-			""",
+			"""),
 
 			"layout:section" : "Settings.General",
 
@@ -372,7 +373,7 @@ Gaffer.Metadata.registerNode(
 		"prototypes" : {
 
 			"description" :
-			"""
+			_("""
 			The scene containing the prototypes to be applied to
 			each vertex. Use the `prototypeMode` and associated
 			plugs to control the mapping between prototypes and
@@ -380,7 +381,7 @@ Gaffer.Metadata.registerNode(
 
 			Note that the prototypes are not limited to being a single
 			object - they can have arbitrary child hierarchies.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "",
 
@@ -389,7 +390,7 @@ Gaffer.Metadata.registerNode(
 		"prototypeMode" : {
 
 			"description" :
-			"""
+			_("""
 			The method used to define how the prototypes map
 			onto each instance.
 
@@ -413,7 +414,7 @@ Gaffer.Metadata.registerNode(
 
 			  > Note : it is advisable to provide an indexed string
 			  array in order to limit the number of unique prototypes.
-			""",
+			"""),
 
 			"preset:Indexed (Roots List)" : GafferScene.Instancer.PrototypeMode.IndexedRootsList,
 			"preset:Indexed (Roots Variable)" : GafferScene.Instancer.PrototypeMode.IndexedRootsVariable,
@@ -426,12 +427,12 @@ Gaffer.Metadata.registerNode(
 		"prototypeIndex" : {
 
 			"description" :
-			"""
+			_("""
 			The name of a per-vertex integer primitive variable used
 			to determine which prototype is applied to the vertex.
 			This plug is used in "Indexed (Roots List)" mode as well
 			as "Indexed (Roots Variable)" mode.
-			""",
+			"""),
 
 			"userDefault" : "prototypeIndex",
 			"layout:section" : "Prototypes",
@@ -442,7 +443,7 @@ Gaffer.Metadata.registerNode(
 		"prototypeRoots" : {
 
 			"description" :
-			"""
+			_("""
 			If `prototypeMode` is set to "Indexed (Roots Variable)",
 			then this should specify the name of a constant string
 			array primitive variable used to map between `prototypeIndex`
@@ -454,7 +455,7 @@ Gaffer.Metadata.registerNode(
 			for each instance.
 
 			This plug is not used in "Indexed (Roots List)" mode.
-			""",
+			"""),
 
 			"layout:section" : "Prototypes",
 			"layout:visibilityActivator" : "modeIsNotIndexedRootsList",
@@ -464,11 +465,11 @@ Gaffer.Metadata.registerNode(
 		"prototypeRootsList" : {
 
 			"description" :
-			"""
+			_("""
 			An explicit list of paths used to map between `prototypeIndex`
 			and paths in the prototypes scene. This plug is only used in
 			"Indexed (Roots List)" mode.
-			""",
+			"""),
 
 			"layout:section" : "Prototypes",
 			"layout:visibilityActivator" : "modeIsIndexedRootsList",
@@ -478,13 +479,13 @@ Gaffer.Metadata.registerNode(
 		"id" : {
 
 			"description" :
-			"""
+			_("""
 			The name of a per-vertex integer primitive variable
 			used to give each instance a unique identity. This
 			is useful when points are added and removed over time,
 			as is often the case in a particle simulation. The
 			id is used to name the instance in the output scene.
-			""",
+			"""),
 
 			"layout:section" : "Settings.General",
 
@@ -493,11 +494,11 @@ Gaffer.Metadata.registerNode(
 		"omitDuplicateIds" : {
 
 			"description" :
-			"""
+			_("""
 			When off, having the same ids on multiple points is considered
 			an error. Setting on will allow a render to proceed, with all
 			instances that share an id being omitted.
-			""",
+			"""),
 
 			"layout:section" : "Settings.General",
 
@@ -508,10 +509,10 @@ Gaffer.Metadata.registerNode(
 		"position" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the per-vertex primitive variable used
 			to specify the position of each instance.
-			""",
+			"""),
 
 			"layout:section" : "Settings.Transforms",
 
@@ -520,13 +521,13 @@ Gaffer.Metadata.registerNode(
 		"orientation" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the per-vertex primitive variable used
 			to specify the orientation of each instance. This
 			must be provided as a quaternion : use an upstream
 			Orientation node to convert from other representations
 			before instancing.
-			""",
+			"""),
 
 			"userDefault" : "orientation",
 			"layout:section" : "Settings.Transforms",
@@ -536,12 +537,12 @@ Gaffer.Metadata.registerNode(
 		"scale" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the per-vertex primitive variable used
 			to specify the scale of each instance. Scale can be
 			provided as a float for uniform scaling, or as a vector
 			to define different scaling in each axis.
-			""",
+			"""),
 
 			"userDefault" : "scale",
 			"layout:section" : "Settings.Transforms",
@@ -551,14 +552,14 @@ Gaffer.Metadata.registerNode(
 		"inactiveIds" : {
 
 			"description" :
-			"""
+			_("""
 			A space separated list of names of primitive variables specifying instances to make inactive.
 			Inactive instances are not output from the instancer or rendered.
 
 			Each primitive variable either must be a constant vector of type Int or Int64 with a list of
 			matching ids to deactivate, or it  must be a vertex bool primitive variable, in which case it
 			will deactivate the instance for the corresponding vertex if the value is true.
-			""",
+			"""),
 
 			# This user default will pick up any of the standard USD ways of controlling this.
 			"userDefault" : "inactiveIds invisibleIds",
@@ -570,12 +571,12 @@ Gaffer.Metadata.registerNode(
 		"attributes" : {
 
 			"description" :
-			"""
+			_("""
 			The names of per-vertex primitive variables to be
 			turned into per-instance attributes. Names should
 			be separated by spaces and can use Gaffer's
 			standard wildcards.
-			""",
+			"""),
 
 			"layout:section" : "Settings.Attributes",
 
@@ -584,10 +585,10 @@ Gaffer.Metadata.registerNode(
 		"attributePrefix" : {
 
 			"description" :
-			"""
+			_("""
 			A prefix added to all per-instance attributes specified
 			via the \"attributes\" plug.
-			""",
+			"""),
 
 			"userDefault" : "user:",
 			"layout:section" : "Settings.Attributes",
@@ -597,7 +598,7 @@ Gaffer.Metadata.registerNode(
 		"encapsulate" : {
 
 			"description" :
-			"""
+			_("""
 			Converts instances into a capsule, which won't
 			be expanded until you Unencapsulate or render. When keeping
 			these locations encapsulated, downstream nodes can't see the
@@ -610,7 +611,7 @@ Gaffer.Metadata.registerNode(
 			- Fewer unnecessary updates during interactive rendering.
 			- Faster performance in renderer backends with special
 			instancer capsule support ( ie. Arnold )
-			""",
+			"""),
 
 			"layout:section" : "Settings.Encapsulation",
 
@@ -618,21 +619,21 @@ Gaffer.Metadata.registerNode(
 
 		"seedEnabled" : {
 			"description" :
-			"""
+			_("""
 			Creates a seed context variable based on a hash of the instance ID, which could come
 			from the primitive varable specified in the `id` plug or otherwise the point index.
 			This integer is available to the upstream prototypes network, and might typically
 			be used with a Random node to randomise properties of the prototype.
-			""",
+			"""),
 			"layout:section" : "Context Variations",
 			"layout:index" : 101,
 		},
 
 		"seedVariable" : {
 			"description" :
-			"""
+			_("""
 			Name of the context variable to put the seed value in.
-			""",
+			"""),
 			"layout:section" : "Context Variations",
 			"layout:index" : 102,
 			"layout:visibilityActivator" : "seedEnabled",
@@ -640,10 +641,10 @@ Gaffer.Metadata.registerNode(
 
 		"seeds" : {
 			"description" :
-			"""
+			_("""
 			The number of possible seed values.  Increasing this allows for more different variations
 			to be driven by the seed, increasing the total number of variations required.
-			""",
+			"""),
 			"layout:section" : "Context Variations",
 			"layout:index" : 103,
 			"layout:visibilityActivator" : "seedEnabled",
@@ -652,10 +653,10 @@ Gaffer.Metadata.registerNode(
 
 		"seedPermutation" : {
 			"description" :
-			"""
+			_("""
 			Changing the seedPermutation changes the mapping of ids to seeds.  This results in a different
 			grouping of which instances end up with the same seed.
-			""",
+			"""),
 			"layout:section" : "Context Variations",
 			"layout:index" : 104,
 			"layout:visibilityActivator" : "seedEnabled",
@@ -664,12 +665,12 @@ Gaffer.Metadata.registerNode(
 
 		"rawSeed" : {
 			"description" :
-			"""
+			_("""
 			Enable this in rare cases when it is required to pass through every single id directly into the seed
 			context variable.  This is very expensive, because every single instance will need a separate
 			context, but is sometimes useful, and may be an acceptable cost if there isn't a huge number of
 			total instances.
-			""",
+			"""),
 			"layout:section" : "Context Variations",
 			"layout:index" : 105,
 			"layout:visibilityActivator" : "seedEnabled",
@@ -677,12 +678,12 @@ Gaffer.Metadata.registerNode(
 
 		"contextVariables" : {
 			"description" :
-			"""
+			_("""
 			Specifies context variables to be created from primitive variables.  These variables are
 			available to upstream prototypes network, allowing the prototypes scene to be generated
 			differently depending on the source point.  Supports quantization to avoid re-evaluating the
 			prototypes scene too many times.
-			""",
+			"""),
 			"layout:section" : "Context Variations",
 			"layout:index" : 106,
 			"plugValueWidget:type" : "GafferSceneUI.InstancerUI._ContextVariableListWidget",
@@ -694,56 +695,56 @@ Gaffer.Metadata.registerNode(
 
 		"contextVariables.*.name" : {
 			"description" :
-			"""
+			_("""
 			Name of the primitive variable to read.  The same name will be used for the context variables
 			available to the upstream prototype network.
-			""",
+			"""),
 		},
 
 		"contextVariables.*.enabled" : {
 			"description" :
-			"""
+			_("""
 			Puts this variable in the context for the upstream prototypes network.
-			""",
+			"""),
 		},
 
 		"contextVariables.*.quantize" : {
 			"description" :
-			"""
+			_("""
 			Quantizing to a large interval reduces the number of variations created.  For example, if the primvar varies from 0 to 1, and you quantize to 0.2, then only 6 unique variations will be created, even if there are millions of instances.  This dramatically improves performance, but if you need to see more continuous changes in the primvar values, you will need to reduce quantize, or in extreme cases where you need full accuracy and don't care about performance, set it to 0.
-			""",
+			"""),
 		},
 
 		"timeOffset" : {
 			"description" :
-			"Modify the current time when evaluating the prototypes network, by adding a primvar.",
+			_("Modify the current time when evaluating the prototypes network, by adding a primvar."),
 			"layout:section" : "Context Variations",
 			"layout:index" : 107,
 			"plugValueWidget:type" : "GafferSceneUI.InstancerUI._TimeOffsetContextVariableWidget",
 		},
 		"timeOffset.name" : {
 			"description" :
-			"""
+			_("""
 			Name of a primitive variable to add to the time.  Must be a float or int primvar.  It will
 			be treated as a number of frames, and can be negative or positive to adjust time forward or back.
-			""",
+			"""),
 		},
 		"timeOffset.enabled" : {
 			"description" :
-			"""
+			_("""
 			Modifies the current time for the network upstream of the prototypes plug.
-			""",
+			"""),
 		},
 		"timeOffset.quantize" : {
 			"description" :
-			"""
+			_("""
 			Quantizes the variable value before adding it to the time.  Quantizing to a large interval reduces the number of variations created.  For example, if the primvar varies from 0 to 1, and you quantize to 0.2, then only 6 unique variations will be created, even if there are millions of instances.  This dramatically improves performance, but if you need to see more continuous changes in the primvar values, you will need to reduce quantize, or in extreme cases where you need full accuracy and don't care about performance, set it to 0.
-			""",
+			"""),
 		},
 
 		"variations" : {
 			"description" :
-			"""
+			_("""
 			This special output plug returns an CompoundData dictionary with counts about how many
 			variations are being created.  For each context variable variable being set ( including
 			"frame" when using Time Offset ), there is an entry with the name of the context variable,
@@ -757,7 +758,7 @@ Gaffer.Metadata.registerNode(
 			extra evaluations of the `prototypes` scene, and can dramatically increase the cost of the Instancer.
 
 			Note that variations are measured across all locations in the scene where the instancer is filtered.
-			""",
+			"""),
 			"layout:section" : "Context Variations",
 			"layout:index" : 108,
 			"plugValueWidget:type" : "GafferSceneUI.InstancerUI._TotalCountWidget",

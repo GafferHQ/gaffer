@@ -36,48 +36,49 @@
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.CopyPrimitiveVariables,
 
 	"description",
-	"""
+	_("""
 	Copies primitive variables from a source scene, adding them to the objects
 	of the main input scene.
-	""",
+	"""),
 
 	plugs = {
 
 		"source" : {
 
 			"description" :
-			"""
+			_("""
 			The scene from which the primitive variables are copied.
-			""",
+			"""),
 
 		},
 
 		"primitiveVariables" : {
 
 			"description" :
-			"""
+			_("""
 			The names of the primitive variables to be copied. These should be
 			separated by spaces and can use Gaffer's standard wildcards
 			to match multiple variables.
-			""",
+			"""),
 
 		},
 
 		"sourceLocation" : {
 
 			"description" :
-			"""
+			_("""
 			The location in the source scene that primitive variables are copied from.
 			By default, variables are copied from the location equivalent to the one
 			they are being copied to. It is not an error if the location to be copied from
 			does not exist; instead, no variables are copied.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
 			"scenePathPlugValueWidget:scene" : "source",
@@ -87,19 +88,19 @@ Gaffer.Metadata.registerNode(
 		"prefix" : {
 
 			"description" :
-			"""
+			_("""
 			A prefix applied to the names of the copied primitive variables.
-			""",
+			"""),
 
 		},
 
 		"ignoreIncompatible" : {
 
 			"description" :
-			"""
+			_("""
 			Causes the node to not error when attempting to copy primitive variables from
 			the source object that are not compatible with the destination object.
-			""",
+			"""),
 		}
 
 	}

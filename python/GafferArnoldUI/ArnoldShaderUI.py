@@ -50,6 +50,7 @@ import GafferUI
 import GafferImageUI
 import GafferSceneUI
 import GafferArnold
+from GafferUI.i18n import _
 
 ##########################################################################
 # Utilities to make it easier to work with the Arnold API, which has a
@@ -446,12 +447,12 @@ def __nodeDescription( node ) :
 	if isinstance( node, GafferArnold.ArnoldShader ) :
 		return __metadata[node["name"].getValue()].get(
 			"description",
-			"""Loads shaders for use in Arnold renders. Use the ShaderAssignment node to assign shaders to objects in the scene.""",
+			_("""Loads shaders for use in Arnold renders. Use the ShaderAssignment node to assign shaders to objects in the scene."""),
 		)
 	else :
 		return __metadata[node["__shader"]["name"].getValue()].get(
 			"description",
-			"""Loads an Arnold light shader and uses it to output a scene with a single light."""
+			_("""Loads an Arnold light shader and uses it to output a scene with a single light.""")
 		)
 
 def __nodeMetadata( node, name ) :

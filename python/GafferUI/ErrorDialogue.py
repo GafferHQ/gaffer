@@ -41,6 +41,7 @@ import imath
 import IECore
 
 import GafferUI
+from GafferUI.i18n import _
 
 class ErrorDialogue( GafferUI.Dialogue ) :
 
@@ -50,7 +51,7 @@ class ErrorDialogue( GafferUI.Dialogue ) :
 	#  - message : A simple (string) message to display.
 	#  - messages : A list of messages in the format stored by `IECore.CapturingMessageHandler.messages`
 	#  - details : A string containing additional details to be shown in a collapsed section.
-	def __init__( self, title, message = None, details = None, messages = None, closeLabel = "Close", **kw ) :
+	def __init__( self, title, message = None, details = None, messages = None, closeLabel = _("Close"), **kw ) :
 
 		GafferUI.Dialogue.__init__( self, title, sizeMode=GafferUI.Window.SizeMode.Manual, **kw )
 
@@ -79,7 +80,7 @@ class ErrorDialogue( GafferUI.Dialogue ) :
 				messageWidget.setMessages( messages )
 
 			if details is not None :
-				with GafferUI.Collapsible( label = "Details", collapsed = True ) :
+				with GafferUI.Collapsible( label = _("Details"), collapsed = True ) :
 					GafferUI.MultiLineTextWidget(
 						text = details,
 						editable = False,
@@ -148,7 +149,7 @@ class ErrorDialogue( GafferUI.Dialogue ) :
 	## Displays an exception in a modal dialogue. By default the currently handled exception is displayed
 	# but another exception can be displayed by specifying excInfo in the same format as returned by sys.exc_info()
 	@staticmethod
-	def displayException( title="Error", messagePrefix=None, withDetails=True, parentWindow=None, exceptionInfo=None ) :
+	def displayException( title=_("Error"), messagePrefix=None, withDetails=True, parentWindow=None, exceptionInfo=None ) :
 
 		if exceptionInfo is None :
 			exceptionInfo = sys.exc_info()

@@ -41,6 +41,7 @@ import GafferUI
 
 import GafferScene
 import GafferSceneUI
+from GafferUI.i18n import _
 
 ##########################################################################
 # Metadata
@@ -51,9 +52,9 @@ Gaffer.Metadata.registerNode(
 	GafferScene.MergeCurves,
 
 	"description",
-	"""
+	_("""
 	Merge curves from all filtered location into a single curves primitive, or into
 	multiple destinations.
-	""",
+	"""),
 
 )

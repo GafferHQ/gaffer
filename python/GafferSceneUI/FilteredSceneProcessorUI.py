@@ -40,6 +40,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 import GafferScene
 import GafferSceneUI
@@ -53,20 +54,20 @@ Gaffer.Metadata.registerNode(
 	GafferScene.FilteredSceneProcessor,
 
 	"description",
-	"""
+	_("""
 	The base type for scene processors which use a Filter node to control
 	which part of the scene is affected.
-	""",
+	"""),
 
 	plugs = {
 
 		"filter" : {
 
 			"description" :
-			"""
+			_("""
 			The filter used to control which parts of the scene are
 			processed. A Filter node should be connected here.
-			""",
+			"""),
 
 			"layout:section" : "Filter",
 			"noduleLayout:section" : "right",
@@ -122,7 +123,7 @@ def appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition ) :
 		return
 
 	menuDefinition.append( "/FilteredSceneProcessorDivider", { "divider" : True } )
-	menuDefinition.append( "/Select Affected Objects", { "command" : functools.partial( __selectAffected, node ) } )
+	menuDefinition.append( "/" + _("Select Affected Objects"), { "command" : functools.partial( __selectAffected, node ), "label" : _("Select Affected Objects") } )
 
 ##########################################################################
 # NodeEditor tool menu
@@ -134,4 +135,4 @@ def appendNodeEditorToolMenuDefinitions( nodeEditor, node, menuDefinition ) :
 		return
 
 	menuDefinition.append( "/FilteredSceneProcessorDivider", { "divider" : True } )
-	menuDefinition.append( "/Select Affected Objects", { "command" : functools.partial( __selectAffected, node ) } )
+	menuDefinition.append( "/" + _("Select Affected Objects"), { "command" : functools.partial( __selectAffected, node ), "label" : _("Select Affected Objects") } )

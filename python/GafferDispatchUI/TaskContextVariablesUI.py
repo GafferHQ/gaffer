@@ -36,25 +36,26 @@
 
 import Gaffer
 import GafferDispatch
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferDispatch.TaskContextVariables,
 
 	"description",
-	"""
+	_("""
 	Adds variables which can be referenced by upstream expressions.
-	""",
+	"""),
 
 	plugs = {
 
 		"variables" : {
 
 			"description" :
-			"""
+			_("""
 			The variables to be added - arbitrary numbers of variables
 			can be added here.
-			""",
+			"""),
 
 		}
 

@@ -39,6 +39,7 @@ import functools
 import IECore
 
 import Gaffer
+from GafferUI.i18n import _
 
 # Metadata registration
 # ---------------------
@@ -51,7 +52,7 @@ Gaffer.Metadata.registerNode(
 	Gaffer.Spreadsheet,
 
 	"description",
-	"""
+	_("""
 	Provides a spreadsheet designed for easy management of sets of
 	associated plug values. Each column of the spreadsheet corresponds
 	to an output value that can be connected to drive a plug on another
@@ -81,7 +82,7 @@ Gaffer.Metadata.registerNode(
 	- **<kbd>Shift</kbd> + <kbd>Up</kbd>**, **<kbd>Down</kbd>**, **<kbd>Left</kbd>**, **<kbd>Right</kbd>** Extend cell selection.
 	- **<kbd>Ctrl</kbd> + <kbd>Up</kbd>**, **<kbd>Down</kbd>**, **<kbd>Left</kbd>**, **<kbd>Right</kbd>** Move keyboard focus.
 	- **<kbd>Space</kbd>** Toggle selection state of cell with keyboard focus.
-	""",
+	"""),
 
 	"nodeGadget:type", "GafferUI::AuxiliaryNodeGadget",
 	"nodeGadget:shape", "oval",
@@ -100,11 +101,11 @@ Gaffer.Metadata.registerNode(
 		"selector" : {
 
 			"description" :
-			"""
+			_("""
 			The value that the row names will be matched against.
 			Typically this will refer to a Context Variable using
 			the `${variableName}` syntax.
-			""",
+			"""),
 
 			"preset:Render Pass" : "${renderPass}",
 
@@ -115,59 +116,59 @@ Gaffer.Metadata.registerNode(
 		"rows" : {
 
 			"description" :
-			"""
+			_("""
 			Holds a child RowPlug for each row in the spreadsheet.
-			""",
+			"""),
 
 		},
 
 		"rows.default" : {
 
 			"description" :
-			"""
+			_("""
 			The default row. This provides output values when no other
 			row matches the `selector`.
-			""",
+			"""),
 
 		},
 
 		"rows.*.name" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the row. This is matched against the `selector`
 			to determine which row is chosen to be passed to the output.
 			May contain multiple space separated names and any of Gaffer's
 			standard wildcards.
-			""",
+			"""),
 
 		},
 
 		"rows.*.enabled" : {
 
 			"description" :
-			"""
+			_("""
 			Enables or disables this row. Disabled rows are ignored.
-			""",
+			"""),
 
 		},
 
 		"rows.*.cells" : {
 
 			"description" :
-			"""
+			_("""
 			Contains a child CellPlug for each column in the spreadsheet.
-			""",
+			"""),
 
 		},
 
 		"out" : {
 
 			"description" :
-			"""
+			_("""
 			The outputs from the spreadsheet. Contains a child plug for each
 			column in the spreadsheet.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "",
 
@@ -176,9 +177,9 @@ Gaffer.Metadata.registerNode(
 		"enabledRowNames" : {
 
 			"description" :
-			"""
+			_("""
 			An output plug containing the names of all currently enabled rows.
-			""",
+			"""),
 
 			"layout:section" : "Advanced",
 			"plugValueWidget:type" : "GafferUI.ConnectionPlugValueWidget"
@@ -188,7 +189,7 @@ Gaffer.Metadata.registerNode(
 		"resolvedRows" : {
 
 			"description" :
-			"""
+			_("""
 			An output plug containing the resolved cell values for all enabled
 			rows, This can be used to drive expressions in situations where the
 			standard `out` plug is not useful, or would be awkward to use. The
@@ -204,7 +205,7 @@ Gaffer.Metadata.registerNode(
 
 			> Note : The output is completely independent of the value of
 			> `selector`.
-			""",
+			"""),
 
 			"layout:section" : "Advanced",
 			"plugValueWidget:type" : "GafferUI.ConnectionPlugValueWidget"
@@ -214,7 +215,7 @@ Gaffer.Metadata.registerNode(
 		"activeRowIndex" : {
 
 			"description" :
-			"""
+			_("""
 			An output containing the index of the row that matches the selector
 			in the current context.
 
@@ -223,7 +224,7 @@ Gaffer.Metadata.registerNode(
 			> convert to `True`). Therefore `Spreadsheet.activeRowIndex` can
 			> be connected to a Node's `enabled` plug to disable the node when
 			> no row is matched.
-			""",
+			"""),
 
 			"layout:section" : "Advanced",
 
@@ -275,7 +276,7 @@ def __forwardedMetadata( plug, key ) :
 
 for key in [
 	"description",
-	"spreadsheet:columnLabel",
+	_("spreadsheet:columnLabel"),
 	"spreadsheet:columnWidth",
 	"plugValueWidget:type",
 	"presetsPlugValueWidget:allowCustom",

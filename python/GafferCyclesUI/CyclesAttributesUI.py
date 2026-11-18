@@ -36,6 +36,7 @@
 
 import Gaffer
 import GafferCycles
+from GafferUI.i18n import _
 
 def __attributeSummary( plug, attributes ) :
 
@@ -119,9 +120,9 @@ Gaffer.Metadata.registerNode(
 	GafferCycles.CyclesAttributes,
 
 	"description",
-	"""
+	_("""
 	Applies Cycles attributes to objects in the scene.
-	""",
+	"""),
 
 	plugs = {
 

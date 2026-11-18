@@ -43,13 +43,14 @@ import IECore
 import Gaffer
 import GafferUI
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.CameraTweaks,
 
 	"description",
-	"""
+	_("""
 	Applies modifications, also known as "tweaks" to camera
 	parameters or render options in the scene. Supports any number
 	of tweaks, and custom camera parameters. Tweaks to camera
@@ -64,7 +65,7 @@ Gaffer.Metadata.registerNode(
 	Tweaks are applied in order, so if there is more than one tweak
 	to the same parameter/option, the first tweak will be applied
 	first, then the second, etc.
-	""",
+	"""),
 
 	"layout:section:Settings.Tweaks:collapsed", False,
 
@@ -73,23 +74,23 @@ Gaffer.Metadata.registerNode(
 		"ignoreMissing" : {
 
 			"description" :
-			"""
+			_("""
 			Ignores tweaks that would normally cause an error if the input
 			parameter was missing.
-			""",
+			"""),
 
 		},
 
 		"tweaks" : {
 
 			"description" :
-			"""
+			_("""
 			Add a camera tweak.
 
 			Arbitrary numbers of user defined tweaks may be
 			added as children of this plug via the user
 			interface, or via the CameraTweaks API in Python.
-			""",
+			"""),
 
 			"layout:section" : "Settings.Tweaks",
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
@@ -231,7 +232,7 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 		] :
 
 			if isinstance( item, str ) :
-				result.append( "/Custom/" + item, { "divider" : True } )
+				result.append( "/" + _("Custom") + item, { "divider" : True } )
 			else :
 
 				def creator( plugType ) :

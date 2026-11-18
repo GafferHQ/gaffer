@@ -42,6 +42,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 import GafferScene
 import GafferSceneUI
 
@@ -83,7 +84,7 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 				rootSection = "Filter"
 			)
 
-			self.__locationNameColumn = GafferUI.PathListingWidget.StandardColumn( "Name", "name", GafferUI.PathColumn.SizeMode.Stretch )
+			self.__locationNameColumn = GafferUI.PathListingWidget.StandardColumn( _("Name"), "name", GafferUI.PathColumn.SizeMode.Stretch )
 			self.__visibilityColumn = GafferSceneUI.Private.VisibilityColumn( self.settings()["__adaptedIn"], self.settings()["editScope"] )
 			self.__pathListing = GafferUI.PathListingWidget(
 				GafferScene.ScenePath( self.settings()["__filteredIn"], self.context(), "/" ),
@@ -150,7 +151,7 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 			attributeName,
 			lambda scene, editScope : GafferSceneUI.Private.InspectorColumn(
 				GafferSceneUI.Private.AttributeInspector( scene, editScope, attributeName ),
-				columnName,
+				_(columnName),
 				toolTip
 			),
 			section
@@ -262,7 +263,8 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 				{
 					"command" : Gaffer.WeakMethod( self.__frameSelectedPaths ),
 					"active" : not selection[0].isEmpty(),
-					"shortCut" : "F"
+					"shortCut" : "F",
+					"label" : _("Frame Selection"),
 				}
 			)
 
@@ -354,7 +356,7 @@ class _SectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def _updateFromValues( self, values, exception ) :
 
 		for i in range( 0, self._qtWidget().count() ) :
-			if self._qtWidget().tabText( i ) == values[0] :
+			if self._qtWidget().tabData( i ) == values[0] :
 				try :
 					self.__ignoreCurrentChanged = True
 					self._qtWidget().setCurrentIndex( i )
@@ -368,10 +370,10 @@ class _SectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 			return
 
 		index = self._qtWidget().currentIndex()
-		text = self._qtWidget().tabText( index )
+		originalName = self._qtWidget().tabData( index )
 		with self._blockedUpdateFromValues() :
 			self.getPlug().setValue(
-				text if text != "Main" else ""
+				originalName if originalName and originalName != "Main" else ""
 			)
 
 	def __updateTabs( self ) :
@@ -386,9 +388,12 @@ class _SectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 			for groupKey, sections in AttributeEditor._AttributeEditor__columnRegistry.items() :
 				if IECore.StringAlgo.match( tabGroup, groupKey ) :
 					for section in sections.keys() :
-						self._qtWidget().addTab( section or "Main" )
+						name = section or "Main"
+						idx = self._qtWidget().addTab( _(name) )
+						self._qtWidget().setTabData( idx, name )
 					if "All" not in sections.keys() and len( sections.keys() ) > 1 :
-						self._qtWidget().addTab( "All" )
+						idx = self._qtWidget().addTab( _("All") )
+						self._qtWidget().setTabData( idx, "All" )
 
 			self._qtWidget().setVisible( self._qtWidget().count() > 1 )
 		finally :

@@ -38,6 +38,7 @@ import imath
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 import GafferSceneUI
 
 Gaffer.Metadata.registerNode(
@@ -45,7 +46,7 @@ Gaffer.Metadata.registerNode(
 	GafferSceneUI.CropWindowTool,
 
 	"description",
-	"""
+	_("""
 	Tool for adjusting crop window for rendering. The crop window is displayed as a
 	masked area which can be adjusted using drag and drop.
 
@@ -54,7 +55,7 @@ Gaffer.Metadata.registerNode(
 	that there is something to adjust - typically this will be a StandardOptions
 	node. The name of the plug being manipulated is displayed underneath the
 	cropped area - it can be used to verify that the expected node is being adjusted.
-	""",
+	"""),
 
 	"viewer:shortCut", "C",
 	"order", 5,
@@ -101,11 +102,11 @@ class _StatusWidget( GafferUI.Frame ) :
 
 				with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal ) as self.__controls :
 
-					self.__enabledLabel = GafferUI.Label( "Enabled" )
+					self.__enabledLabel = GafferUI.Label( _("Enabled") )
 					self.__enabled = GafferUI.BoolPlugValueWidget( None )
 					self.__enabled.boolWidget().setDisplayMode( GafferUI.BoolWidget.DisplayMode.Switch )
 
-					button = GafferUI.Button( "Reset" )
+					button = GafferUI.Button( _("Reset") )
 					button._qtWidget().setFixedWidth( 50 )
 					button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
 

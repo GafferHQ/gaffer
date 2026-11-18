@@ -45,6 +45,7 @@ import Gaffer
 import GafferUI
 import GafferScene
 import GafferSceneUI
+from GafferUI.i18n import _
 
 ##########################################################################
 # Metadata
@@ -61,7 +62,7 @@ plugsMetadata = {
 	"projection" : [
 
 		"description",
-		"""
+		_("""
 		The base camera type.
 
 		Supports two standard projections: orthographic and
@@ -69,7 +70,7 @@ plugsMetadata = {
 		renderer-specific implementations, such as spherical, you
 		will need to use a downstream CameraTweaks node to adjust
 		this camera's parameters.
-		""",
+		"""),
 
 		"preset:Perspective", "perspective",
 		"preset:Orthographic", "orthographic",
@@ -83,7 +84,7 @@ plugsMetadata = {
 	"perspectiveMode" : [
 
 		"description",
-		"""
+		_("""
 		The input values to use in defining the perspective
 		projection. They can be either a horizontal field of view
 		(`fieldOfView`), or a film back/sensor (`aperture`) and
@@ -91,7 +92,7 @@ plugsMetadata = {
 		exact measurements from a real camera and lens setup. With
 		either perspective mode, perspective is stored as
 		`aperture` and `focalLength` parameters on the camera.
-		""",
+		"""),
 
 		"preset:Field Of View", GafferScene.Camera.PerspectiveMode.FieldOfView,
 		"preset:Aperture and Focal Length", GafferScene.Camera.PerspectiveMode.ApertureFocalLength,
@@ -105,7 +106,7 @@ plugsMetadata = {
 	"fieldOfView" : [
 
 		"description",
-		"""
+		_("""
 		The horizontal field of view, in degrees.
 
 		In the camera's parameters, projection is always stored as
@@ -113,7 +114,7 @@ plugsMetadata = {
 		View_ perspective mode, the aperture has the fixed
 		dimensions of `1, 1`, and this plug drives the
 		`focalLength` parameter.
-		""",
+		"""),
 
 		"layout:visibilityActivator", "perspectiveModeFOV",
 
@@ -122,7 +123,7 @@ plugsMetadata = {
 	"apertureAspectRatio" : [
 
 		"description",
-		"""
+		_("""
 		The vertical field of view, according to the ratio
 		`(horizontal FOV) / (vertical FOV)`. A value of 1 would
 		result in a square aperture, while a value of 1.778 would
@@ -133,7 +134,7 @@ plugsMetadata = {
 		The final projection of a render using this camera will
 		depend on these settings in combination with the
 		`resolution` and `filmFit` render settings.
-		""",
+		"""),
 
 		"layout:visibilityActivator", "perspectiveModeFOV",
 
@@ -142,7 +143,7 @@ plugsMetadata = {
 	"aperture" : [
 
 		"description",
-		"""
+		_("""
 		The width and height of the aperture when using the
 		_Aperture and Focal Length_ perspective mode. Use this in
 		conjunction with a focal length to define the camera's
@@ -163,7 +164,7 @@ plugsMetadata = {
 		The final field of view of a render will depend on these
 		settings in combination with the `resolution` and `filmFit`
 		render options.
-		""",
+		"""),
 
 		"layout:visibilityActivator", "perspectiveModeFocalLength",
 
@@ -188,7 +189,7 @@ plugsMetadata = {
 	"focalLength" : [
 
 		"description",
-		"""
+		_("""
 		The focal length portion of the _Aperture and Focal Length_
 		perspective mode. This is equivalent to the lens's focal
 		length in a real camera setup. Use this in conjunction with
@@ -204,7 +205,7 @@ plugsMetadata = {
 		The final field of view of a render using this camera will
 		depend on these settings in combination with the
 		`resolution` and `filmFit` render options.
-		""",
+		"""),
 
 		"layout:visibilityActivator", "perspectiveModeFocalLength",
 
@@ -214,10 +215,10 @@ plugsMetadata = {
 	"orthographicAperture" : [
 
 		"description",
-		"""
+		_("""
 		The width and height of the orthographic camera's aperture,
 		in world space units.
-		""",
+		"""),
 
 		"layout:visibilityActivator", "orthographic",
 		"layout:divider", True,
@@ -227,7 +228,7 @@ plugsMetadata = {
 	"apertureOffset" : [
 
 		"description",
-		"""
+		_("""
 		Offsets the aperture parallel to the image plane, to
 		achieve a skewed viewing frustum. The scale of the offset
 		depends on the projection and perspective mode:
@@ -242,19 +243,19 @@ plugsMetadata = {
 		For use in special cases, such as simulating a tilt-shift
 		lens, rendering tiles for a large panorama, or matching a
 		plate that has been asymmetrically cropped.
-		""",
+		"""),
 
 	],
 
 	"fStop" : [
 
 		"description",
-		"""
+		_("""
 		The setting equivalent to the f-number on a camera, which ultimately determines the strength of the depth of field blur. A lower value produces more blur. As in a real camera, `fStop` is defined as `focalLength / lens aperture`.
 
 		To enable depth of field blur (if your renderer supports it), give this plug a value greater than 0, and, on a downstream StandardOptions node, enable the _Depth Of Field_ plug and turn it on.
 
-		""",
+		"""),
 		"layout:section", "Depth of Field",
 
 	],
@@ -262,7 +263,7 @@ plugsMetadata = {
 	"focalLengthWorldScale" : [
 
 		"description",
-		"""
+		_("""
 		The scale to convert from focal length units to world space
 		units. Combined with f-stop to calculate the lens aperture.
 		Set this to scale the lens units into scene units, to
@@ -287,7 +288,7 @@ plugsMetadata = {
 		aperture size. For example, `3.5` would convert 1
 		centimeter (Alembic/USD default) to 35mm, which would
 		simulate a 35mm lens.
-		""",
+		"""),
 
 		"preset:No Conversion	   ( 1.0 )", 1.0,
 		"preset:Millimeters to Centimeters	   ( 0.1 )", 0.1,
@@ -306,10 +307,10 @@ plugsMetadata = {
 	"focusDistance" : [
 
 		"description",
-		"""
+		_("""
 		The distance from the camera at which objects are in
 		perfect focus, in world space units.
-		""",
+		"""),
 		"layout:activator", "dof",
 		"layout:section", "Depth of Field",
 	],
@@ -317,21 +318,21 @@ plugsMetadata = {
 	"clippingPlanes" : [
 
 		"description",
-		"""
+		_("""
 		The near and far clipping planes, defining a region of
 		forward depth within which objects are visible to this
 		camera.
-		""",
+		"""),
 
 	],
 
 	"renderSettingOverrides" : [
 
 		"description",
-		"""
+		_("""
 		Render settings specified here will override their
 		corresponding global render options.
-		""",
+		"""),
 		"layout:section", "Render Overrides",
 		"compoundDataPlugValueWidget:editable", False,
 
@@ -346,9 +347,9 @@ plugsMetadata = {
 	"visualiserAttributes" : [
 
 			"description",
-			"""
+			_("""
 			Attributes that affect the visualisation of this camera in the Viewer.
-			""",
+			"""),
 
 			"layout:section", "Visualisation",
 			"compoundDataPlugValueWidget:editable", False,
@@ -364,19 +365,19 @@ plugsMetadata = {
 	"visualiserAttributes.scale" : [
 
 			"description",
-			"""
+			_("""
 			Scales non-geometric visualisations in the viewport to make them
 			easier to work with.
-			""",
+			"""),
 
 	],
 
 	"visualiserAttributes.frustum" : [
 
 			"description",
-			"""
+			_("""
 			Controls whether the camera draws a visualisation of its frustum.
-			"""
+			""")
 
 	],
 
@@ -429,7 +430,7 @@ for option, overridePlug in __optionsToOverride.items() :
 	__overrideMetadata[ overridePlug ] = [
 
 		"description",
-		"Overrides the `{option}` option:\n\n{description}".format(
+		_("Overrides the `{option}` option:\n\n{description}").format(
 			option = option,
 			description = Gaffer.Metadata.value( "option:" + option, "description" )
 		)
@@ -443,10 +444,10 @@ Gaffer.Metadata.registerNode(
 	GafferScene.Camera,
 
 	"description",
-	"""
+	_("""
 	Produces scenes containing a camera. To choose which camera is
 	used for rendering, use a StandardOptions node.
-	""",
+	"""),
 
 	"layout:activator:perspective", lambda node : node["projection"].getValue() == "perspective",
 	"layout:activator:perspectiveModeFOV", lambda node : node["perspectiveMode"].getValue() == GafferScene.Camera.PerspectiveMode.FieldOfView and node["projection"].getValue() == "perspective",

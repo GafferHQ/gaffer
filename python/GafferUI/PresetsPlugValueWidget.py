@@ -41,6 +41,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 from GafferUI.PlugValueWidget import sole
 
@@ -97,13 +98,13 @@ class PresetsPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if exception is not None :
 			self.__menuButton.setText( "" )
 		elif isCustom :
-			self.__menuButton.setText( "Custom" )
+			self.__menuButton.setText( _("Custom") )
 		elif self.__currentPreset :
-			self.__menuButton.setText( self.__currentPreset )
+			self.__menuButton.setText( _(self.__currentPreset) )
 		elif self.__currentPreset is None :
 			self.__menuButton.setText( "---" )
 		else :
-			self.__menuButton.setText( "Invalid" )
+			self.__menuButton.setText( _("Invalid") )
 
 		self.__menuButton.setErrored( exception is not None )
 

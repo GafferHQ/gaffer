@@ -37,39 +37,40 @@
 import Gaffer
 import GafferUI
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.Wireframe,
 
 	"description",
-	"""
+	_("""
 	Creates a wireframe representation of a mesh. The wireframe
 	is created as a CurvesPrimitive.
-	""",
+	"""),
 
 	plugs = {
 
 		"position" : {
 
 			"description" :
-			"""
+			_("""
 			The primitive variable containing the positions to use
 			for the wireframe. This must have either Vertex or FaceVarying
 			interpolation and contain either V3fVectorData or V2fVectorData.
 
 			> Tip : Use "uv" to create a wireframe representation of the
 			> UVs for a mesh.
-			"""
+			""")
 
 		},
 
 		"width" : {
 
 			"description" :
-			"""
+			_("""
 			The width of the curves used to represent the wireframe.
-			"""
+			""")
 
 		},
 

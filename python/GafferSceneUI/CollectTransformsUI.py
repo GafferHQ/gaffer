@@ -36,13 +36,14 @@
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.CollectTransforms,
 
 	"description",
-	"""
+	_("""
 	Collects transforms in different Contexts, storing the results as attributes. The
 	names of the attributes being collected are provided as a Context Variable,
 	which can be used to vary the transforms that are collected.
@@ -50,24 +51,24 @@ Gaffer.Metadata.registerNode(
 	By combining this with a TimeWarp, you can create copies of
 	the transform at different times, useful for creating trail
 	effects.
-	""",
+	"""),
 
 	plugs = {
 
 		"attributes" : {
 
 			"description" :
-			"""
+			_("""
 			The names of the new attributes to create.  The new attributes will be
 			copied from the transform in different Contexts.
-			""",
+			"""),
 
 		},
 
 		"attributeContextVariable" : {
 
 			"description" :
-			"""
+			_("""
 			The name of a Context Variable that is set to the current
 			attribute name when evaluating the transform. This can be used
 			in upstream expressions and string substitutions to vary
@@ -76,17 +77,17 @@ Gaffer.Metadata.registerNode(
 			For example, you could drive a TimeWarp with this
 			variable in order create copies of the transform at
 			different times.
-			""",
+			"""),
 
 		},
 
 		"space" : {
 
 			"description" :
-			"""
+			_("""
 			If you select world space, the created attributes will contain a concatenation
 			of all transforms from the root of the scene to the current location.
-			""",
+			"""),
 
 			"preset:Local" : GafferScene.Transform.Space.Local,
 			"preset:World" : GafferScene.Transform.Space.World,
@@ -98,26 +99,26 @@ Gaffer.Metadata.registerNode(
 		"requireVariation" : {
 
 			"description" :
-			"""
+			_("""
 			If true, new attributes will only be created
 			if the transform differs in some of the Contexts.
 			If the transform never changes, no new attributes will be created
 			( you can just use the transform instead of accessing the new attributes ).
-			"""
+			""")
 
 		},
 
 		"transforms" : {
 
 			"description" :
-			"""
+			_("""
 			This hidden plug is a CompoundObject that contains just the new
 			transform attributes.
 
 			It is primarily used for internal computation, but there are
 			cases where you can improve performance by naughtily plugging
 			it into an expression.
-			""",
+			"""),
 			"plugValueWidget:type" : ""
 
 		},

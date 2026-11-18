@@ -34,12 +34,15 @@
 #
 ##########################################################################
 
+import unicodedata
+
 import imath
 
 import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _, stripAccents
 
 ## A command suitable for use with NodeMenu.definition().append(), to add a menu
 # item for the creation of a backdrop for the current selection. We don't
@@ -58,6 +61,10 @@ def nodeMenuCreateCommand( menu ) :
 
 		backdrop = Gaffer.Backdrop()
 		Gaffer.NodeAlgo.applyUserDefaults( backdrop )
+
+		# Translate the default title and strip accents for IECoreGL
+		defaultTitle = _( "Title" )
+		backdrop["title"].setValue( stripAccents( defaultTitle ) )
 
 		graphGadget.getRoot().addChild( backdrop )
 
@@ -83,22 +90,22 @@ Gaffer.Metadata.registerNode(
 	Gaffer.Backdrop,
 
 	"description",
-	"""
+	_("""
 	A utility node which allows the positioning of other nodes on a
 	coloured backdrop with optional text. Selecting a backdrop in the
 	ui selects all the nodes positioned on it, and moving it moves
 	them with it.
-	""",
+	"""),
 
 	plugs = {
 
 		"title" : {
 
 			"description" :
-			"""
+			_("""
 			The title for the backdrop - this will be displayed at
 			the top of the backdrop.
-			""",
+			"""),
 
 			"stringPlugValueWidget:continuousUpdate" : True,
 
@@ -107,19 +114,19 @@ Gaffer.Metadata.registerNode(
 		"scale" : {
 
 			"description" :
-			"""
+			_("""
 			Controls the size of the backdrop text.
-			""",
+			"""),
 
 		},
 
 		"description" : {
 
 			"description" :
-			"""
+			_("""
 			Text describing the contents of the backdrop -
 			this will be displayed below the title.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.MultiLineStringPlugValueWidget",
 			"multiLineStringPlugValueWidget:continuousUpdate" : True,
@@ -129,13 +136,13 @@ Gaffer.Metadata.registerNode(
 		"depth" : {
 
 			"description" :
-			"""
+			_("""
 			Determines the drawing order of overlapping backdrops.
 
 			> Note : Larger backdrops are _automatically_ drawn behind smaller ones,
 			> so it is only necessary to manually assign a depth in rare cases where
 			> this is not desirable.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 			"preset:Back" : -1,
