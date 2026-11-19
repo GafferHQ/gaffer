@@ -47,6 +47,34 @@ from GafferCycles import IECoreCyclesPreview as IECoreCycles
 
 class ShaderNetworkAlgoTest( unittest.TestCase ) :
 
+	def setUp( self ) :
+
+		self.addTypeEqualityFunc( IECoreScene.ShaderNetwork, self.__assertShaderNetworkAlmostEqual )
+
+	def __assertShaderNetworkAlmostEqual( self, networkA, networkB, msg = None ) :
+
+		self.assertEqual( networkA.blindData(), networkB.blindData() )
+
+		self.assertEqual( networkA.shaders().keys(), networkB.shaders().keys() )
+		for handle in networkA.shaders().keys() :
+
+			shaderA = networkA.getShader( handle )
+			shaderB = networkB.getShader( handle )
+
+			self.assertEqual( shaderA.name, shaderB.name, handle )
+			self.assertEqual( shaderA.type, shaderB.type, handle )
+
+			self.assertEqual( shaderA.blindData(), shaderB.blindData(), handle )
+
+			self.assertEqual( shaderA.parameters.keys(), shaderB.parameters.keys(), handle )
+			for parameter in shaderA.parameters.keys() :
+				self.assertEqual( shaderA.parameters[parameter], shaderB.parameters[parameter], f"{handle}.{parameter}" )
+
+			self.assertEqual( networkA.inputConnections( handle ), networkB.inputConnections( handle ), handle )
+			self.assertEqual( networkA.outputConnections( handle ), networkB.outputConnections( handle ), handle )
+
+		self.assertEqual( networkA.getOutput(), networkB.getOutput() )
+
 	def testConvertUSDLights( self ) :
 
 		def expectedLightParameters( parameters ) :
@@ -1328,6 +1356,388 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 				)
 
 				self.assertEqual( modifiedAttributes["cycles:surface"], meshLightSurface )
+
+	def testUSDMeshLightColorTemperature( self ) :
+
+		# Acquired from a temporary Python binding of `ShaderNetworkAlgo::blackbody()`
+		# to get the result for 1000.0K.
+		tempRGB = imath.Color3f( 4.30550385, 0.118358329, 0 )
+
+		standardLightParams = { "strength" : IECore.FloatData( 1.0 ) }
+
+		attributes = IECore.CompoundObject(
+			{
+				"light" : IECoreScene.ShaderNetwork(
+					shaders = { "light" : IECoreScene.Shader( "MeshLight", "light", {
+						"enableColorTemperature" : True,
+						"colorTemperature" : 1000.0,
+					} ) },
+					output = "light"
+				)
+			}
+		)
+
+		modifiedAttributes = IECoreCycles.ShaderNetworkAlgo.convertUSDMeshLightAttributes( attributes )
+
+		self.assertNotIn( "light", modifiedAttributes )
+		self.assertIn( "cycles:surface", modifiedAttributes )
+
+		mixShader = IECoreScene.Shader( "mix_closure", "cycles:surface" )
+		mixShader.blindData()["__USDRayVisibility"] = ( 1 << 11 ) - 1  # `PATH_RAY_ALL_VISIBILITY` value from cycles/include/kernel/types.h
+		meshLightSurface = IECoreScene.ShaderNetwork(
+			shaders = {
+				"mixShader" : mixShader,
+				"floatAddShaderA" : IECoreScene.Shader( "math", "shader", { "math_type" : "add" } ),
+				"floatAddShaderB" : IECoreScene.Shader( "math", "shader", { "math_type" : "add", "use_clamp" : True } ),
+				"lightPath" : IECoreScene.Shader( "light_path", "shader" ),
+				"emission" : IECoreScene.Shader( "emission", "shader", { "color" : IECore.Color3fData( tempRGB ) } | standardLightParams ),
+				"geometry" : IECoreScene.Shader( "geometry", "surface" ),
+				"vectorMath" : IECoreScene.Shader( "vector_math", "shader", { "math_type" : IECore.StringData( "dot_product" ) } ),
+			},
+			connections = [
+				( ( "geometry", "normal" ), ( "vectorMath", "vector1" ) ),
+				( ( "geometry", "incoming" ), ( "vectorMath", "vector2" ) ),
+				( ( "vectorMath", "value" ), ( "mixShader", "closure2" ) ),
+				( ( "emission", "emission" ), ( "mixShader", "closure1" ) ),
+				( ( "lightPath", "is_camera_ray" ), ( "floatAddShaderA", "value1" ) ),
+				( ( "lightPath", "is_reflection_ray" ), ( "floatAddShaderA", "value2" ) ),
+				( ( "floatAddShaderA", "value" ), ( "floatAddShaderB", "value1" ) ),
+				( ( "lightPath", "is_transmission_ray" ), ( "floatAddShaderB", "value2" ) ),
+				( ( "floatAddShaderB", "value" ), ( "mixShader", "fac" ) ),
+			],
+			output = ( "mixShader", "closure" ),
+		)
+
+		self.assertEqual( modifiedAttributes["cycles:surface"], meshLightSurface )
+
+		# Surface color only, light color + temperature only (no color inputs)
+
+		attributes = IECore.CompoundObject(
+			{
+				"light" : IECoreScene.ShaderNetwork(
+					shaders = { "light" : IECoreScene.Shader( "MeshLight", "light", {
+						"color" : imath.Color3f( 0.125, 0.25, 0.375 ),
+						"enableColorTemperature" : True,
+						"colorTemperature" : 1000.0,
+					} ) },
+					output = "light"
+				),
+				"cycles:surface" : IECoreScene.ShaderNetwork(
+					shaders = { "surface" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", {
+						"emission_color" : imath.Color3f( 0.5, 0.625, 0.75 ),
+					} ) },
+					output = "surface"
+				),
+			}
+		)
+
+		modifiedAttributes = IECoreCycles.ShaderNetworkAlgo.convertUSDMeshLightAttributes( attributes )
+
+		self.assertNotIn( "light", modifiedAttributes )
+		self.assertIn( "cycles:surface", modifiedAttributes )
+
+		meshLightSurface = IECoreScene.ShaderNetwork(
+			shaders = {
+				"surface" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { "emission_color" : IECore.Color3fData( imath.Color3f( 0.5, 0.625, 0.75 ) ) } ),
+				"mixShader" : mixShader,
+				"floatAddShaderA" : IECoreScene.Shader( "math", "shader", { "math_type" : "add" } ),
+				"floatAddShaderB" : IECoreScene.Shader( "math", "shader", { "math_type" : "add", "use_clamp" : True } ),
+				"lightPath" : IECoreScene.Shader( "light_path", "shader" ),
+				"emission" : IECoreScene.Shader( "emission", "shader", { "color" : IECore.Color3fData( imath.Color3f( 0.125 * 0.5, 0.25 * 0.625, 0.375 * 0.75) * tempRGB ), } | standardLightParams ),
+			},
+			connections = [
+				( ( "emission", "emission" ), ( "mixShader", "closure1" ) ),
+				( ( "surface", "" ), ( "mixShader", "closure2" ) ),
+				( ( "lightPath", "is_camera_ray" ), ( "floatAddShaderA", "value1" ) ),
+				( ( "lightPath", "is_reflection_ray" ), ( "floatAddShaderA", "value2" ) ),
+				( ( "floatAddShaderA", "value" ), ( "floatAddShaderB", "value1" ) ),
+				( ( "lightPath", "is_transmission_ray" ), ( "floatAddShaderB", "value2" ) ),
+				( ( "floatAddShaderB", "value" ), ( "mixShader", "fac" ) ),
+			],
+			output = ( "mixShader", "closure" ),
+		)
+
+		self.assertEqual( modifiedAttributes["cycles:surface"], meshLightSurface )
+
+		def surfaceWithTexture( lightColor ) :
+			return IECore.CompoundObject(
+				{
+					"light" : IECoreScene.ShaderNetwork(
+						shaders = { "light" : IECoreScene.Shader( "MeshLight", "light", {
+							"color" : lightColor,
+							"enableColorTemperature" : True,
+							"colorTemperature" : 1000.0
+						} ) },
+						output = "light"
+					),
+					"cycles:surface" : IECoreScene.ShaderNetwork(
+						shaders = {
+							"surface" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { "emission_color" : imath.Color3f( 0.5, 0.625, 0.75 ) } ),
+							"texture" : IECoreScene.Shader( "image_texture", "shader", { "filename" : "test.tx" } ),
+						},
+						output = ( "surface", "BSDF" ),
+						connections = [ ( ( "texture", "color" ), ( "surface", "emission_color" ) ), ]
+					),
+				}
+			)
+
+		# Surface with color input, black + temperature mesh light emission
+
+		modifiedAttributes = IECoreCycles.ShaderNetworkAlgo.convertUSDMeshLightAttributes( surfaceWithTexture( imath.Color3f( 0.0 ) ) )
+		meshLightSurface = IECoreScene.ShaderNetwork(
+			shaders = {
+				"surface" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { "emission_color" : imath.Color3f( 0.5, 0.625, 0.75 ) } ),
+				"texture" : IECoreScene.Shader( "image_texture", "shader", { "filename" : "test.tx" } ),
+				"mixShader" : mixShader,
+				"floatAddShaderA" : IECoreScene.Shader( "math", "shader", { "math_type" : "add" } ),
+				"floatAddShaderB" : IECoreScene.Shader( "math", "shader", { "math_type" : "add", "use_clamp" : True } ),
+				"lightPath" : IECoreScene.Shader( "light_path", "shader" ),
+				"emission" : IECoreScene.Shader( "emission", "shader", { "color" : IECore.Color3fData( imath.Color3f( 0.0 ) ) } | standardLightParams ),
+			},
+			output = ( "mixShader", "closure" ),
+			connections = [
+				( ( "texture", "color" ), ( "surface", "emission_color" ) ),
+				( ( "surface", "BSDF" ), ( "mixShader", "closure2" ) ),
+				( ( "emission", "emission" ), ( "mixShader", "closure1" ) ),
+				( ( "lightPath", "is_camera_ray" ), ( "floatAddShaderA", "value1" ) ),
+				( ( "lightPath", "is_reflection_ray" ), ( "floatAddShaderA", "value2" ) ),
+				( ( "floatAddShaderA", "value" ), ( "floatAddShaderB", "value1" ) ),
+				( ( "lightPath", "is_transmission_ray" ), ( "floatAddShaderB", "value2" ) ),
+				( ( "floatAddShaderB", "value" ), ( "mixShader", "fac" ) ),
+			]
+		)
+
+		self.assertEqual( modifiedAttributes["cycles:surface"], meshLightSurface )
+
+		# Surface with color input, white + temperature mesh light emission
+
+		modifiedAttributes = IECoreCycles.ShaderNetworkAlgo.convertUSDMeshLightAttributes( surfaceWithTexture( imath.Color3f( 1.0 ) ) )
+		meshLightSurface = IECoreScene.ShaderNetwork(
+			shaders = {
+				"surface" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { "emission_color" : imath.Color3f( 0.5, 0.625, 0.75 ) } ),
+				"texture" : IECoreScene.Shader( "image_texture", "shader", { "filename" : "test.tx" } ),
+				"mixShader" : mixShader,
+				"floatAddShaderA" : IECoreScene.Shader( "math", "shader", { "math_type" : "add" } ),
+				"floatAddShaderB" : IECoreScene.Shader( "math", "shader", { "math_type" : "add", "use_clamp" : True } ),
+				"lightPath" : IECoreScene.Shader( "light_path", "shader" ),
+				"emission" : IECoreScene.Shader( "emission", "shader", { "color" : IECore.Color3fData( imath.Color3f( 0.5, 0.625, 0.75 ) * tempRGB ) } | standardLightParams ),
+				"tint" : IECoreScene.Shader( "vector_math", "shader", { "vector1" : imath.Color3f( 0.5, 0.625, 0.75 ), "vector2" : imath.Color3f( 1.0 ) * tempRGB, "math_type" : "multiply" } ),
+			},
+			output = ( "mixShader", "closure" ),
+			connections = [
+				( ( "texture", "color" ), ( "surface", "emission_color" ) ),
+				( ( "surface", "BSDF" ), ( "mixShader", "closure2" ) ),
+				( ( "emission", "emission" ), ( "mixShader", "closure1" ) ),
+				( ( "lightPath", "is_camera_ray" ), ( "floatAddShaderA", "value1" ) ),
+				( ( "lightPath", "is_reflection_ray" ), ( "floatAddShaderA", "value2" ) ),
+				( ( "floatAddShaderA", "value" ), ( "floatAddShaderB", "value1" ) ),
+				( ( "lightPath", "is_transmission_ray" ), ( "floatAddShaderB", "value2" ) ),
+				( ( "floatAddShaderB", "value" ), ( "mixShader", "fac" ) ),
+				( ( "texture", "color" ), ( "tint", "vector1" ) ),
+				( ( "tint", "vector" ), ( "emission", "color" ) ),
+			]
+		)
+
+		self.assertEqual( modifiedAttributes["cycles:surface"], meshLightSurface )
+
+		# Surface with color input, color + temperature mesh light emission
+
+		modifiedAttributes = IECoreCycles.ShaderNetworkAlgo.convertUSDMeshLightAttributes( surfaceWithTexture( imath.Color3f( 0.125, 0.25, 0.375 ) ) )
+		meshLightSurface = IECoreScene.ShaderNetwork(
+			shaders = {
+				"surface" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { "emission_color" : imath.Color3f( 0.5, 0.625, 0.75 ) } ),
+				"texture" : IECoreScene.Shader( "image_texture", "shader", { "filename" : "test.tx" } ),
+				"mixShader" : mixShader,
+				"floatAddShaderA" : IECoreScene.Shader( "math", "shader", { "math_type" : "add" } ),
+				"floatAddShaderB" : IECoreScene.Shader( "math", "shader", { "math_type" : "add", "use_clamp" : True } ),
+				"lightPath" : IECoreScene.Shader( "light_path", "shader" ),
+				"emission" : IECoreScene.Shader( "emission", "shader", { "color" : IECore.Color3fData( imath.Color3f( 0.125 * 0.5, 0.25 * 0.625, 0.375 * 0.75 ) * tempRGB ) } | standardLightParams ),
+				"tint" : IECoreScene.Shader( "vector_math", "shader", { "vector1" : imath.Color3f( 0.5, 0.625, 0.75 ), "vector2" : imath.Color3f( 0.125, 0.25, 0.375 ) * tempRGB, "math_type" : "multiply" } ),
+			},
+			output = ( "mixShader", "closure" ),
+			connections = [
+				( ( "texture", "color" ), ( "surface", "emission_color" ) ),
+				( ( "surface", "BSDF" ), ( "mixShader", "closure2" ) ),
+				( ( "emission", "emission" ), ( "mixShader", "closure1" ) ),
+				( ( "lightPath", "is_camera_ray" ), ( "floatAddShaderA", "value1" ) ),
+				( ( "lightPath", "is_reflection_ray" ), ( "floatAddShaderA", "value2" ) ),
+				( ( "floatAddShaderA", "value" ), ( "floatAddShaderB", "value1" ) ),
+				( ( "lightPath", "is_transmission_ray" ), ( "floatAddShaderB", "value2" ) ),
+				( ( "floatAddShaderB", "value" ), ( "mixShader", "fac" ) ),
+				( ( "texture", "color" ), ( "tint", "vector1" ) ),
+				( ( "tint", "vector" ), ( "emission", "color" ) ),
+			]
+		)
+
+		self.assertEqual( modifiedAttributes["cycles:surface"], meshLightSurface )
+
+		def lightWithTexture( surfaceColor ) :
+			return IECore.CompoundObject(
+				{
+					"light" : IECoreScene.ShaderNetwork(
+						shaders = {
+							"light" : IECoreScene.Shader( "MeshLight", "light", {
+								"color" : imath.Color3f( 0.125, 0.25, 0.375 ),
+								"enableColorTemperature" : True,
+								"colorTemperature" : 1000.0,
+							} ),
+							"texture" : IECoreScene.Shader( "image_texture", "shader", { "filename" : "test.tx" } ),
+						},
+						output = "light",
+						connections = [ ( ( "texture", "color" ), ( "light", "color" ) ), ]
+					),
+					"cycles:surface" : IECoreScene.ShaderNetwork(
+						shaders = { "surface" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { "emission_color" : surfaceColor } ), },
+						output = ( "surface", "BSDF" ),
+					),
+				}
+			)
+
+		# Surface with black emission, light with color input + temperature
+
+		modifiedAttributes = IECoreCycles.ShaderNetworkAlgo.convertUSDMeshLightAttributes( lightWithTexture( imath.Color3f( 0.0 ) ) )
+		meshLightSurface = IECoreScene.ShaderNetwork(
+			shaders = {
+				"surface" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { "emission_color" : imath.Color3f( 0.0 ) } ),
+				"mixShader" : mixShader,
+				"floatAddShaderA" : IECoreScene.Shader( "math", "shader", { "math_type" : "add" } ),
+				"floatAddShaderB" : IECoreScene.Shader( "math", "shader", { "math_type" : "add", "use_clamp" : True } ),
+				"lightPath" : IECoreScene.Shader( "light_path", "shader" ),
+				"emission" : IECoreScene.Shader( "emission", "shader", { "color" : IECore.Color3fData( imath.Color3f( 0.0 ) ) } | standardLightParams ),
+			},
+			output = ( "mixShader", "closure" ),
+			connections = [
+				( ( "emission", "emission" ), ( "mixShader", "closure1" ) ),
+				( ( "surface", "BSDF" ), ( "mixShader", "closure2" ) ),
+				( ( "lightPath", "is_camera_ray" ), ( "floatAddShaderA", "value1" ) ),
+				( ( "lightPath", "is_reflection_ray" ), ( "floatAddShaderA", "value2" ) ),
+				( ( "floatAddShaderA", "value" ), ( "floatAddShaderB", "value1" ) ),
+				( ( "lightPath", "is_transmission_ray" ), ( "floatAddShaderB", "value2" ) ),
+				( ( "floatAddShaderB", "value" ), ( "mixShader", "fac" ) ),
+			]
+		)
+
+		self.assertEqual( modifiedAttributes["cycles:surface"], meshLightSurface )
+
+		# Surface with white emission, light with color input + temperature
+
+		modifiedAttributes = IECoreCycles.ShaderNetworkAlgo.convertUSDMeshLightAttributes( lightWithTexture( imath.Color3f( 1.0 ) ) )
+		meshLightSurface = IECoreScene.ShaderNetwork(
+			shaders = {
+				"surface" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { "emission_color" : imath.Color3f( 1.0 ) } ),
+				"texture" : IECoreScene.Shader( "image_texture", "shader", { "filename" : "test.tx" } ),
+				"mixShader" : mixShader,
+				"floatAddShaderA" : IECoreScene.Shader( "math", "shader", { "math_type" : "add" } ),
+				"floatAddShaderB" : IECoreScene.Shader( "math", "shader", { "math_type" : "add", "use_clamp" : True } ),
+				"lightPath" : IECoreScene.Shader( "light_path", "shader" ),
+				"emission" : IECoreScene.Shader( "emission", "shader", { "color" : IECore.Color3fData( imath.Color3f( 0.125, 0.25, 0.375 ) * tempRGB ) } | standardLightParams ),
+				"tint" : IECoreScene.Shader( "vector_math", "shader", { "vector1" : imath.Color3f( 1.0 ) * tempRGB, "vector2" : imath.Color3f( 0.125, 0.25, 0.375 ) * tempRGB, "math_type" : "multiply" } ),
+			},
+			output = ( "mixShader", "closure" ),
+			connections = [
+				( ( "texture", "color" ), ( "tint", "vector2" ) ),
+				( ( "tint", "vector" ), ( "emission", "color" ) ),
+				( ( "surface", "BSDF" ), ( "mixShader", "closure2" ) ),
+				( ( "emission", "emission" ), ( "mixShader", "closure1" ) ),
+				( ( "lightPath", "is_camera_ray" ), ( "floatAddShaderA", "value1" ) ),
+				( ( "lightPath", "is_reflection_ray" ), ( "floatAddShaderA", "value2" ) ),
+				( ( "floatAddShaderA", "value" ), ( "floatAddShaderB", "value1" ) ),
+				( ( "lightPath", "is_transmission_ray" ), ( "floatAddShaderB", "value2" ) ),
+				( ( "floatAddShaderB", "value" ), ( "mixShader", "fac" ) ),
+			]
+		)
+
+		self.assertEqual( modifiedAttributes["cycles:surface"], meshLightSurface )
+
+		# Surface with colored emission, light with color input + temperature
+
+		modifiedAttributes = IECoreCycles.ShaderNetworkAlgo.convertUSDMeshLightAttributes( lightWithTexture( imath.Color3f( 0.5, 0.625, 0.75) ) )
+		meshLightSurface = IECoreScene.ShaderNetwork(
+			shaders = {
+				"surface" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { "emission_color" : imath.Color3f( 0.5, 0.625, 0.75 ) } ),
+				"texture" : IECoreScene.Shader( "image_texture", "shader", { "filename" : "test.tx" } ),
+				"mixShader" : mixShader,
+				"floatAddShaderA" : IECoreScene.Shader( "math", "shader", { "math_type" : "add" } ),
+				"floatAddShaderB" : IECoreScene.Shader( "math", "shader", { "math_type" : "add", "use_clamp" : True } ),
+				"lightPath" : IECoreScene.Shader( "light_path", "shader" ),
+				"emission" : IECoreScene.Shader( "emission", "shader", { "color" : IECore.Color3fData( imath.Color3f( 0.125 * 0.5, 0.25 * 0.625, 0.375 * 0.75 ) * tempRGB ) } | standardLightParams ),
+				"tint" : IECoreScene.Shader( "vector_math", "shader", { "vector1" : imath.Color3f( 0.5, 0.625, 0.75 ) * tempRGB, "vector2" : imath.Color3f( 0.125, 0.25, 0.375 ) * tempRGB, "math_type" : "multiply" } ),
+			},
+			output = ( "mixShader", "closure" ),
+			connections = [
+				( ( "texture", "color" ), ( "tint", "vector2" ) ),
+				( ( "tint", "vector" ), ( "emission", "color" ) ),
+				( ( "surface", "BSDF" ), ( "mixShader", "closure2" ) ),
+				( ( "emission", "emission" ), ( "mixShader", "closure1" ) ),
+				( ( "lightPath", "is_camera_ray" ), ( "floatAddShaderA", "value1" ) ),
+				( ( "lightPath", "is_reflection_ray" ), ( "floatAddShaderA", "value2" ) ),
+				( ( "floatAddShaderA", "value" ), ( "floatAddShaderB", "value1" ) ),
+				( ( "lightPath", "is_transmission_ray" ), ( "floatAddShaderB", "value2" ) ),
+				( ( "floatAddShaderB", "value" ), ( "mixShader", "fac" ) ),
+			]
+		)
+
+		self.assertEqual( modifiedAttributes["cycles:surface"], meshLightSurface )
+
+		# Surface with color input, light with color input + temperature
+
+		sourceNetwork = IECore.CompoundObject(
+			{
+				"light" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"light" : IECoreScene.Shader( "MeshLight", "light", {
+							"color" : imath.Color3f( 0.125, 0.25, 0.375 ),
+							"enableColorTemperature" : True,
+							"colorTemperature" : 1000.0
+						} ),
+						"lightTexture" : IECoreScene.Shader( "image_texture", "shader", { "filename" : "lightTest.tx" } ),
+					},
+					output = "light",
+					connections = [ ( ( "lightTexture", "color" ), ( "light", "color" ) ), ]
+				),
+				"cycles:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"surface" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { "emission_color" : imath.Color3f( 0.5, 0.625, 0.75 ) } ),
+						"texture" : IECoreScene.Shader( "image_texture", "shader", { "filename" : "test.tx" } ),
+					},
+					output = ( "surface", "BSDF" ),
+					connections = [ ( ( "texture", "color" ), ( "surface", "emission_color" ) ), ]
+				),
+			}
+		)
+
+		modifiedAttributes = IECoreCycles.ShaderNetworkAlgo.convertUSDMeshLightAttributes( sourceNetwork )
+		meshLightSurface = IECoreScene.ShaderNetwork(
+			shaders = {
+				"surface" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { "emission_color" : imath.Color3f( 0.5, 0.625, 0.75 ) } ),
+				"texture" : IECoreScene.Shader( "image_texture", "shader", { "filename" : "test.tx" } ),
+				"mixShader" : mixShader,
+				"floatAddShaderA" : IECoreScene.Shader( "math", "shader", { "math_type" : "add" } ),
+				"floatAddShaderB" : IECoreScene.Shader( "math", "shader", { "math_type" : "add", "use_clamp" : True } ),
+				"lightPath" : IECoreScene.Shader( "light_path", "shader" ),
+				"emission" : IECoreScene.Shader( "emission", "shader", { "color" : IECore.Color3fData( imath.Color3f( 0.5 * .125, 0.625 * 0.25, 0.75 * 0.375 ) * tempRGB ) } | standardLightParams ),
+				"lightTexture" : IECoreScene.Shader( "image_texture", "shader", { "filename" : "lightTest.tx" } ),
+				"tint" : IECoreScene.Shader( "vector_math", "shader", { "vector1" : imath.Color3f( 0.5, 0.625, 0.75 ), "vector2" : imath.Color3f( 0.125, 0.25, 0.375 ) * tempRGB, "math_type" : "multiply" } ),
+				"tintTemperature" : IECoreScene.Shader( "vector_math", "shader", { "vector2" : tempRGB, "math_type" : "multiply" } ),
+			},
+			output = ( "mixShader", "closure" ),
+			connections = [
+				( ( "texture", "color" ), ( "surface", "emission_color" ) ),
+				( ( "surface", "BSDF" ), ( "mixShader", "closure2" ) ),
+				( ( "emission", "emission" ), ( "mixShader", "closure1" ) ),
+				( ( "lightPath", "is_camera_ray" ), ( "floatAddShaderA", "value1" ) ),
+				( ( "lightPath", "is_reflection_ray" ), ( "floatAddShaderA", "value2" ) ),
+				( ( "floatAddShaderA", "value" ), ( "floatAddShaderB", "value1" ) ),
+				( ( "lightPath", "is_transmission_ray" ), ( "floatAddShaderB", "value2" ) ),
+				( ( "floatAddShaderB", "value" ), ( "mixShader", "fac" ) ),
+				( ( "texture", "color" ), ( "tint", "vector1" ) ),
+				( ( "lightTexture", "color" ), ( "tintTemperature", "vector1" ) ),
+				( ( "tintTemperature", "vector" ), ( "tint", "vector2" ) ),
+				( ( "tint", "vector" ), ( "emission", "color" ) ),
+			]
+		)
+
+		self.assertEqual( modifiedAttributes["cycles:surface"], meshLightSurface )
 
 	def __assertShadersEqual( self, shader1, shader2, message = None ) :
 
