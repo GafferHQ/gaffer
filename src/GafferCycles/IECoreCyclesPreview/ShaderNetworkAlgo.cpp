@@ -945,13 +945,17 @@ IECoreScene::ConstShaderNetworkPtr g_facingRatio = []() {
 
 } ();
 
+Color3f colorTemperatureTint( const Shader *shader )
+{
+	return parameterValue( shader, g_enableColorTemperatureParameter, false ) ?
+		blackbody( parameterValue( shader, g_colorTemperatureParameter, 6500.0f ) ) :
+		Color3f( 1.f )
+	;
+}
+
 void transferCommonUSDLightParameters( const Shader *usdShader, Shader *shader )
 {
-	Color3f color = parameterValue( usdShader, g_colorParameter, Color3f( 1 ) );
-	if( parameterValue( usdShader, g_enableColorTemperatureParameter, false ) )
-	{
-		color *= blackbody( parameterValue( usdShader, g_colorTemperatureParameter, 6500.0f ) );
-	}
+	const Color3f color = parameterValue( usdShader, g_colorParameter, Color3f( 1 ) ) * colorTemperatureTint( usdShader );
 	shader->parameters()[g_colorParameter] = new Color3fData( color );
 
 	int visibility = (int)ccl::PATH_RAY_ALL_VISIBILITY;
@@ -1666,7 +1670,11 @@ ConstCompoundObjectPtr IECoreCycles::ShaderNetworkAlgo::convertUSDMeshLightAttri
 		}
 		newSurfaceNetwork->addConnection( { emissionColorInput, textureDestination } );
 	}
-	if( meshLightColorInput && ( emissionColor != Color3f( 0.f ) || emissionColorInput ) )
+
+	const Color3f temperatureColor = colorTemperatureTint( lightShader );
+	const Color3f tintedEmissionColor = emissionColor * temperatureColor;
+
+	if( meshLightColorInput && ( tintedEmissionColor != Color3f( 0.f ) || emissionColorInput ) )
 	{
 		ShaderNetworkPtr meshLightColorNetwork = lightNetwork->copy();
 		meshLightColorNetwork->setOutput( meshLightColorInput );
@@ -1674,7 +1682,7 @@ ConstCompoundObjectPtr IECoreCycles::ShaderNetworkAlgo::convertUSDMeshLightAttri
 		ShaderNetwork::Parameter newLightColorInput = IECoreScene::ShaderNetworkAlgo::addShaders( newSurfaceNetwork.get(), meshLightColorNetwork.get(), /* connections = */ true );
 
 		ShaderNetwork::Parameter textureDestination = { emissionShaderHandle, g_colorParameter };
-		if( emissionColor != Color3f( 1.f ) || emissionColorInput )
+		if( tintedEmissionColor != Color3f( 1.f ) || emissionColorInput )
 		{
 			if( tintHandle == g_empty )
 			{
@@ -1682,7 +1690,7 @@ ConstCompoundObjectPtr IECoreCycles::ShaderNetworkAlgo::convertUSDMeshLightAttri
 					"vector_math",
 					"shader",
 					{
-						{ g_vector1Parameter, new Color3fData( emissionColor ) },
+						{ g_vector1Parameter, new Color3fData( tintedEmissionColor ) },
 						{ g_vector2Parameter, new Color3fData( lightColor ) },
 						{ g_mathTypeParameter, new StringData( "multiply" ) }
 					}
@@ -1690,7 +1698,27 @@ ConstCompoundObjectPtr IECoreCycles::ShaderNetworkAlgo::convertUSDMeshLightAttri
 				tintHandle = newSurfaceNetwork->addShader( InternedString( "tint" ), std::move( tintShader ) );
 				newSurfaceNetwork->addConnection( { { tintHandle, g_vectorOutput }, { emissionShaderHandle, g_colorParameter } } );
 			}
-			textureDestination = { tintHandle, g_vector2Parameter };
+
+			if( temperatureColor != Color3f( 1.f ) && emissionColorInput )
+			{
+				// We've connected the emission shader directly to `vector1` and we also have an input to the
+				// light's color. Color temperature needs to be added using a second tint shader.
+				ShaderPtr temperatureTintShader = new Shader(
+					"vector_math",
+					"shader",
+					{
+						{ g_vector2Parameter, new Color3fData( temperatureColor ) },
+						{ g_mathTypeParameter, new StringData( "multiply" ) }
+					}
+				);
+				const InternedString temperatureTintHandle = newSurfaceNetwork->addShader( InternedString( "tintTemperature" ), std::move( temperatureTintShader ) );
+				newSurfaceNetwork->addConnection( { { temperatureTintHandle, g_vectorOutput }, { tintHandle, g_vector2Parameter } } );
+				textureDestination = { temperatureTintHandle, g_vector1Parameter };
+			}
+			else
+			{
+				textureDestination = { tintHandle, g_vector2Parameter };
+			}
 		}
 
 		if( !newSurfaceNetwork->input( textureDestination ) )

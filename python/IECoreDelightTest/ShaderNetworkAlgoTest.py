@@ -910,3 +910,315 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 				)
 
 				self.assertEqual( modifiedAttributes["light"], meshLightSurface )
+
+	def testUSDMeshLightColorTemperature( self ) :
+
+		# Acquired from a temporary Python binding of `ShaderNetworkAlgo::blackbody()`
+		# to get the result for 1000.0K.
+		tempRGB = imath.Color3f( 4.30550385, 0.118358329, 0 )
+
+		standardLightParams = { "normalize_area" : False, "intensity" : 1.0, "exposure" : 0.0 }
+
+		attributes = IECore.CompoundObject(
+			{
+				"light" : IECoreScene.ShaderNetwork(
+					shaders = { "light" : IECoreScene.Shader( "MeshLight", "light", {
+						"enableColorTemperature" : True,
+						"colorTemperature" : 1000.0,
+					} ) },
+					output = "light"
+				)
+			}
+		)
+
+		modifiedAttributes = IECoreDelight.ShaderNetworkAlgo.convertUSDMeshLightAttributes( attributes )
+		self.assertIn( "light", modifiedAttributes )
+		self.assertNotIn( "osl:surface", modifiedAttributes )
+		self.assertNotIn( "surface", modifiedAttributes )
+
+		meshLightSurface = IECoreScene.ShaderNetwork(
+			shaders = {
+				"raySwitch" : IECoreScene.Shader( "dlRaySwitch", "osl:surface", { "switch_camera" : True, "switch_reflection" : True, "switch_refraction" : True } ),
+				"areaLight" : IECoreScene.Shader( "areaLight", "osl:light", { "i_color" : imath.Color3f( 1.0 ) * tempRGB } | standardLightParams ),
+				"defaultSurface" : IECoreScene.Shader( "Surface/Constant", "surface" ),
+			},
+			connections = [
+				( ( "areaLight", "out" ), ( "raySwitch", "base_closure" ) ),
+				( ( "defaultSurface", "out" ), ( "raySwitch", "switched_closure" ) ),
+			],
+			output = ( "raySwitch", "outClosure" ),
+		)
+
+		self.assertEqual( modifiedAttributes["light"], meshLightSurface )
+
+		# Surface color only, light color + temperature only (no color inputs)
+
+		attributes = IECore.CompoundObject(
+			{
+				"light" : IECoreScene.ShaderNetwork(
+					shaders = { "light" : IECoreScene.Shader( "MeshLight", "light", {
+						"color" : imath.Color3f( 0.125, 0.25, 0.375 ),
+						"enableColorTemperature" : True,
+						"colorTemperature" : 1000.0
+					} ) },
+					output = "light"
+				),
+				"osl:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"surface" : IECoreScene.Shader(
+							"dlPrincipled", "osl:surface",
+							{ "incandescence" : imath.Color3f( 0.5, 0.625, 0.75 ) }
+						),
+					},
+					output = "surface"
+				)
+			}
+		)
+
+		modifiedAttributes = IECoreDelight.ShaderNetworkAlgo.convertUSDMeshLightAttributes( attributes )
+		self.assertNotIn( "osl:surface", modifiedAttributes )
+		self.assertIn( "light", modifiedAttributes )
+
+		meshLightSurface = IECoreScene.ShaderNetwork(
+			shaders = {
+				"raySwitch" : IECoreScene.Shader( "dlRaySwitch", "osl:surface", { "switch_camera" : True, "switch_reflection" : True, "switch_refraction" : True } ),
+				"areaLight" : IECoreScene.Shader( "areaLight", "osl:light", { "i_color" : imath.Color3f( 0.125 * 0.5, 0.25 * 0.625, 0.375 * 0.75 ) * tempRGB } | standardLightParams ),
+				"surface" : IECoreScene.Shader( "dlPrincipled", "osl:surface", { "incandescence" : imath.Color3f( 0.5, 0.625, 0.75 ) } ),
+			},
+			connections = [
+				( ( "areaLight", "out" ), ( "raySwitch", "base_closure" ) ),
+				( ( "surface", "" ), ( "raySwitch", "switched_closure" ) ),
+			],
+			output = ( "raySwitch", "outClosure" ),
+		)
+
+		self.assertEqual( modifiedAttributes["light"], meshLightSurface )
+
+		def surfaceWithTexture( lightColor ) :
+			return IECore.CompoundObject(
+				{
+					"light" : IECoreScene.ShaderNetwork(
+						shaders = { "light" : IECoreScene.Shader( "MeshLight", "light", { "color" : lightColor, "enableColorTemperature" : True, "colorTemperature" : 1000.0 } ) },
+						output = "light"
+					),
+					"osl:surface" : IECoreScene.ShaderNetwork(
+						shaders = {
+							"surface" : IECoreScene.Shader( "dlPrincipled", "osl:surface", { "incandescence" : imath.Color3f( 0.5, 0.625, 0.75 ) } ),
+							"texture" : IECoreScene.Shader( "dlTexture", "osl:surface", { "textureFile" : "test.tx" } ),
+						},
+						output = ( "surface", "outColor" ),
+						connections = [ ( ( "texture", "outColor" ), ( "surface", "incandescence" ) ), ]
+					),
+				}
+			)
+
+		# Surface with color input, black mesh light emission
+
+		modifiedAttributes = IECoreDelight.ShaderNetworkAlgo.convertUSDMeshLightAttributes( surfaceWithTexture( imath.Color3f( 0.0 ) ) )
+
+		meshLightSurface = IECoreScene.ShaderNetwork(
+			shaders = {
+				"surface" : IECoreScene.Shader( "dlPrincipled", "osl:surface", { "incandescence" : imath.Color3f( 0.5, 0.625, 0.75 ) } ),
+				"texture" : IECoreScene.Shader( "dlTexture", "osl:surface", { "textureFile" : "test.tx" } ),
+				"raySwitch" : IECoreScene.Shader( "dlRaySwitch", "osl:surface", { "switch_camera" : True, "switch_reflection" : True, "switch_refraction" : True } ),
+				"areaLight" : IECoreScene.Shader( "areaLight", "osl:light", { "i_color" : imath.Color3f( 0.0 ), } | standardLightParams ),
+			},
+			connections = [
+				( ( "texture", "outColor" ), ( "surface", "incandescence" ) ),
+				( ( "surface", "outColor" ), ( "raySwitch", "switched_closure" ) ),
+				( ( "areaLight", "out" ), ( "raySwitch", "base_closure" ) ),
+			],
+			output = ( "raySwitch", "outClosure" ),
+		)
+
+		self.assertEqual( modifiedAttributes["light"], meshLightSurface )
+
+		# Surface with color input, white + temperature mesh light emission
+
+		modifiedAttributes = IECoreDelight.ShaderNetworkAlgo.convertUSDMeshLightAttributes( surfaceWithTexture( imath.Color3f( 1.0 ) ) )
+
+		meshLightSurface = IECoreScene.ShaderNetwork(
+			shaders = {
+				"surface" : IECoreScene.Shader( "dlPrincipled", "osl:surface", { "incandescence" : imath.Color3f( 0.5, 0.625, 0.75 ) } ),
+				"texture" : IECoreScene.Shader( "dlTexture", "osl:surface", { "textureFile" : "test.tx" } ),
+				"raySwitch" : IECoreScene.Shader( "dlRaySwitch", "osl:surface", { "switch_camera" : True, "switch_reflection" : True, "switch_refraction" : True } ),
+				"areaLight" : IECoreScene.Shader( "areaLight", "osl:light", { "i_color" : imath.Color3f( 0.5, 0.625, 0.75 ) * tempRGB } | standardLightParams ),
+				"tint" : IECoreScene.Shader( "Maths/MultiplyColor", "osl:surface", { "a" : imath.Color3f( 0.5, 0.625, 0.75 ), "b" : imath.Color3f( 1.0 ) * tempRGB } ),
+			},
+			connections = [
+				( ( "texture", "outColor" ), ( "surface", "incandescence" ) ),
+				( ( "surface", "outColor" ), ( "raySwitch", "switched_closure" ) ),
+				( ( "areaLight", "out" ), ( "raySwitch", "base_closure" ) ),
+				( ( "tint", "out" ), ( "areaLight", "i_color" ) ),
+				( ( "texture", "outColor" ), ( "tint", "a" ) ),
+			],
+			output = ( "raySwitch", "outClosure" ),
+		)
+
+		self.assertEqual( modifiedAttributes["light"], meshLightSurface )
+
+		# Surface with color input, colored + temperature mesh light emission
+
+		modifiedAttributes = IECoreDelight.ShaderNetworkAlgo.convertUSDMeshLightAttributes( surfaceWithTexture( imath.Color3f( 0.125, 0.25, 0.375 ) ) )
+
+		meshLightSurface = IECoreScene.ShaderNetwork(
+			shaders = {
+				"surface" : IECoreScene.Shader( "dlPrincipled", "osl:surface", { "incandescence" : imath.Color3f( 0.5, 0.625, 0.75 ) } ),
+				"texture" : IECoreScene.Shader( "dlTexture", "osl:surface", { "textureFile" : "test.tx" } ),
+				"raySwitch" : IECoreScene.Shader( "dlRaySwitch", "osl:surface", { "switch_camera" : True, "switch_reflection" : True, "switch_refraction" : True } ),
+				"areaLight" : IECoreScene.Shader( "areaLight", "osl:light", { "i_color" : imath.Color3f( 0.125 * 0.5, 0.25 * 0.625, 0.375 * 0.75 ) * tempRGB } | standardLightParams ),
+				"tint" : IECoreScene.Shader( "Maths/MultiplyColor", "osl:surface", { "a" : imath.Color3f( 0.5, 0.625, 0.75 ), "b" : imath.Color3f( 0.125, 0.25, 0.375 ) * tempRGB } ),
+			},
+			connections = [
+				( ( "texture", "outColor" ), ( "surface", "incandescence" ) ),
+				( ( "surface", "outColor" ), ( "raySwitch", "switched_closure" ) ),
+				( ( "areaLight", "out" ), ( "raySwitch", "base_closure" ) ),
+				( ( "tint", "out" ), ( "areaLight", "i_color" ) ),
+				( ( "texture", "outColor" ), ( "tint", "a" ) ),
+			],
+			output = ( "raySwitch", "outClosure" ),
+		)
+
+		self.assertEqual( modifiedAttributes["light"], meshLightSurface )
+
+		def lightWithTexture( surfaceColor ) :
+			return IECore.CompoundObject(
+				{
+					"light" : IECoreScene.ShaderNetwork(
+						shaders = {
+							"light" : IECoreScene.Shader( "MeshLight", "light", {
+								"color" : imath.Color3f( 0.125, 0.25, 0.375 ),
+								"enableColorTemperature" : True,
+								"colorTemperature" : 1000.0,
+							} ),
+							"texture" : IECoreScene.Shader( "dlTexture", "osl:surface", { "textureFile" : "test.tx" } ),
+						},
+						output = "light",
+						connections = [ ( ( "texture", "outColor" ), ( "light", "color" ) ), ]
+					),
+					"osl:surface" : IECoreScene.ShaderNetwork(
+						shaders = {
+							"surface" : IECoreScene.Shader( "dlPrincipled", "osl:surface", { "incandescence" : surfaceColor } ),
+						},
+						output = ( "surface", "outColor" ),
+					),
+				}
+			)
+
+		# Surface with black emission, light with color input + temperature
+
+		modifiedAttributes = IECoreDelight.ShaderNetworkAlgo.convertUSDMeshLightAttributes( lightWithTexture( imath.Color3f( 0.0 ) ) )
+
+		meshLightSurface = IECoreScene.ShaderNetwork(
+			shaders = {
+				"surface" : IECoreScene.Shader( "dlPrincipled", "osl:surface", { "incandescence" : imath.Color3f( 0.0 ) } ),
+				"raySwitch" : IECoreScene.Shader( "dlRaySwitch", "osl:surface", { "switch_camera" : True, "switch_reflection" : True, "switch_refraction" : True } ),
+				"areaLight" : IECoreScene.Shader( "areaLight", "osl:light", { "i_color" : imath.Color3f( 0.0 ) } | standardLightParams ),
+			},
+			connections = [
+				( ( "areaLight", "out" ), ( "raySwitch", "base_closure" ) ),
+				( ( "surface", "outColor" ), ( "raySwitch", "switched_closure" ) ),
+			],
+			output = ( "raySwitch", "outClosure" ),
+		)
+
+		self.assertEqual( modifiedAttributes["light"], meshLightSurface )
+
+		# Surface with white emission, light with color input + temperature
+
+		modifiedAttributes = IECoreDelight.ShaderNetworkAlgo.convertUSDMeshLightAttributes( lightWithTexture( imath.Color3f( 1.0 ) ) )
+
+		meshLightSurface = IECoreScene.ShaderNetwork(
+			shaders = {
+				"surface" : IECoreScene.Shader( "dlPrincipled", "osl:surface", { "incandescence" : imath.Color3f( 1.0 ) } ),
+				"raySwitch" : IECoreScene.Shader( "dlRaySwitch", "osl:surface", { "switch_camera" : True, "switch_reflection" : True, "switch_refraction" : True } ),
+				"texture" : IECoreScene.Shader( "dlTexture", "osl:surface", { "textureFile" : "test.tx" } ),
+				"areaLight" : IECoreScene.Shader( "areaLight", "osl:light", { "i_color" : imath.Color3f( 0.125, 0.25, 0.375 ) * tempRGB } | standardLightParams ),
+				"tint" : IECoreScene.Shader( "Maths/MultiplyColor", "osl:surface", { "a" : imath.Color3f( 1.0 ) * tempRGB, "b" : imath.Color3f( 0.125, 0.25, 0.375 ) * tempRGB } ),
+			},
+			connections = [
+				( ( "surface", "outColor" ), ( "raySwitch", "switched_closure" ) ),
+				( ( "texture", "outColor" ), ( "tint", "b" ) ),
+				( ( "tint", "out" ), ( "areaLight", "i_color" ) ),
+				( ( "areaLight", "out" ), ( "raySwitch", "base_closure" ) ),
+			],
+			output = ( "raySwitch", "outClosure" ),
+		)
+
+		self.assertEqual( modifiedAttributes["light"], meshLightSurface )
+
+		# Surface with colored emission, light with color input + temperature
+
+		modifiedAttributes = IECoreDelight.ShaderNetworkAlgo.convertUSDMeshLightAttributes( lightWithTexture( imath.Color3f( 0.5, 0.625, 0.75 ) ) )
+
+		meshLightSurface = IECoreScene.ShaderNetwork(
+			shaders = {
+				"surface" : IECoreScene.Shader( "dlPrincipled", "osl:surface", { "incandescence" : imath.Color3f( 0.5, 0.625, 0.75 ) } ),
+				"raySwitch" : IECoreScene.Shader( "dlRaySwitch", "osl:surface", { "switch_camera" : True, "switch_reflection" : True, "switch_refraction" : True } ),
+				"texture" : IECoreScene.Shader( "dlTexture", "osl:surface", { "textureFile" : "test.tx" } ),
+				"areaLight" : IECoreScene.Shader( "areaLight", "osl:light", { "i_color" : imath.Color3f( 0.125 * 0.5, 0.25 * 0.625, 0.375 * 0.75 ) * tempRGB } | standardLightParams ),
+				"tint" : IECoreScene.Shader( "Maths/MultiplyColor", "osl:surface", { "a" : imath.Color3f( 0.5, 0.625, 0.75 ) * tempRGB, "b" : imath.Color3f( 0.125, 0.25, 0.375 ) * tempRGB } ),
+			},
+			connections = [
+				( ( "surface", "outColor" ), ( "raySwitch", "switched_closure" ) ),
+				( ( "texture", "outColor" ), ( "tint", "b" ) ),
+				( ( "tint", "out" ), ( "areaLight", "i_color" ) ),
+				( ( "areaLight", "out" ), ( "raySwitch", "base_closure" ) ),
+			],
+			output = ( "raySwitch", "outClosure" ),
+		)
+
+		self.assertEqual( modifiedAttributes["light"], meshLightSurface )
+
+		# Surface with color input, light with color input + temperature
+
+		sourceNetwork = IECore.CompoundObject(
+			{
+				"light" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"light" : IECoreScene.Shader( "MeshLight", "light", {
+							"color" : imath.Color3f( 0.125, 0.25, 0.375 ),
+							"enableColorTemperature" : True,
+							"colorTemperature" : 1000.0,
+						} ),
+						"lightTexture" : IECoreScene.Shader( "dlTexture", "osl:surface", { "textureFile" : "lightTest.tx" } ),
+					},
+					output = "light",
+					connections = [ ( ( "lightTexture", "outColor" ), ( "light", "color" ) ), ]
+				),
+				"osl:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"surface" : IECoreScene.Shader( "dlPrincipled", "osl:surface", { "incandescence" : imath.Color3f( 0.5, 0.625, 0.75 ) } ),
+						"texture" : IECoreScene.Shader( "dlTexture", "osl:surface", { "textureFile" : "test.tx" } ),
+					},
+					output = ( "surface", "outColor" ),
+					connections = [ ( ( "texture", "outColor" ), ( "surface", "incandescence" ) ), ]
+				),
+			}
+		)
+
+		modifiedAttributes = IECoreDelight.ShaderNetworkAlgo.convertUSDMeshLightAttributes( sourceNetwork )
+
+		meshLightSurface = IECoreScene.ShaderNetwork(
+			shaders = {
+				"surface" : IECoreScene.Shader( "dlPrincipled", "osl:surface", { "incandescence" : imath.Color3f( 0.5, 0.625, 0.75 ) } ),
+				"texture" : IECoreScene.Shader( "dlTexture", "osl:surface", { "textureFile" : "test.tx" } ),
+				"raySwitch" : IECoreScene.Shader( "dlRaySwitch", "osl:surface", { "switch_camera" : True, "switch_reflection" : True, "switch_refraction" : True } ),
+				"lightTexture" : IECoreScene.Shader( "dlTexture", "osl:surface", { "textureFile" : "lightTest.tx" } ),
+				"areaLight" : IECoreScene.Shader( "areaLight", "osl:light", { "i_color" : imath.Color3f( 0.125 * 0.5, 0.25 * 0.625, 0.375 * 0.75 ) * tempRGB } | standardLightParams ),
+				"tint" : IECoreScene.Shader( "Maths/MultiplyColor", "osl:surface", { "a" : imath.Color3f( 0.5, 0.625, 0.75 ), "b" : imath.Color3f( 0.125, 0.25, 0.375 ) * tempRGB } ),
+				"tintTemperature" : IECoreScene.Shader( "Maths/MultiplyColor", "osl:surface", { "b" : tempRGB } ),
+			},
+			connections = [
+				( ( "texture", "outColor" ), ( "surface", "incandescence" ) ),
+				( ( "surface", "outColor" ), ( "raySwitch", "switched_closure" ) ),
+				( ( "lightTexture", "outColor" ), ( "tintTemperature", "a" ) ),
+				( ( "tintTemperature", "out" ), ( "tint", "b" ) ),
+				( ( "tint", "out" ), ( "areaLight", "i_color" ) ),
+				( ( "areaLight", "out" ), ( "raySwitch", "base_closure" ) ),
+				( ( "texture", "outColor" ), ( "tint", "a" ) ),
+			],
+			output = ( "raySwitch", "outClosure" ),
+		)
+
+		self.assertEqual( modifiedAttributes["light"], meshLightSurface )

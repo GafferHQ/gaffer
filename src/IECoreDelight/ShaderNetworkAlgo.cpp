@@ -576,13 +576,17 @@ void transferUSDParameter( ShaderNetwork *network, InternedString shaderHandle, 
 	}
 }
 
+Color3f colorTemperatureTint( const Shader *shader )
+{
+	return parameterValue( shader, g_enableColorTemperatureParameter, false ) ?
+		blackbody( parameterValue( shader, g_colorTemperatureParameter, 6500.f ) ) :
+		Color3f( 1.f )
+	;
+}
+
 void transferCommonUSDLightParameters( const Shader *usdShader, Shader *shader )
 {
-	Color3f color = parameterValue( usdShader, g_colorParameter, Color3f( 1 ) );
-	if( parameterValue( usdShader, g_enableColorTemperatureParameter, false ) )
-	{
-		color *= blackbody( parameterValue( usdShader, g_colorTemperatureParameter, 6500.f ) );
-	}
+	const Color3f color = parameterValue( usdShader, g_colorParameter, Color3f( 1 ) ) * colorTemperatureTint( usdShader );
 	shader->parameters()[g_dlColorParameter] = new Color3fData( color );
 }
 
@@ -1214,11 +1218,11 @@ ConstCompoundObjectPtr convertUSDMeshLightAttributes( const CompoundObject *attr
 	// C = light color x surface color. If 0 or 1 in parenthesis, it means it's known to be that value.
 	// TINT = A multiply shader combining the surface and light colors.
 	// Light / Emission Tex = the texture is connected directly without tint.
-	//                         | LightColor 0 | LightColor 0-1 | LightColor 1  | LightColor Textured
-	// EmissionColor 0         |      C(0)    |       C(0)     |     C(0)      |       C(0)
-	// EmissionColor 0-1       |      C(0)    |       C        |     C         |       TINT
-	// EmissionColor 1         |      C(0)    |       C        |     C(1)      |     Light Tex
-	// EmissionColor Textured  |      C(0)    |      TINT      |  Emission Tex |       TINT
+	//                         | LightColor 0 | LightColor 0-1 |                LightColor 1              | LightColor Textured
+	// EmissionColor 0         |      C(0)    |       C(0)     |                    C(0)                  |  C(0)
+	// EmissionColor 0-1       |      C(0)    |       C        |                    C                     |  TINT
+	// EmissionColor 1         |      C(0)    |       C        |                    C                     |  colorTemperature ? TINT : Light Tex
+	// EmissionColor Textured  |      C(0)    |      TINT      |  colorTemperature ? TINT : Emission Tex  |  TINT + TEMPERATURE TINT
 
 	InternedString tintHandle;
 	ShaderNetwork::Parameter lightOutputParameter = lightNetwork->getOutput();
@@ -1238,7 +1242,10 @@ ConstCompoundObjectPtr convertUSDMeshLightAttributes( const CompoundObject *attr
 		newLightNetwork->addConnection( { incandescenceInput, textureDestination } );
 	}
 
-	if( meshLightColorInput && ( incandescenceColor != Color3f( 0.f ) || incandescenceInput ) )
+	const Color3f temperatureColor = colorTemperatureTint( lightShader );
+	const Color3f tintedIncandescenceColor = incandescenceColor * temperatureColor;
+
+	if( meshLightColorInput && ( tintedIncandescenceColor != Color3f( 0.f ) || incandescenceInput ) )
 	{
 		ShaderNetworkPtr meshLightColorNetwork = lightNetwork->copy();
 		meshLightColorNetwork->setOutput( meshLightColorInput );
@@ -1246,16 +1253,29 @@ ConstCompoundObjectPtr convertUSDMeshLightAttributes( const CompoundObject *attr
 		ShaderNetwork::Parameter areaLightColorInput = IECoreScene::ShaderNetworkAlgo::addShaders( newLightNetwork.get(), meshLightColorNetwork.get(), /* connections = */ true );
 
 		ShaderNetwork::Parameter textureDestination = { areaLightShaderHandle, g_dlColorParameter };
-		if( incandescenceColor != Color3f( 1.f ) || incandescenceInput )
+		if( tintedIncandescenceColor != Color3f( 1.f ) || incandescenceInput )
 		{
 			if( tintHandle == g_emptyString )
 			{
-				ShaderPtr tintShader = new Shader( "Maths/MultiplyColor", "osl:surface", { { "a", new Color3fData( incandescenceColor ) }, { "b", new Color3fData( lightColor ) } } );
+				ShaderPtr tintShader = new Shader( "Maths/MultiplyColor", "osl:surface", { { "a", new Color3fData( tintedIncandescenceColor ) }, { "b", new Color3fData( lightColor ) } } );
 				tintHandle = newLightNetwork->addShader( InternedString( "tint" ), std::move( tintShader ) );
 
 				newLightNetwork->addConnection( { { tintHandle, "out" }, { areaLightShaderHandle, g_dlColorParameter } } );
 			}
-			textureDestination = { tintHandle, "b" };
+
+			if( temperatureColor != Color3f( 1.f ) && incandescenceInput )
+			{
+				// We've connected the emission shader directly to `a` and we also have an input to the
+				// light's color. Color temperature needs to be added using a second tint shader.
+				ShaderPtr temperatureTintShader = new Shader( "Maths/MultiplyColor", "osl:surface", { { "b", new Color3fData( temperatureColor ) } } );
+				InternedString temperatureTintHandle = newLightNetwork->addShader( InternedString( "tintTemperature" ), std::move( temperatureTintShader ) );
+				newLightNetwork->addConnection( { { temperatureTintHandle, "out" }, { tintHandle, "b" } } );
+				textureDestination = { temperatureTintHandle, "a" };
+			}
+			else
+			{
+				textureDestination = { tintHandle, "b" };
+			}
 		}
 
 		if( !newLightNetwork->input( textureDestination ) )

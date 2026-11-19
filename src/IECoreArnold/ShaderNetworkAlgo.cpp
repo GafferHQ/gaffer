@@ -778,13 +778,17 @@ const std::vector<IECore::InternedString> g_surfaceShaderAttributeNames = {
 
 const string g_arnoldNamespace( "arnold:" );
 
+Color3f colorTemperatureTint( const Shader *usdShader )
+{
+	return parameterValue( usdShader, g_enableColorTemperatureParameter, false ) ?
+		blackbody( parameterValue( usdShader, g_colorTemperatureParameter, 6500.0f ) ) :
+		Color3f( 1.f )
+	;
+}
+
 void transferUSDLightParameters( ShaderNetwork *network, InternedString shaderHandle, const Shader *usdShader, Shader *shader )
 {
-	Color3f color = parameterValue( usdShader, g_colorParameter, Color3f( 1 ) );
-	if( parameterValue( usdShader, g_enableColorTemperatureParameter, false ) )
-	{
-		color *= blackbody( parameterValue( usdShader, g_colorTemperatureParameter, 6500.0f ) );
-	}
+	const Color3f color = parameterValue( usdShader, g_colorParameter, Color3f( 1 ) ) * colorTemperatureTint( usdShader );
 	shader->parameters()[g_colorParameter] = new Color3fData( color );
 
 	transferUSDParameter( network, shaderHandle, usdShader, g_diffuseParameter, shader, g_diffuseParameter, 1.0f );
@@ -1293,8 +1297,8 @@ ConstCompoundObjectPtr convertUSDMeshLightAttributes( const CompoundObject *attr
 		return attributes;
 	}
 
-	const IECoreScene::Shader *outputShader = lightNetwork->outputShader();
-	if( !outputShader || outputShader->getName() != "MeshLight" )
+	const Shader *lightOutputShader = lightNetwork->outputShader();
+	if( !lightOutputShader || lightOutputShader->getName() != "MeshLight" )
 	{
 		return attributes;
 	}
@@ -1307,7 +1311,6 @@ ConstCompoundObjectPtr convertUSDMeshLightAttributes( const CompoundObject *attr
 	const auto &[emissionColorParameter, emissionColorInput] = surfaceGlowParameters( surfaceNetwork );
 
 	ShaderNetwork::Parameter lightOutputParameter = lightNetwork->getOutput();
-	const Shader *lightOutputShader = lightNetwork->outputShader();
 
 	ShaderPtr newLightShader = new Shader( "mesh_light", "ai:light" );
 	transferUSDLightParameters( newLightShaderNetwork.get(), lightOutputParameter.shader, lightOutputShader, newLightShader.get() );
@@ -1318,13 +1321,15 @@ ConstCompoundObjectPtr convertUSDMeshLightAttributes( const CompoundObject *attr
 	// C = light color x surface color. If 0 or 1 in parenthesis, it means it's known to be that value.
 	// TINT = A multiply shader combining the surface and light colors.
 	// Light / Emission Tex = the texture is connected directly without tint.
-	//                         | LightColor 0 | LightColor 0-1 | LightColor 1  | LightColor Textured
-	// EmissionColor 0         |      C(0)    |       C(0)     |     C(0)      |       C(0)
-	// EmissionColor 0-1       |      C(0)    |       C        |     C         |       TINT
-	// EmissionColor 1         |      C(0)    |       C        |     C(1)      |     Light Tex
-	// EmissionColor Textured  |      C(0)    |      TINT      |  Emission Tex |       TINT
+	//                         | LightColor 0 | LightColor 0-1 |                LightColor 1              | LightColor Textured
+	// EmissionColor 0         |      C(0)    |       C(0)     |                    C(0)                  |  C(0)
+	// EmissionColor 0-1       |      C(0)    |       C        |                    C                     |  TINT
+	// EmissionColor 1         |      C(0)    |       C        |                    C                     |  colorTemperature ? TINT : Light Tex
+	// EmissionColor Textured  |      C(0)    |      TINT      |  colorTemperature ? TINT : Emission Tex  |  TINT + TEMPERATURE TINT
 
-	const Color3f lightColor = parameterValue( lightOutputShader, g_colorParameter, Color3f( 1.f ) );
+	auto lightColorData = newLightShader->parametersData()->member<Color3fData>( g_colorParameter );
+	assert( lightColorData );
+	const Color3f lightColor = lightColorData->readable();
 	const Color3f emissionColor = emissionColorParameter ? parameterValue( surfaceNetwork->getShader( emissionColorParameter.shader ), emissionColorParameter.name, Color3f( 0.f ) ) : Color3f( 0.f );
 	if( emissionColorParameter )
 	{
@@ -1358,19 +1363,34 @@ ConstCompoundObjectPtr convertUSDMeshLightAttributes( const CompoundObject *attr
 		}
 	}
 
-	if( meshLightColorInput && ( emissionColor != Color3f( 0.f ) || emissionColorInput ) )
+	const Color3f temperatureColor = colorTemperatureTint( lightOutputShader );
+	const Color3f tintedEmissionColor = emissionColor * temperatureColor;
+
+	if( meshLightColorInput && ( tintedEmissionColor != Color3f( 0.f ) || emissionColorInput ) )
 	{
-		if( emissionColor != Color3f( 1.f ) || emissionColorInput )
+		if( tintedEmissionColor != Color3f( 1.f ) || emissionColorInput )
 		{
 			if( tintHandle == g_emptyString )
 			{
-				ShaderPtr tintShader = new Shader( "multiply", "ai:surface", { { "input1", new Color3fData( emissionColor ) } } );
+				ShaderPtr tintShader = new Shader( "multiply", "ai:surface", { { "input1", new Color3fData( tintedEmissionColor ) } } );
 				tintHandle = newLightShaderNetwork->addShader( InternedString( "tint" ), std::move( tintShader ) );
 
 				newLightShaderNetwork->addConnection( { { tintHandle, "out" }, meshLightColorParameter } );
 			}
 
-			newLightShaderNetwork->addConnection( { meshLightColorInput, { tintHandle, "input2" } } );
+			if( temperatureColor != Color3f( 1.f ) && emissionColorInput )
+			{
+				// We've connected the emission shader directly to `input1` and we also have an input to the
+				// light's color. Color temperature needs to be added using a second tint shader.
+				ShaderPtr temperatureTintShader = new Shader( "multiply", "ai:surface", { { "input2", new Color3fData( temperatureColor ) } } );
+				InternedString temperatureTintHandle = newLightShaderNetwork->addShader( InternedString( "tintTemperature" ), std::move( temperatureTintShader ) );
+				newLightShaderNetwork->addConnection( { meshLightColorInput, { temperatureTintHandle, "input1" } } );
+				newLightShaderNetwork->addConnection( { { temperatureTintHandle, "out" }, { tintHandle, "input2" } } );
+			}
+			else
+			{
+				newLightShaderNetwork->addConnection( { meshLightColorInput, { tintHandle, "input2" } } );
+			}
 		}
 		else
 		{
