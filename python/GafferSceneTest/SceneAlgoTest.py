@@ -3421,6 +3421,49 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		# See todo in `CapturingMonitor::forceMonitoring()`.
 		self.__assertPrimitiveVariableHistory( primitiveVariableHistory, [ 0, 0, 0, 0 ], shufflePrimitiveVariables["out"], "/cube", "foo", emptyPrimitiveVariable, 0 )
 
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testHistoryContextAllocation( self ) :
+
+		cube = GafferScene.Cube()
+
+		cubeFilter = GafferScene.PathFilter()
+		cubeFilter["paths"].setValue( IECore.StringVectorData( [ "/cube" ] ) )
+
+		prevNode = cube
+
+		keepAlive = set()
+
+		for i in range( 1000 ):
+			primVars = GafferScene.PrimitiveVariables()
+			primVars["in"].setInput( prevNode["out"] )
+			primVars["filter"].setInput( cubeFilter["out"] )
+			primVars["primitiveVariables"].addChild( Gaffer.NameValuePlug( "test", i ) )
+
+			keepAlive.add( primVars )
+			prevNode = primVars
+
+		context = Gaffer.Context()
+
+		# Put a whole pile of variables in the context - this will hurt performance a lot if we make
+		# a copy of the context for every CapturedProcess
+		for i in range( 400 ):
+			context[f"a{i}"] = i
+
+		with context:
+			# Pre-evaluate so we're not looking at the cost to evaluate/hash this plug
+			prevNode["out"].object( "/cube" )
+
+			with GafferTest.TestRunner.PerformanceScope() :
+				objectHistory = GafferScene.SceneAlgo.history( prevNode["out"]["object"], "/cube" )
+
+		# We'll only get decent results on performance if we're sharing contexts, but we can also test
+		# explicitly that the contexts are in fact shared
+		h = objectHistory
+		rootContext = h.getContext( _copy = False )
+		while h:
+			self.assertTrue( h.getContext( _copy = False ).isSame( rootContext ) )
+			h = h.predecessors[0] if len( h.predecessors ) else None
+
 	def testRenderPassNames( self ) :
 
 		renderPasses = GafferScene.RenderPasses()

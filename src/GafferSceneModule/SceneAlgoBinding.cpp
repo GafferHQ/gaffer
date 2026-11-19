@@ -256,12 +256,24 @@ void historySetScene( SceneAlgo::History &h, const ScenePlugPtr &s )
 
 Gaffer::ContextPtr historyGetContext( SceneAlgo::History &h )
 {
-	return h.context;
+	return h.context ? new Gaffer::Context( *h.context ) : nullptr;
 }
 
 void historySetContext( SceneAlgo::History &h, const Gaffer::ContextPtr &c )
 {
 	h.context = c;
+}
+
+Gaffer::ContextPtr historyGetContextOptionalCopy( SceneAlgo::History &h, bool copy = true )
+{
+	if( copy )
+	{
+		return h.context ? new Gaffer::Context( *h.context ) : nullptr;
+	}
+	else
+	{
+		return boost::const_pointer_cast<Gaffer::Context>( h.context );
+	}
 }
 
 SceneAlgo::History::Ptr historyWrapper( const ValuePlug &scenePlugChild, const ScenePlug::ScenePath &path )
@@ -515,6 +527,8 @@ void bindSceneAlgo()
 			.def( init<ScenePlugPtr, Gaffer::ContextPtr>() )
 			.add_property( "scene", &historyGetScene, &historySetScene )
 			.add_property( "context", &historyGetContext, &historySetContext )
+			// We add this accessor as well as the property so that you can pass `copy = False`
+			.def( "getContext", &historyGetContextOptionalCopy, ( arg( "_copy" ) = true ) )
 			.def_readonly( "predecessors", &SceneAlgo::History::predecessors )
 		;
 

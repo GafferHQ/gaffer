@@ -244,10 +244,10 @@ struct History : public IECore::RefCounted
 	using Predecessors = std::vector<Ptr>;
 
 	History() = default;
-	History( const ScenePlugPtr &scene, const Gaffer::ContextPtr &context ) : scene( scene ), context( context ) {}
+	History( const ScenePlugPtr &scene, const Gaffer::ConstContextPtr &context ) : scene( scene ), context( context ) {}
 
 	ScenePlugPtr scene;
-	Gaffer::ContextPtr context;
+	Gaffer::ConstContextPtr context;
 	Predecessors predecessors;
 };
 
@@ -261,7 +261,7 @@ struct AttributeHistory : public History
 {
 	IE_CORE_DECLAREMEMBERPTR( AttributeHistory )
 	AttributeHistory(
-		const ScenePlugPtr &scene, const Gaffer::ContextPtr &context,
+		const ScenePlugPtr &scene, const Gaffer::ConstContextPtr &context,
 		const IECore::InternedString &attributeName, const IECore::ConstObjectPtr &attributeValue
 	) :	History( scene, context ), attributeName( attributeName ), attributeValue( attributeValue ) {}
 	IECore::InternedString attributeName;
@@ -284,7 +284,7 @@ struct OptionHistory : public History
 {
 	IE_CORE_DECLAREMEMBERPTR( OptionHistory )
 	OptionHistory(
-		const ScenePlugPtr &scene, const Gaffer::ContextPtr &context,
+		const ScenePlugPtr &scene, const Gaffer::ConstContextPtr &context,
 		const IECore::InternedString &optionName, const IECore::ConstObjectPtr &optionValue
 	) :	History( scene, context ), optionName( optionName ), optionValue( optionValue ) {}
 	IECore::InternedString optionName;
@@ -303,7 +303,7 @@ struct PrimitiveVariableHistory : public History
 {
 	IE_CORE_DECLAREMEMBERPTR( PrimitiveVariableHistory )
 	PrimitiveVariableHistory(
-		const ScenePlugPtr &scene, const Gaffer::ContextPtr &context,
+		const ScenePlugPtr &scene, const Gaffer::ConstContextPtr &context,
 		const IECore::InternedString &primitiveVariableName, const IECoreScene::PrimitiveVariable &primitiveVariableValue
 	) :	History( scene, context ), primitiveVariableName( primitiveVariableName ), primitiveVariableValue( primitiveVariableValue ) {}
 	IECore::InternedString primitiveVariableName;

@@ -579,7 +579,6 @@ class CapturingMonitor : public Monitor
 			capturedProcess->type = process->type();
 			capturedProcess->plug = p;
 			capturedProcess->destinationPlug = process->destinationPlug();
-			capturedProcess->context = new Context( *process->context(), /* omitCanceller = */ true );
 
 			Mutex::scoped_lock lock( m_mutex );
 			m_processMap[process] = capturedProcess.get();
@@ -588,15 +587,34 @@ class CapturingMonitor : public Monitor
 			if( it != m_processMap.end() )
 			{
 				CapturedProcess * const * parent = std::get_if<CapturedProcess *>( &it->second );
-				if( parent && *parent )
+
+				// The only way for the parent not to be a CapturedProcess is if it's a Monitor::Scope
+				// which should disable monitoring - which should mean this isn't being called. So
+				// there should be no way to get here without a CapturedProcess corresponding to the
+				// parent.
+				assert( parent && *parent );
+
+				// If the parent CapturedProcess has already made a copy of our context, we can safely
+				// share that.
+				if( (*parent)->context->hash() == process->context()->hash() )
 				{
-					(*parent)->children.push_back( std::move( capturedProcess ) );
+					capturedProcess->context = (*parent)->context;
 				}
+				else
+				{
+					capturedProcess->context = new Context( *process->context(), /* omitCanceller = */ true );
+				}
+
+				(*parent)->children.push_back( std::move( capturedProcess ) );
 			}
 			else
 			{
 				// Either `process->parent()` was null, or was started
 				// before we were made active via `Monitor::Scope`.
+
+				// For a root process, we always need to make a context copy
+				capturedProcess->context = new Context( *process->context(), /* omitCanceller = */ true );
+
 				m_rootProcesses.push_back( std::move( capturedProcess ) );
 			}
 
