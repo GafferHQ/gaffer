@@ -267,6 +267,14 @@ ArnoldLightVisualiser::~ArnoldLightVisualiser()
 
 Visualisations ArnoldLightVisualiser::visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, const IECore::CompoundObject *attributes, IECoreGL::ConstStatePtr &state ) const
 {
+	if( const auto *drawingMode = attributes->member<IECore::StringData>( "gl:light:drawingMode" ) )
+	{
+		if( drawingMode->readable() == "none" )
+		{
+			return {};
+		}
+	}
+
 	Visualisations v = StandardLightVisualiser::visualise( attributeName, shaderNetwork, attributes, state );
 
 	if( shaderNetwork->outputShader()->getName() == "photometric_light" )

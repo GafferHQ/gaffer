@@ -339,13 +339,14 @@ Gaffer.Metadata.registerValues( {
 		"description" :
 		"""
 		Controls how lights are presented in the Viewer.
+		`None` draws no OpenGL light geometry.
 		""",
 		"label" : "Light Drawing Mode",
 		"layout:section" : "Visualisers",
 
 		"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
-		"presetNames" : IECore.StringVectorData( [ "Wireframe", "Color", "Texture" ] ),
-		"presetValues" : IECore.StringVectorData( [ "wireframe", "color", "texture" ] ),
+		"presetNames" : IECore.StringVectorData( [ "Wireframe", "Color", "Texture", "None" ] ),
+		"presetValues" : IECore.StringVectorData( [ "wireframe", "color", "texture", "none" ] ),
 
 	},
 
