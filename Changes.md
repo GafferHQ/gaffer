@@ -7,6 +7,7 @@ Improvements
 - MeshSplit : Added `ignoreMissing` plug.
 - Cycles : Added render-time translation of `UsdPreviewSurface` normal maps, these require a FaceVarying `uv` primitive variable to render correctly.
 - Parent, Duplicate, Instancer, Group, MergeScenes : Improved performance when handling large numbers of sets.
+- Viewer : Added a search field to the channels menu.
 
 Fixes
 -----

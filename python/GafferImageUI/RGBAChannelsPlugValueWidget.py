@@ -48,11 +48,19 @@ from GafferUI.PlugValueWidget import sole
 ## Supported plug metadata :
 #
 # - "rgbaChannelsPlugValueWidget:allowNone" : Allows "None" to be chosen to assign an empty StringVectorData.
+# - "rgbaChannelsPlugValueWidget:searchable" : Set to False to remove the search field from the menu. Defaults to True.
 class RGBAChannelsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plugs, **kw ) :
 
-		self.__menuButton = GafferUI.MenuButton( menu = GafferUI.Menu( Gaffer.WeakMethod( self._menuDefinition ) ) )
+		searchable = all(
+			Gaffer.Metadata.value( p, "rgbaChannelsPlugValueWidget:searchable" ) is not False
+			for p in ( { plugs } if isinstance( plugs, Gaffer.Plug ) else plugs )
+		)
+
+		self.__menuButton = GafferUI.MenuButton(
+			menu = GafferUI.Menu( Gaffer.WeakMethod( self._menuDefinition ), searchable = searchable )
+		)
 		self.__menuButton._qtWidget().setMinimumWidth( 150 )
 
 		GafferUI.PlugValueWidget.__init__( self, self.__menuButton, plugs, **kw )
@@ -161,7 +169,7 @@ class RGBAChannelsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		result = IECore.MenuDefinition()
 		if not rgbaChannels :
-			result.append( "/No channels available", { "active" : False } )
+			result.append( "/No channels available", { "active" : False, "searchable" : False } )
 			return result
 
 		for text, value in rgbaChannels.items() :
@@ -171,6 +179,7 @@ class RGBAChannelsPlugValueWidget( GafferUI.PlugValueWidget ) :
 				{
 					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), value = value ),
 					"checkBox" : value == self.__currentValue,
+					"searchText" : text,
 				}
 			)
 
