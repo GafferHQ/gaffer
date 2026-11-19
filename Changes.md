@@ -79,23 +79,33 @@ Build
 - C++ : Updated to C++20.
 - GCC : Updated to 14.2.1 for Linux builds.
 - Boost : Updated to version 1.88.0.
+- Expat : Updated to version 2.10.0.
 - Fmt : Updated to version 12.1.0.
 - FreeType : Updated to version 2.14.3.
 - Imath : Updated to version 3.2.3.
 - LibFFI : Updated to version 3.8.0.
+- LibJPEG-Turbo : Updated to version 3.2.1.
 - LibPNG : Updated to version 1.6.59.
+- LibRaw : Updated to version 0.22.3.
+- LibTIFF : Updated to version 4.7.2.
 - LLVM : Updated to version 20.1.8.
 - MarkupSafe : Updated to version 3.0.4.
+- Minizip : Updated to version 4.2.2.
+- OpenColorIO : Updated to version 2.5.2.
 - OpenEXR : Updated to version 3.4.16.
+- OpenImageIO : Updated to version 3.2.2.0.
+- OpenJPEG : Updated to version 2.5.4.
 - OpenShadingLanguage : Updated to version 1.14.11.0.
 - OpenSubdiv : Updated to version 3.7.0.
 - OpenVDB : Updated to version 13.1.0.
 - PySide : Updated to version 6.8.5.
+- PyString : Updated to version 1.2.0.
 - Python : Updated to version 3.13.16.
 - Qt :
   - Updated to version 6.8.5.
   - Raised minimum required version to Qt 6.
 - TBB : Updated to version 2022.3.0.
+- YAML-CPP : Updated to version 0.9.0.
 - ZLib : Updated to version 1.3.1.
 - Windows : Updated Windows SDK to version 10.0.22621.0.
 
