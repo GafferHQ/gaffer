@@ -45,7 +45,6 @@ BUILD_CACHEDIR = os.environ["GAFFER_CACHE_DIR"]
 
 ARNOLD_ROOT = os.environ.get( "ARNOLD_ROOT", "" )
 DELIGHT_ROOT = os.environ["DELIGHT"]
-ONNX_ROOT = os.environ["ONNX_ROOT"]
 RENDERMAN_ROOT = os.environ.get( "RMANTREE", "" )
 
 BUILD_DIR = os.environ["GAFFER_BUILD_DIR"]
