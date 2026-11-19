@@ -106,7 +106,6 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( n["out"]["format"].getValue().getDisplayWindow(), imath.Box2i( imath.V2i( 0 ), imath.V2i( 200, 150 ) ) )
 
 		expectedMetadata = IECore.CompoundData( {
-			"oiio:ColorSpace" : IECore.StringData( "Linear" if OpenImageIO.VERSION_MAJOR < 3 else "lin_rec709" ),
 			"compression" : IECore.StringData( 'zips' ),
 			"PixelAspectRatio" : IECore.FloatData( 1 ),
 			"screenWindowCenter" : IECore.V2fData( imath.V2f( 0, 0 ) ),
@@ -118,6 +117,9 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 
 		if OpenImageIO.VERSION >= 30004 :
 			expectedMetadata["openexr:lineOrder"] = IECore.StringData( "increasingY" )
+
+		if OpenImageIO.VERSION < 30104 :
+			expectedMetadata["oiio:ColorSpace"] = IECore.StringData( "Linear" if OpenImageIO.VERSION_MAJOR < 3 else "lin_rec709" )
 
 		self.assertEqual( n["out"]["metadata"].getValue(), expectedMetadata )
 
