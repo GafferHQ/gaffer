@@ -27,6 +27,7 @@ Improvements
     - Added `ai:aperture_aspect_ratio` preset menu item.
 - Outputs : Default output presets are now registered in the modules for each renderer, making them available outside of the GUI (#6403).
 - SceneEditor : Pop-up editors are no longer provided when a downstream edit would override their action.
+- ImageWriter : Added `iff.dataType` plug.
 
 Fixes
 -----
