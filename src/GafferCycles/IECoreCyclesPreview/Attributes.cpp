@@ -53,6 +53,7 @@ IECORE_POP_DEFAULT_VISIBILITY
 
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/container/flat_map.hpp"
+#include "boost/container/small_vector.hpp"
 
 using namespace std;
 using namespace Imath;
@@ -319,12 +320,15 @@ ShaderPtr ShaderCache::get(
 	const IECore::CompoundObject *attributes
 )
 {
+	if( !surfaceShader && !volumeShader )
+	{
+		return nullptr;
+	}
+
 	IECore::MurmurHash h; // Cache key
 	IECore::MurmurHash hSubst;
 	IECore::MurmurHash hSubstDisp;
 	IECore::MurmurHash hSubstVol;
-	vector<IECore::MurmurHash> hSubstAovs;
-	vector<const IECoreScene::ShaderNetwork*> aovShaders;
 
 	// Attributes hash
 
@@ -395,25 +399,38 @@ ShaderPtr ShaderCache::get(
 		}
 	}
 
-	// AOV hash
-	if( attributes && ( surfaceShader || volumeShader ) )
+	// AOV shaders hash
+
+	struct AOVShader
 	{
-		for( const auto &member : attributes->members() )
+		IECore::InternedString name;
+		const IECoreScene::ShaderNetwork *shader;
+		IECore::MurmurHash substitutionsHash;
+	};
+	boost::container::small_vector<AOVShader, 4> aovShaders;
+
+	if( attributes )
+	{
+		for( const auto &[name, value] : attributes->members() )
 		{
-			if( boost::starts_with( member.first.string(), "cycles:aov:" ) )
+			if( boost::starts_with( name.string(), "cycles:aov:" ) )
 			{
-				const IECoreScene::ShaderNetwork *aovShader = IECore::runTimeCast<IECoreScene::ShaderNetwork>( member.second.get() );
-				if( aovShader )
+				if( auto aovShader = IECore::runTimeCast<IECoreScene::ShaderNetwork>( value.get() ) )
 				{
-					IECore::MurmurHash aovh = aovShader->Object::hash();
-					IECore::MurmurHash hSubstAov;
-					aovShader->hashSubstitutions( attributes, hSubstAov );
-					aovh.append( hSubstAov );
-					h.append( aovh );
-					hSubstAovs.push_back( hSubstAov );
-					aovShaders.push_back( aovShader );
+					aovShaders.push_back( { name, aovShader, IECore::MurmurHash() } );
 				}
 			}
+		}
+
+		// CompoundObject iteration order is not stable across processes, and we
+		// need a stable hash for Cryptomatte material IDs. Sort before hashing.
+
+		std::sort( aovShaders.begin(), aovShaders.end(), [] ( const AOVShader &a, const AOVShader &b ) { return a.name.string() < b.name.string(); } );
+		for( auto &aovShader : aovShaders )
+		{
+			h.append( aovShader.shader->Object::hash() );
+			aovShader.shader->hashSubstitutions( attributes, aovShader.substitutionsHash );
+			h.append( aovShader.substitutionsHash );
 		}
 	}
 
@@ -428,93 +445,90 @@ ShaderPtr ShaderCache::get(
 	{
 		const std::string namePrefix = "shader:" + writeAccessor->first.toString() + ":";
 
-		if( surfaceShader || volumeShader )
+		// Substitute surface (if needed)
+		IECoreScene::ShaderNetworkPtr substitutedSurfaceShader;
+		if( surfaceShader && hSubst != IECore::MurmurHash() )
 		{
-			// Substitute surface (if needed)
-			IECoreScene::ShaderNetworkPtr substitutedSurfaceShader;
-			if( surfaceShader && hSubst != IECore::MurmurHash() )
-			{
-				substitutedSurfaceShader = surfaceShader->copy();
-				substitutedSurfaceShader->applySubstitutions( attributes );
-				surfaceShader = substitutedSurfaceShader.get();
-			}
-			// Substitute displacement (if needed)
-			IECoreScene::ShaderNetworkPtr substitutedDisplacementShader;
-			if( displacementShader && hSubstDisp != IECore::MurmurHash() )
-			{
-				substitutedDisplacementShader = displacementShader->copy();
-				substitutedDisplacementShader->applySubstitutions( attributes );
-				displacementShader = substitutedDisplacementShader.get();
-			}
-			// Substitute volume (if needed)
-			IECoreScene::ShaderNetworkPtr substitutedVolumeShader;
-			if( volumeShader && hSubstVol != IECore::MurmurHash() )
-			{
-				substitutedVolumeShader = volumeShader->copy();
-				substitutedVolumeShader->applySubstitutions( attributes );
-				volumeShader = substitutedVolumeShader.get();
-			}
-			// Get all the possible AOV shaders
-			vector<IECoreScene::ShaderNetworkPtr> substitutedAOVShaders;
-			for( size_t i = 0; i < hSubstAovs.size(); ++i )
-			{
-				if( hSubstAovs[i] != IECore::MurmurHash() )
-				{
-					substitutedAOVShaders.push_back( aovShaders[i]->copy() );
-					substitutedAOVShaders.back()->applySubstitutions( attributes );
-					aovShaders[i] = substitutedAOVShaders.back().get();
-				}
-			}
-
-			// Make the `ccl::ShaderGraph`.
-
-			std::unique_ptr<ccl::ShaderGraph> graph = ShaderNetworkAlgo::convertGraph(
-				surfaceShader, displacementShader, volumeShader, m_scene, namePrefix
-			);
-
-			if( surfaceShader && singleSided )
-			{
-				ShaderNetworkAlgo::setSingleSided( graph.get() );
-			}
-
-			for( const IECoreScene::ShaderNetwork *aovShader : aovShaders )
-			{
-				ShaderNetworkAlgo::convertAOV( aovShader, graph.get(), m_scene, namePrefix );
-			}
-
-			// Make the `ccl::Shader` to house the graph. We reference this via
-			// raw pointer, because Cycles doesn't support the deletion of
-			// Shader nodes.
-
-			ccl::Shader *shader = SceneAlgo::createNodeWithLock<ccl::Shader>( m_scene );
-			if( auto nameSource = surfaceShader ? surfaceShader : volumeShader )
-			{
-				shader->name = ccl::ustring( namePrefix + nameSource->getOutput().shader.string() );
-			}
-
-			shader->set_displacement_method( displacementMethod );
-			SocketAlgo::setSocket( shader, shader->get_emission_sampling_method_socket(), emissionSamplingMethod.get() );
-			shader->set_use_transparent_shadow( useTransparentShadow ? useTransparentShadow.value() : true );
-
-			if( volumeShader )
-			{
-				SocketAlgo::setSocket( shader, shader->get_volume_sampling_method_socket(), volumeSamplingMethod.get() );
-				SocketAlgo::setSocket( shader, shader->get_volume_interpolation_method_socket(), volumeInterpolationMethod.get() );
-				shader->set_volume_step_rate( volumeStepRate ? volumeStepRate.value() : 1.0f );
-			}
-
-			shader->set_graph( std::move( graph ) );
-
-			SceneAlgo::tagUpdateWithLock( shader, m_scene );
-			// Cycles defaults `need_update_displacement` to true for new shaders,
-			// which re-tessellates any subdiv mesh the shader is assigned to.
-			// Repeating tessellation on a previously tessellated mesh corrupts
-			// it and can cause Cycles to crash. We can disable this update as we
-			// reissue new geometry whenever displacement changes.
-			shader->need_update_displacement = false;
-
-			writeAccessor->second = new IECoreCycles::Shader( shader, h );
+			substitutedSurfaceShader = surfaceShader->copy();
+			substitutedSurfaceShader->applySubstitutions( attributes );
+			surfaceShader = substitutedSurfaceShader.get();
 		}
+		// Substitute displacement (if needed)
+		IECoreScene::ShaderNetworkPtr substitutedDisplacementShader;
+		if( displacementShader && hSubstDisp != IECore::MurmurHash() )
+		{
+			substitutedDisplacementShader = displacementShader->copy();
+			substitutedDisplacementShader->applySubstitutions( attributes );
+			displacementShader = substitutedDisplacementShader.get();
+		}
+		// Substitute volume (if needed)
+		IECoreScene::ShaderNetworkPtr substitutedVolumeShader;
+		if( volumeShader && hSubstVol != IECore::MurmurHash() )
+		{
+			substitutedVolumeShader = volumeShader->copy();
+			substitutedVolumeShader->applySubstitutions( attributes );
+			volumeShader = substitutedVolumeShader.get();
+		}
+
+		// Make the `ccl::ShaderGraph`.
+
+		std::unique_ptr<ccl::ShaderGraph> graph = ShaderNetworkAlgo::convertGraph(
+			surfaceShader, displacementShader, volumeShader, m_scene, namePrefix
+		);
+
+		if( surfaceShader && singleSided )
+		{
+			ShaderNetworkAlgo::setSingleSided( graph.get() );
+		}
+
+		// Add the AOV shaders.
+
+		for( const auto &[name, aovShader, hSubstAOV] : aovShaders )
+		{
+			IECoreScene::ShaderNetworkPtr substitutedAOVShader;
+			if( hSubstAOV != IECore::MurmurHash() )
+			{
+				substitutedAOVShader = aovShader->copy();
+				substitutedAOVShader->applySubstitutions( attributes );
+			}
+			ShaderNetworkAlgo::convertAOV(
+				substitutedAOVShader ? substitutedAOVShader.get() : aovShader,
+				graph.get(), m_scene, namePrefix
+			);
+		}
+
+		// Make the `ccl::Shader` to house the graph. We reference this via
+		// raw pointer, because Cycles doesn't support the deletion of
+		// Shader nodes.
+
+		ccl::Shader *shader = SceneAlgo::createNodeWithLock<ccl::Shader>( m_scene );
+		if( auto nameSource = surfaceShader ? surfaceShader : volumeShader )
+		{
+			shader->name = ccl::ustring( namePrefix + nameSource->getOutput().shader.string() );
+		}
+
+		shader->set_displacement_method( displacementMethod );
+		SocketAlgo::setSocket( shader, shader->get_emission_sampling_method_socket(), emissionSamplingMethod.get() );
+		shader->set_use_transparent_shadow( useTransparentShadow ? useTransparentShadow.value() : true );
+
+		if( volumeShader )
+		{
+			SocketAlgo::setSocket( shader, shader->get_volume_sampling_method_socket(), volumeSamplingMethod.get() );
+			SocketAlgo::setSocket( shader, shader->get_volume_interpolation_method_socket(), volumeInterpolationMethod.get() );
+			shader->set_volume_step_rate( volumeStepRate ? volumeStepRate.value() : 1.0f );
+		}
+
+		shader->set_graph( std::move( graph ) );
+
+		SceneAlgo::tagUpdateWithLock( shader, m_scene );
+		// Cycles defaults `need_update_displacement` to true for new shaders,
+		// which re-tessellates any subdiv mesh the shader is assigned to.
+		// Repeating tessellation on a previously tessellated mesh corrupts
+		// it and can cause Cycles to crash. We can disable this update as we
+		// reissue new geometry whenever displacement changes.
+		shader->need_update_displacement = false;
+
+		writeAccessor->second = new IECoreCycles::Shader( shader, h );
 	}
 
 	return writeAccessor->second;
