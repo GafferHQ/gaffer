@@ -361,7 +361,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 			self.__inspect( plane["out"], "not:an:option" ),
 			source = None,
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
-			canAcquireEdit = False, cantAcquireEditReason = "No editable source found in history."
+			canAcquireEdit = False, cantAcquireEditReason = "Editing not supported"
 		)
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
@@ -859,7 +859,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 			self.__inspect( s["editScope"]["out"], "test:enabled" ),
 			source = None,
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
-			canAcquireEdit = False, cantAcquireEditReason = "No editable source found in history."
+			canAcquireEdit = False, cantAcquireEditReason = "Editing not supported"
 		)
 
 		# Providing an EditScope does not allow an edit as the option does not
@@ -993,7 +993,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 
 		inspection = self.__inspect( s["editScope2"]["out"], "render:camera", None )
 		self.assertFalse( inspection.canDisableEdit() )
-		self.assertEqual( inspection.cantDisableEditReason(), "No editable source found in history." )
+		self.assertEqual( inspection.cantDisableEditReason(), "No edit found to disable." )
 
 		cameraEdit = GafferScene.EditScopeAlgo.acquireOptionEdit(
 			s["editScope1"], "render:camera", createIfNecessary = True

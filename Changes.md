@@ -38,6 +38,7 @@ Fixes
 - MetadataAlgo : Fixed crash calling `firstViewableNode()` on a plug without a node.
 - SceneEditors :
   - Fixed refusal to show pop-up editors for plugs which had been ganged, animated or locked.
+  - Fixed refusal to edit optional parameters on lights, such as the renderer-specific parameters on USD lights.
   - Fixed bug that misattributed shader parameter edits to ShaderTweaks nodes when the `shader` plug didn't match the inspected attribute.
 - LightTool : Fixed messaging for parameters which were not editable, for example because they originated in a SceneReader.
 

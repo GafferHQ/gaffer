@@ -753,7 +753,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		self.__assertExpectedResult(
 			self.__inspect( light["out"], "/light", "nothingHere" ),
 			source = None, sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
-			canAcquireEdit = False, cantAcquireEditReason = "No editable source found in history."
+			canAcquireEdit = False, cantAcquireEditReason = "Editing not supported"
 		)
 		self.__assertExpectedResult(
 			self.__inspect( editScope["out"], "/light", "nothingHere", editScope ),
@@ -788,7 +788,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 			source = None,
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
 			canAcquireEdit = False,
-			cantAcquireEditReason = "No editable source found in history."
+			cantAcquireEditReason = "Editing not supported"
 		)
 
 		self.__assertExpectedResult(
@@ -1024,45 +1024,28 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 
 		s["light"]["parameters"].addChild( Gaffer.OptionalValuePlug( "testFloat", Gaffer.FloatPlug(), False ) )
 
-		s["editScope"] = Gaffer.EditScope()
-		s["editScope"].setup( s["light"]["out"] )
-		s["editScope"]["in"].setInput( s["light"]["out"] )
+		inspection = self.__inspect( s["light"]["out"], "/light", "testFloat" )
+		self.assertEqual( inspection.source(), None )
+
+		self.assertFalse( inspection.canAcquireEdit( createIfNecessary = False ) )
+		self.assertIsNone( inspection.acquireEdit( createIfNecessary = False ) )
+
+		self.assertTrue( inspection.canAcquireEdit( createIfNecessary = True ) )
+		edit = inspection.acquireEdit( createIfNecessary = True )
+		self.assertEqual( edit, s["light"]["parameters"]["testFloat"] )
+		self.assertFalse( edit["enabled"].getValue() )
+
+		self.assertTrue( inspection.canEdit( IECore.FloatData( 1 ) ) )
+		inspection.edit( IECore.FloatData( 1 ) )
+		self.assertTrue( edit["enabled"].getValue() )
+		self.assertEqual( edit["value"].getValue(), 1.0 )
 
 		self.__assertExpectedResult(
-			self.__inspect( s["editScope"]["out"], "/light", "testFloat" ),
-			source = None, sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
-			canAcquireEdit = False, cantAcquireEditReason = "No editable source found in history."
-		)
-		self.__assertExpectedResult(
-			self.__inspect( s["editScope"]["out"], "/light", "testFloat", s["editScope"] ),
-			source = None, sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
-			canAcquireEdit = False, cantAcquireEditReason = "Parameter \"testFloat\" does not exist."
-		)
-
-		s["light"]["parameters"]["testFloat"]["enabled"].setValue( True )
-
-		SourceType = GafferSceneUI.Private.Inspector.Result.SourceType
-
-		self.__assertExpectedResult(
-			self.__inspect( s["editScope"]["out"], "/light", "testFloat" ),
+			self.__inspect( s["light"]["out"], "/light", "testFloat" ),
 			source = s["light"]["out"],
-			sourceType = SourceType.Other,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
 			canAcquireEdit = True,
 			edit = s["light"]["parameters"]["testFloat"]
-		)
-
-		inspection = self.__inspect( s["editScope"]["out"], "/light", "testFloat", s["editScope"] )
-		self.assertIsNotNone( inspection )
-		edit = inspection.acquireEdit()
-		edit["enabled"].setValue( True )
-		edit["value"].setValue( 5.0 )
-
-		self.__assertExpectedResult(
-			self.__inspect( s["editScope"]["out"], "/light", "testFloat", s["editScope"] ),
-			source = edit.node()["out"].source(),
-			sourceType = SourceType.EditScope,
-			canAcquireEdit = True,
-			edit = edit
 		)
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
@@ -1428,7 +1411,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 			sourceType = SourceType.None_,
 			fallbackDescription = "Inherited from /group",
 			canAcquireEdit = False,
-			cantAcquireEditReason = "No editable source found in history."
+			cantAcquireEditReason = "Editing not supported"
 		)
 
 		s["planeShader"] = GafferSceneTest.TestShader()
@@ -1604,7 +1587,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 			source = None,
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
 			canAcquireEdit = False,
-			cantAcquireEditReason = "No editable source found in history."
+			cantAcquireEditReason = "Editing not supported"
 		)
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
@@ -1713,7 +1696,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		self.__assertExpectedResult(
 			self.__inspect( s["editScope"]["out"], "/light", "testParameter" ),
 			source = None, sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
-			canAcquireEdit = False, cantAcquireEditReason = "No editable source found in history."
+			canAcquireEdit = False, cantAcquireEditReason = "Editing not supported"
 		)
 		self.__assertExpectedResult(
 			self.__inspect( s["editScope"]["out"], "/light", "testParameter", s["editScope"] ),

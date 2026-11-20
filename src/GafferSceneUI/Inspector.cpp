@@ -422,7 +422,7 @@ void Inspector::inspectHistoryWalk( const GafferScene::SceneAlgo::History *histo
 
 	if( !result->m_editors )
 	{
-		// Initialise editors from source if we can.
+		// Initialise editors from history if we can.
 		if( source && source->ancestor<EditScope>() == result->m_editScope && !source->ancestor<ScriptNode>() )
 		{
 			// Source is a node internal to the UI, which the user has no business editing.
@@ -433,7 +433,13 @@ void Inspector::inspectHistoryWalk( const GafferScene::SceneAlgo::History *histo
 			);
 			result->m_editors = Result::Editors( reason );
 		}
-		else if( source && source->ancestor<EditScope>() == result->m_editScope )
+		else if(
+			// Source is in the current EditScope.
+			( source && source->ancestor<EditScope>() == result->m_editScope ) ||
+			// No value and no source, and we've hit the top of the history.
+			// This is our last chance to make an editor, so we should take it.
+			( !result->m_value && !source && history->predecessors.empty() && node->ancestor<EditScope>() == result->m_editScope )
+		)
 		{
 			auto acquireEditFunction = [inspector = ConstInspectorPtr( this ), history = GafferScene::SceneAlgo::History::ConstPtr( history )] ( bool createIfNecessary, bool dryRun ) -> ValuePlugPtr {
 				Context::Scope scope( history->context.get() );
