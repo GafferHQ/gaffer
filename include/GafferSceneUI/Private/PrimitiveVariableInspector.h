@@ -74,7 +74,7 @@ class GAFFERSCENEUI_API PrimitiveVariableInspector : public Inspector
 
 		GafferScene::SceneAlgo::History::ConstPtr history() const override;
 		IECore::ConstObjectPtr value( const GafferScene::SceneAlgo::History *history) const override;
-		Gaffer::ValuePlugPtr source( const GafferScene::SceneAlgo::History *history, std::string &editWarning ) const override;
+		Gaffer::ValuePlugPtr acquireEdit( const GafferScene::SceneAlgo::History *history, bool createIfNecessary, bool dryRun ) const override;
 
 	private :
 

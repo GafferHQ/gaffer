@@ -404,13 +404,10 @@ class _InspectorWidget( GafferUI.Widget ) :
 		if not self.__inspectorResults :
 			return False
 
-		if all( r.editable() for r in self.__inspectorResults ) :
+		if all( r.canAcquireEdit() for r in self.__inspectorResults ) :
 
 			self.__popup = GafferUI.PlugPopup(
 				list( { r.acquireEdit() for r in self.__inspectorResults } ),
-				warning = self.__formatWarnings(
-					[ r.editWarning() for r in self.__inspectorResults ]
-				)
 			)
 			if isinstance( self.__popup.plugValueWidget(), GafferUI.TweakPlugValueWidget ) :
 				self.__popup.plugValueWidget().setNameVisible( False )
@@ -419,7 +416,7 @@ class _InspectorWidget( GafferUI.Widget ) :
 		else :
 
 			GafferUI.PopupWindow.showWarning(
-				self.__formatWarnings( [ r.nonEditableReason() for r in self.__inspectorResults ] ),
+				self.__formatWarnings( [ r.cantAcquireEditReason() for r in self.__inspectorResults ] ),
 				parent = self
 			)
 

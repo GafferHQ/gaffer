@@ -26,6 +26,7 @@ Improvements
     - Changed tweak plug names to match the parameter name it tweaks.
     - Added `ai:aperture_aspect_ratio` preset menu item.
 - Outputs : Default output presets are now registered in the modules for each renderer, making them available outside of the GUI (#6403).
+- SceneEditor : Pop-up editors are no longer provided when a downstream edit would override their action.
 
 Fixes
 -----
@@ -34,6 +35,11 @@ Fixes
 - Viewer : Fixed crashes on macOS when using Arnold, Cycles or 3Delight as the viewport renderer.
 - Enums : Fixed conversion of `QtCore.Qt.AlignmentFlag.AlignJustify`.
 - Arnold, Cycles, 3Delight : Fixed fallback value for USD DistantLight intensity.
+- MetadataAlgo : Fixed crash calling `firstViewableNode()` on a plug without a node.
+- SceneEditors :
+  - Fixed refusal to show pop-up editors for plugs which had been ganged, animated or locked.
+  - Fixed bug that misattributed shader parameter edits to ShaderTweaks nodes when the `shader` plug didn't match the inspected attribute.
+- LightTool : Fixed messaging for parameters which were not editable, for example because they originated in a SceneReader.
 
 API
 ---
@@ -71,6 +77,7 @@ Breaking Changes
   - Removed legacy compatibility code for PySide2 and PyQt.
   - Removed `_Variant` class.
 - MeshSegments : Changed behaviour when setting `connectivity` to "". Previously, this used vertex topology, now it passes through the input unchanged. This aligns better with other geometry processing nodes.
+- EditScopeAlgo : Removed `acquireSetEdits()` function.
 
 Build
 -----

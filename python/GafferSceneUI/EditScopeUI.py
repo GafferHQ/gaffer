@@ -267,9 +267,13 @@ def __editSelectionVisibility( editor, makeVisible = False ) :
 				context["scene:path"] = IECore.InternedStringVectorData( path.split( "/" )[1:] )
 				inspection = inspector.inspect()
 
-				if inspection is None or not inspection.editable() :
+				if inspection is None or not inspection.canEdit( IECore.BoolData( makeVisible ) ) :
 					continue
 
+				## \todo Maybe `AttributeInspector.edit()` should do this for us,
+				# (since we checked `canEdit()` above, that would seem logical).
+				# We could pass `None` as the value when we want to make the object
+				# visible, to say that we want to delete any existing attribute.
 				GafferScene.EditScopeAlgo.setVisibility( inspection.editScope(), path, makeVisible )
 
 		if makeVisible :

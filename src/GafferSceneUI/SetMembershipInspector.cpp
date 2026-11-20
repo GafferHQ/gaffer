@@ -128,104 +128,21 @@ HistoryCache g_historyCache(
 ConstBoolDataPtr g_true = new BoolData( true );
 ConstBoolDataPtr g_false = new BoolData( false );
 
-bool canEdit( const Gaffer::Plug *plug, const IECore::Object *value, std::string &failureReason )
+EditScope *editScopeWithContainingProcessor( ScenePlug *scene )
 {
-	if( !runTimeCast<const IECore::BoolData>( value ) )
+	auto editScope = scene->ancestor<EditScope>();
+	if( !editScope )
 	{
-		failureReason = fmt::format( "Data of type \"{}\" is not compatible.", value->typeName() );
-		return false;
+		return nullptr;
 	}
 
-	if( plug->node() )
+	auto setMemberShipProcessor = editScope->acquireProcessor( "SetMembershipEdits", /* createIfNecessary = */ false );
+	if( setMemberShipProcessor && setMemberShipProcessor->isAncestorOf( scene ) )
 	{
-		if( runTimeCast<const ObjectSource>( plug->node() ) )
-		{
-			return true;
-		}
-
-		if( runTimeCast<const Gaffer::ValuePlug>( plug ) && plug->parent<Spreadsheet::RowPlug>() && plug->ancestor<EditScope>() )
-		{
-			return true;
-		}
-		failureReason = fmt::format( "Cannot edit nodes of type \"{}\".", plug->node()->typeName() );
-	}
-	else
-	{
-		// If we've received a plug without a node, it's expected
-		// that this edit would need to be first acquired from an
-		// EditScope, which would create an appropriate plug to
-		// receive a BoolData edit. Typically this situation would
-		// arise from a plug being created by `Inspector::Result::canEdit()`
-		// when it cannot acquire an existing edit.
-		return true;
+		return editScope;
 	}
 
-	return false;
-}
-
-bool editSetMembership( Gaffer::Plug *plug, const std::string &setName, const ScenePlug::ScenePath &path, EditScopeAlgo::SetMembership setMembership )
-{
-	if( auto objectNode = runTimeCast<ObjectSource>( plug->node() ) )
-	{
-		std::vector<std::string> sets;
-		IECore::StringAlgo::tokenize( objectNode->setsPlug()->getValue(), ' ', sets );
-
-		if( setMembership == EditScopeAlgo::SetMembership::Added )
-		{
-			if( std::find( sets.begin(), sets.end(), setName ) == sets.end() )
-			{
-				sets.push_back( setName );
-			}
-		}
-		else
-		{
-			sets.erase( std::remove( sets.begin(), sets.end(), setName ), sets.end() );
-		}
-
-		objectNode->setsPlug()->setValue( boost::algorithm::join( sets, " " ) );
-
-		return true;
-	}
-
-	if( auto cells = runTimeCast<Gaffer::ValuePlug>( plug ) )
-	{
-		auto row = cells->parent<Spreadsheet::RowPlug>();
-		auto editScope = cells->ancestor<EditScope>();
-		if( row && editScope )
-		{
-			PathMatcher m;
-			m.addPath( path );
-			EditScopeAlgo::setSetMembership(
-				editScope,
-				m,
-				setName,
-				setMembership
-			);
-
-			return true;
-		}
-	}
-
-	return false;
-}
-
-std::string nonDisableableReason( const Gaffer::Plug *plug, const std::string &setName )
-{
-	if( const GraphComponent *readOnlyReason = MetadataAlgo::readOnlyReason( plug ) )
-	{
-		return fmt::format( "{} is locked.", readOnlyReason->relativeName( readOnlyReason->ancestor<ScriptNode>() ) );
-	}
-	else if( auto objectNode = runTimeCast<const ObjectSource>( plug->node() ) )
-	{
-		std::vector<std::string> sets;
-		IECore::StringAlgo::tokenize( objectNode->setsPlug()->getValue(), ' ', sets );
-		if( std::find( sets.begin(), sets.end(), setName ) == sets.end() )
-		{
-			return fmt::format( "{} has no edit to disable.", plug->relativeName( plug->ancestor<ScriptNode>() ) );
-		}
-	}
-
-	return "";
+	return nullptr;
 }
 
 }  // namespace
@@ -293,24 +210,24 @@ IECore::ConstObjectPtr SetMembershipInspector::fallbackValue( const GafferScene:
 	return ancestorMatch ? g_true : g_false;
 }
 
-Gaffer::ValuePlugPtr SetMembershipInspector::source( const GafferScene::SceneAlgo::History *history, std::string &editWarning ) const
+bool SetMembershipInspector::hasEdit( const GafferScene::SceneAlgo::History *history ) const
 {
 	auto sceneNode = runTimeCast<SceneNode>( history->scene->node() );
 	if( !sceneNode || history->scene != sceneNode->outPlug() || !sceneNode->enabledPlug()->getValue() )
 	{
-		return nullptr;
+		return false;
 	}
 
-	if( const auto objectSource = runTimeCast<ObjectSource>( sceneNode ) )
+	if( runTimeCast<ObjectSource>( sceneNode ) )
 	{
-		return objectSource->setsPlug();
+		return true;
 	}
 	if( const auto setSource = runTimeCast<GafferScene::Set>( sceneNode ) )
 	{
 		const std::string setNamePattern = setSource->namePlug()->getValue();
 		if( !StringAlgo::matchMultiple( m_setName, setNamePattern ) )
 		{
-			return nullptr;
+			return false;
 		}
 
 		unsigned filterResult;
@@ -324,90 +241,117 @@ Gaffer::ValuePlugPtr SetMembershipInspector::source( const GafferScene::SceneAlg
 			filterResult = setSource->filterPlug()->match( setSource->inPlug() );
 		}
 
-		if( !( filterResult & ( PathMatcher::Result::ExactMatch | PathMatcher::Result::AncestorMatch ) ) )
+		if( filterResult & PathMatcher::Result::ExactMatch )
 		{
-			return nullptr;
+			return true;
+		}
+	}
+
+	return false;
+}
+
+void SetMembershipInspector::edit( const IECore::Object *value, const GafferScene::SceneAlgo::History *history, bool dryRun ) const
+{
+	auto boolValue = runTimeCast<const IECore::BoolData>( value );
+	if( !boolValue)
+	{
+		throw EditDisallowed( fmt::format( "Data of type \"{}\" is not compatible.", value->typeName() ) );
+	}
+
+	setSetMembership(
+		boolValue->readable() ? EditScopeAlgo::SetMembership::Added : EditScopeAlgo::SetMembership::Removed,
+		history, dryRun
+	);
+}
+
+void SetMembershipInspector::edit( const IECore::Object *value, Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history, bool dryRun ) const
+{
+	auto boolValue = runTimeCast<const IECore::BoolData>( value );
+	if( !boolValue )
+	{
+		throw EditDisallowed( fmt::format( "Data of type \"{}\" is not compatible.", value->typeName() ) );
+	}
+
+	setSetMembership(
+		boolValue->readable() ? EditScopeAlgo::SetMembership::Added : EditScopeAlgo::SetMembership::Removed,
+		editScope, history, dryRun
+	);
+}
+
+void SetMembershipInspector::disableEdit( const GafferScene::SceneAlgo::History *history, bool dryRun ) const
+{
+	return setSetMembership( EditScopeAlgo::SetMembership::Unchanged, history, dryRun );
+}
+
+void SetMembershipInspector::disableEdit( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history, bool dryRun ) const
+{
+	return setSetMembership( EditScopeAlgo::SetMembership::Unchanged, editScope, history, dryRun );
+}
+
+void SetMembershipInspector::setSetMembership( GafferScene::EditScopeAlgo::SetMembership membership, const GafferScene::SceneAlgo::History *history, bool dryRun ) const
+{
+	if( auto objectNode = runTimeCast<ObjectSource>( history->scene->node() ) )
+	{
+		auto setsPlug = objectNode->setsPlug();
+		if( !setsPlug->settable() || Gaffer::MetadataAlgo::readOnly( objectNode->setsPlug() ) )
+		{
+			throw EditDisallowed( fmt::format( "{} is locked.", setsPlug->relativeName( setsPlug->ancestor<ScriptNode>() ) ) );
 		}
 
-		if( const auto spreadsheetSource = runTimeCast<Spreadsheet>( setSource->namePlug()->source<Plug>()->parent() ) )
+		std::vector<std::string> sets;
+		IECore::StringAlgo::tokenize( objectNode->setsPlug()->getValue(), ' ', sets );
+
+		if( membership == EditScopeAlgo::SetMembership::Unchanged )
 		{
-			if( const auto row = spreadsheetSource->rowsPlug()->row( m_setName ) )
+			if( std::find( sets.begin(), sets.end(), m_setName.string() ) == sets.end() )
 			{
-				return row->cellsPlug();
+				throw EditDisallowed( fmt::format( "{} has no edit to disable.", setsPlug->relativeName( setsPlug->ancestor<ScriptNode>() ) ) );
 			}
 		}
 
-		return setSource->namePlug();
-	}
-
-	return nullptr;
-}
-
-Inspector::AcquireEditFunctionOrFailure SetMembershipInspector::acquireEditFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const
-{
-	const GraphComponent *readOnlyReason = EditScopeAlgo::setMembershipReadOnlyReason(
-		editScope,
-		m_setName.string(),
-		EditScopeAlgo::SetMembership::Added
-	);
-
-	if( readOnlyReason )
-	{
-		return fmt::format( "{} is locked.", readOnlyReason->relativeName( readOnlyReason->ancestor<ScriptNode>() ) );
-	}
-	else
-	{
-		InternedString setName = m_setName;
-		return [
-			editScope = editScope,
-			setName,
-			context = history->context
-		] ( bool createIfNecessary ) {
-			Context::Scope scope( context.get() );
-			return EditScopeAlgo::acquireSetEdits( editScope, setName, createIfNecessary );
-		};
-	}
-}
-
-Inspector::CanEditFunction SetMembershipInspector::canEditFunction( const GafferScene::SceneAlgo::History *history ) const
-{
-	return [] ( const Gaffer::Plug *plug, const IECore::Object *value, std::string &failureReason ) { return ::canEdit( plug, value, failureReason ); };
-}
-
-Inspector::EditFunction SetMembershipInspector::editFunction( const GafferScene::SceneAlgo::History *history ) const
-{
-	const auto path = history->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
-	return [
-		setName = m_setName,
-		path
-	] ( Gaffer::Plug *plug, const IECore::Object *value ) {
-		if( const auto boolValue = runTimeCast<const IECore::BoolData>( value ) )
+		if( dryRun )
 		{
-			return ::editSetMembership( plug, setName.string(), path, boolValue->readable() ? EditScopeAlgo::SetMembership::Added : EditScopeAlgo::SetMembership::Removed );
+			return;
+		}
+
+		if( membership == EditScopeAlgo::SetMembership::Added )
+		{
+			if( std::find( sets.begin(), sets.end(), m_setName.string() ) == sets.end() )
+			{
+				sets.push_back( m_setName );
+			}
 		}
 		else
 		{
-			throw IECore::Exception( fmt::format( "Cannot edit. Data of type \"{}\" is not compatible.", value->typeName() ) );
+			sets.erase( std::remove( sets.begin(), sets.end(), m_setName.string() ), sets.end() );
 		}
-	};
-}
 
-Inspector::DisableEditFunctionOrFailure SetMembershipInspector::disableEditFunction( Gaffer::ValuePlug *plug, const GafferScene::SceneAlgo::History *history ) const
-{
-	const std::string nonDisableableReason = ::nonDisableableReason( plug, m_setName );
-
-	if( !nonDisableableReason.empty() )
+		objectNode->setsPlug()->setValue( boost::algorithm::join( sets, " " ) );
+	}
+	else if( auto editScope = editScopeWithContainingProcessor( history->scene.get() ) )
 	{
-		return nonDisableableReason;
+		setSetMembership( membership, editScope, history, dryRun );
 	}
 	else
 	{
-		return [
-			plug = PlugPtr( plug ),
-			setName = m_setName,
-			path = history->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName )
-		] () {
-			return ::editSetMembership( plug.get(), setName.string(), path, EditScopeAlgo::SetMembership::Unchanged );
-		};
+		throw EditDisallowed( fmt::format( "Cannot edit nodes of type \"{}\".", history->scene->node()->typeName() ) );
 	}
+}
+
+void SetMembershipInspector::setSetMembership( GafferScene::EditScopeAlgo::SetMembership membership, Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history, bool dryRun ) const
+{
+	if( auto reason = EditScopeAlgo::setMembershipReadOnlyReason( editScope, m_setName, membership ) )
+	{
+		throw EditDisallowed( fmt::format( "{} is locked.", reason->relativeName( reason->ancestor<ScriptNode>() ) ) );
+	}
+
+	if( dryRun )
+	{
+		return;
+	}
+
+	PathMatcher m;
+	m.addPath( history->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ) );
+
+	EditScopeAlgo::setSetMembership( editScope, m, m_setName, membership );
 }

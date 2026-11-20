@@ -72,17 +72,17 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 			context["scene:path"] = IECore.InternedStringVectorData( path.split( "/" )[1:] )
 			return inspector.inspect()
 
-	def __assertExpectedResult( self, result, source, sourceType, editable, nonEditableReason = "", edit = None, editWarning = "", fallbackDescription = "" ) :
+	def __assertExpectedResult( self, result, source, sourceType, canAcquireEdit, cantAcquireEditReason = "", edit = None, fallbackDescription = "" ) :
 
 		self.assertEqual( result.source(), source )
 		self.assertEqual( result.sourceType(), sourceType )
 		self.assertEqual( result.fallbackDescription(), fallbackDescription )
-		self.assertEqual( result.editable(), editable )
+		self.assertEqual( result.canAcquireEdit(), canAcquireEdit )
 
-		if editable :
+		if canAcquireEdit :
 
-			self.assertEqual( nonEditableReason, "" )
-			self.assertEqual( result.nonEditableReason(), "" )
+			self.assertEqual( result.cantAcquireEditReason(), "" )
+			self.assertEqual( cantAcquireEditReason, "" )
 
 			acquiredEdit = result.acquireEdit()
 			self.assertIsNotNone( acquiredEdit )
@@ -95,15 +95,11 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 					edit.fullName() if edit is not None else ""
 				)
 
-			self.assertEqual( result.editWarning(), editWarning )
-
 		else :
 
 			self.assertIsNone( edit )
-			self.assertEqual( editWarning, "" )
-			self.assertEqual( result.editWarning(), "" )
-			self.assertNotEqual( nonEditableReason, "" )
-			self.assertEqual( result.nonEditableReason(), nonEditableReason )
+			self.assertNotEqual( cantAcquireEditReason, "" )
+			self.assertEqual( result.cantAcquireEditReason(), cantAcquireEditReason )
 			self.assertRaises( RuntimeError, result.acquireEdit )
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
@@ -143,24 +139,24 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 
 		self.__assertExpectedResult(
 			self.__inspect( s["group"]["out"], "/group/light", "intensity", None ),
-			source = s["light"]["parameters"]["intensity"], sourceType = SourceType.Other,
-			editable = True, edit = s["light"]["parameters"]["intensity"]
+			source = s["light"]["out"], sourceType = SourceType.Other,
+			canAcquireEdit = True, edit = s["light"]["parameters"]["intensity"]
 		)
 
 		# Even if there is an edit scope in the way
 
 		self.__assertExpectedResult(
 			self.__inspect( s["editScope1"]["out"], "/group/light", "intensity", None ),
-			source = s["light"]["parameters"]["intensity"], sourceType = SourceType.Other,
-			editable = True, edit = s["light"]["parameters"]["intensity"]
+			source = s["light"]["out"], sourceType = SourceType.Other,
+			canAcquireEdit = True, edit = s["light"]["parameters"]["intensity"]
 		)
 
 		# We shouldn't be able to edit if we've been told to use an EditScope and it isn't in the history.
 
 		self.__assertExpectedResult(
 			self.__inspect( s["group"]["out"], "/group/light", "intensity", s["editScope1"] ),
-			source = s["light"]["parameters"]["intensity"], sourceType = SourceType.Other,
-			editable = False, nonEditableReason = "The target edit scope editScope1 is not in the scene history."
+			source = s["light"]["out"], sourceType = SourceType.Other,
+			canAcquireEdit = False, cantAcquireEditReason = "The target edit scope editScope1 is not in the scene history."
 		)
 
 		# If it is in the history though, and we're told to use it, then we will.
@@ -175,8 +171,8 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 
 		self.__assertExpectedResult(
 			inspection,
-			source = s["light"]["parameters"]["intensity"], sourceType = SourceType.Upstream,
-			editable = True
+			source = s["light"]["out"], sourceType = SourceType.Upstream,
+			canAcquireEdit = True
 		)
 
 		lightEditScope2Edit = inspection.acquireEdit()
@@ -189,20 +185,15 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		)
 
 		# If there's an edit downstream of the EditScope we're asked to use,
-		# then we're allowed to be editable still
+		# then we disallow editing, because it is super confusing to be editing
+		# something and not see the results.
+
+		lightEditScope2Edit["enabled"].setValue( True )
 
 		inspection = self.__inspect( s["editScope2"]["out"], "/group/light", "intensity", s["editScope1"] )
-		self.assertTrue( inspection.editable() )
-		self.assertEqual( inspection.nonEditableReason(), "" )
-		lightEditScope1Edit = inspection.acquireEdit()
-		self.assertIsNotNone( lightEditScope1Edit )
-		self.assertEqual(
-			lightEditScope1Edit,
-			GafferScene.EditScopeAlgo.acquireParameterEdit(
-				s["editScope1"], "/group/light", "light", ( "", "intensity" ), createIfNecessary = False
-			)
-		)
-		self.assertEqual( inspection.editWarning(), "" )
+		self.assertFalse( inspection.canAcquireEdit() )
+		self.assertEqual( inspection.cantAcquireEditReason(), "Parameter has edits downstream in editScope2." )
+		self.assertRaises( RuntimeError, inspection.acquireEdit )
 
 		# If there is a source node inside an edit scope, make sure we use that
 
@@ -213,12 +204,12 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		s["editScope1"]["parentLight2"]["parent"].setValue( "/" )
 		s["editScope1"]["parentLight2"]["children"][0].setInput( s["editScope1"]["light2"]["out"] )
 		s["editScope1"]["parentLight2"]["in"].setInput( s["editScope1"]["BoxIn"]["out"] )
-		s["editScope1"]["LightEdits"]["in"].setInput( s["editScope1"]["parentLight2"]["out"] )
+		s["editScope1"].acquireProcessor( "LightEdits" )["in"].setInput( s["editScope1"]["parentLight2"]["out"] )
 
 		self.__assertExpectedResult(
 			self.__inspect( s["editScope2"]["out"], "/light2", "intensity", s["editScope1"] ),
-			source = s["editScope1"]["light2"]["parameters"]["intensity"], sourceType = SourceType.EditScope,
-			editable = True, edit = s["editScope1"]["light2"]["parameters"]["intensity"]
+			source = s["editScope1"]["light2"]["out"], sourceType = SourceType.EditScope,
+			canAcquireEdit = True, edit = s["editScope1"]["light2"]["parameters"]["intensity"]
 		)
 
 		# If there is a tweak in the scope's processor make sure we use that
@@ -229,8 +220,8 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		light2Edit["enabled"].setValue( True )
 		self.__assertExpectedResult(
 			self.__inspect( s["editScope2"]["out"], "/light2", "intensity", s["editScope1"] ),
-			source = light2Edit, sourceType = SourceType.EditScope,
-			editable = True, edit = light2Edit
+			source = light2Edit.node()["out"].source(), sourceType = SourceType.EditScope,
+			canAcquireEdit = True, edit = light2Edit
 		)
 
 		# If there is a manual tweak downstream of the scope's scene processor, make sure we use that
@@ -248,16 +239,16 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 
 		self.__assertExpectedResult(
 			self.__inspect( s["editScope2"]["out"], "/light2", "intensity", s["editScope1"] ),
-			source = editScopeShaderTweak, sourceType = SourceType.EditScope,
-			editable = True, edit = editScopeShaderTweak
+			source = s["editScope1"]["tweakLight2"]["out"], sourceType = SourceType.EditScope,
+			canAcquireEdit = True, edit = editScopeShaderTweak
 		)
 
 		# When using no scope, make sure that we don't inadvertently edit the contents of an EditScope.
 
 		self.__assertExpectedResult(
 			self.__inspect( s["editScope2"]["out"], "/light2", "intensity", None ),
-			source = editScopeShaderTweak, sourceType = SourceType.Other,
-			editable = False, nonEditableReason = "Source is in an EditScope. Change scope to editScope1 to edit."
+			source = s["editScope1"]["tweakLight2"]["out"], sourceType = SourceType.Other,
+			canAcquireEdit = False, cantAcquireEditReason = "Source is in an EditScope. Change scope to editScope1 to edit."
 		)
 
 		# If there is a manual tweak outside of an edit scope make sure we use that with no scope
@@ -275,8 +266,8 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 
 		self.__assertExpectedResult(
 			self.__inspect( s["independentLightTweak"]["out"], "/group/light", "intensity", None ),
-			source = independentLightTweakPlug, sourceType = SourceType.Other,
-			editable = True, edit = independentLightTweakPlug
+			source = s["independentLightTweak"]["out"], sourceType = SourceType.Other,
+			canAcquireEdit = True, edit = independentLightTweakPlug
 		)
 
 		# Check we show the last input plug if the source plug is an output
@@ -286,8 +277,8 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 
 		self.__assertExpectedResult(
 			self.__inspect( s["group"]["out"], "/group/light", "exposure", None ),
-			source = s["light"]["parameters"]["exposure"], sourceType = SourceType.Other,
-			editable = True, edit = s["light"]["parameters"]["exposure"]
+			source = s["light"]["out"], sourceType = SourceType.Other,
+			canAcquireEdit = True, edit = s["light"]["parameters"]["exposure"]
 		)
 
 		inspection = self.__inspect( s["editScope1"]["out"], "/group/light", "exposure", s["editScope1"] )
@@ -298,24 +289,25 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 
 		self.__assertExpectedResult(
 			self.__inspect( s["editScope1"]["out"], "/group/light", "exposure", s["editScope1"] ),
-			source = exposureTweak, sourceType = SourceType.EditScope,
-			editable = True, edit = exposureTweak
+			source = exposureTweak.node()["out"].source(), sourceType = SourceType.EditScope,
+			canAcquireEdit = True, edit = exposureTweak
 		)
 
-		# Check editWarnings and nonEditableReasons
+		# Check cantAcquireEditReasons
 
 		self.__assertExpectedResult(
 			self.__inspect( s["independentLightTweak"]["out"], "/group/light", "intensity", s["editScope2"] ),
-			source = independentLightTweakPlug, sourceType = SourceType.Downstream,
-			editable = True, edit = lightEditScope2Edit, editWarning = "Parameter has edits downstream in independentLightTweak."
+			source = s["independentLightTweak"]["out"], sourceType = SourceType.Downstream,
+			canAcquireEdit = False, cantAcquireEditReason = "Parameter has edits downstream in independentLightTweak."
 		)
 
+		independentLightTweakPlug["enabled"].setValue( False )
 		s["editScope2"]["enabled"].setValue( False )
 
 		self.__assertExpectedResult(
 			self.__inspect( s["independentLightTweak"]["out"], "/group/light", "intensity", s["editScope2"] ),
-			source = independentLightTweakPlug, sourceType = SourceType.Downstream,
-			editable = False, nonEditableReason = "The target edit scope editScope2 is disabled."
+			source = s["light"]["out"], sourceType = SourceType.Upstream,
+			canAcquireEdit = False, cantAcquireEditReason = "The target edit scope editScope2 is disabled."
 		)
 
 		s["editScope2"]["enabled"].setValue( True )
@@ -323,8 +315,8 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 
 		self.__assertExpectedResult(
 			self.__inspect( s["independentLightTweak"]["out"], "/light2", "intensity", s["editScope2"] ),
-			source = editScopeShaderTweak, sourceType = SourceType.Upstream,
-			editable = False, nonEditableReason = "editScope2 is locked."
+			source = editScopeShaderTweak.node()["out"].source(), sourceType = SourceType.Upstream,
+			canAcquireEdit = False, cantAcquireEditReason = "editScope2 is locked."
 		)
 
 		Gaffer.MetadataAlgo.setReadOnly( s["editScope2"], False )
@@ -332,47 +324,16 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 
 		self.__assertExpectedResult(
 			self.__inspect( s["independentLightTweak"]["out"], "/light2", "intensity", s["editScope2"] ),
-			source = editScopeShaderTweak, sourceType = SourceType.Upstream,
-			editable = False, nonEditableReason = "editScope2.LightEdits.edits is locked."
+			source = editScopeShaderTweak.node()["out"], sourceType = SourceType.Upstream,
+			canAcquireEdit = False, cantAcquireEditReason = "editScope2.LightEdits.edits is locked."
 		)
 
 		Gaffer.MetadataAlgo.setReadOnly( s["editScope2"]["LightEdits"], True )
 
 		self.__assertExpectedResult(
 			self.__inspect( s["independentLightTweak"]["out"], "/light2", "intensity", s["editScope2"] ),
-			source = editScopeShaderTweak, sourceType = SourceType.Upstream,
-			editable = False, nonEditableReason = "editScope2.LightEdits is locked."
-		)
-
-	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
-	def testShaderAssignmentWarning( self ) :
-
-		s = Gaffer.ScriptNode()
-
-		s["testShader"] = GafferSceneTest.TestShader()
-		s["testShader"].loadShader( "simpleShader" )
-		s["testShader"]["type"].setValue( "test:surface" )
-		s["testShader"]["parameters"]["optionalString"]["enabled"].setValue( True )
-
-		s["plane"] = GafferScene.Plane()
-
-		s["planeFilter"] = GafferScene.PathFilter()
-		s["planeFilter"]["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
-
-		shaderAssignment = GafferScene.ShaderAssignment()
-		shaderAssignment["shader"].setInput( s["testShader"]["out"] )
-		shaderAssignment["filter"].setInput( s["planeFilter"]["out"] )
-
-		self.__assertExpectedResult(
-			self.__inspect( shaderAssignment["out"], "/plane", "c", None, attribute="test:surface" ),
-			source = s["testShader"]["parameters"]["c"], sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
-			editable = True, editWarning = "Edits to testShader may affect other locations in the scene."
-		)
-
-		self.__assertExpectedResult(
-			self.__inspect( shaderAssignment["out"], "/plane", "optionalString", None, attribute="test:surface" ),
-			source = s["testShader"]["parameters"]["optionalString"], sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
-			editable = True, editWarning = "Edits to testShader may affect other locations in the scene."
+			source = editScopeShaderTweak.node()["out"], sourceType = SourceType.Upstream,
+			canAcquireEdit = False, cantAcquireEditReason = "editScope2.LightEdits is locked."
 		)
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
@@ -389,6 +350,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		s["shaderTweaks"] = GafferScene.ShaderTweaks()
 		s["shaderTweaks"]["in"].setInput( s["light"]["out"] )
 		s["shaderTweaks"]["filter"].setInput( s["lightFilter"]["out"] )
+		s["shaderTweaks"]["shader"].setValue( "light" )
 		s["shaderTweaks"]["tweaks"].addChild( Gaffer.TweakPlug( "exposure", 3 ) )
 
 		editScope = Gaffer.EditScope()
@@ -398,20 +360,20 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 
 		self.__assertExpectedResult(
 			self.__inspect( s["light"]["out"], "/light", "exposure", editScope ),
-			source = s["light"]["parameters"]["exposure"], sourceType = SourceType.Other,
-			editable = False, nonEditableReason = "The target edit scope EditScope is not in the scene history."
+			source = s["light"]["out"], sourceType = SourceType.Other,
+			canAcquireEdit = False, cantAcquireEditReason = "The target edit scope EditScope is not in the scene history."
 		)
 
 		self.__assertExpectedResult(
 			self.__inspect( s["shaderTweaks"]["out"], "/light", "exposure" ),
-			source = s["shaderTweaks"]["tweaks"][0], sourceType = SourceType.Other,
-			editable = True, edit = s["shaderTweaks"]["tweaks"][0],
+			source = s["shaderTweaks"]["out"], sourceType = SourceType.Other,
+			canAcquireEdit = True, edit = s["shaderTweaks"]["tweaks"][0],
 		)
 
 		self.__assertExpectedResult(
 			self.__inspect( s["shaderTweaks"]["out"], "/light", "exposure", editScope ),
-			source = s["shaderTweaks"]["tweaks"][0], sourceType = SourceType.Other,
-			editable = False, nonEditableReason = "The target edit scope EditScope is not in the scene history."
+			source = s["shaderTweaks"]["out"], sourceType = SourceType.Other,
+			canAcquireEdit = False, cantAcquireEditReason = "The target edit scope EditScope is not in the scene history."
 		)
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
@@ -454,6 +416,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		s["shaderTweaks"] = GafferScene.ShaderTweaks()
 		s["shaderTweaks"]["in"].setInput( s["light"]["out"] )
 		s["shaderTweaks"]["filter"].setInput( s["lightFilter"]["out"] )
+		s["shaderTweaks"]["shader"].setValue( "light" )
 		exposureTweak = Gaffer.TweakPlug( "exposure", 10 )
 		s["shaderTweaks"]["tweaks"].addChild( exposureTweak )
 
@@ -468,20 +431,20 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		Gaffer.MetadataAlgo.setReadOnly( exposureTweak["enabled"], True )
 		inspection = self.__inspect( s["shaderTweaks"]["out"], "/light", "exposure", None )
 		self.assertFalse( inspection.canDisableEdit() )
-		self.assertEqual( inspection.nonDisableableReason(), "shaderTweaks.tweaks.tweak.enabled is locked." )
-		self.assertRaisesRegex( IECore.Exception, "Cannot disable edit : shaderTweaks.tweaks.tweak.enabled is locked.", inspection.disableEdit )
+		self.assertEqual( inspection.cantDisableEditReason(), "shaderTweaks.tweaks.tweak.enabled is locked." )
+		self.assertRaisesRegex( IECore.Exception, "shaderTweaks.tweaks.tweak.enabled is locked.", inspection.disableEdit )
 
 		Gaffer.MetadataAlgo.setReadOnly( exposureTweak["enabled"], False )
 		Gaffer.MetadataAlgo.setReadOnly( exposureTweak, True )
 		inspection = self.__inspect( s["shaderTweaks"]["out"], "/light", "exposure", None )
 		self.assertFalse( inspection.canDisableEdit() )
-		self.assertEqual( inspection.nonDisableableReason(), "shaderTweaks.tweaks.tweak is locked." )
-		self.assertRaisesRegex( IECore.Exception, "Cannot disable edit : shaderTweaks.tweaks.tweak is locked.", inspection.disableEdit )
+		self.assertEqual( inspection.cantDisableEditReason(), "shaderTweaks.tweaks.tweak is locked." )
+		self.assertRaisesRegex( IECore.Exception, "shaderTweaks.tweaks.tweak is locked.", inspection.disableEdit )
 
 		Gaffer.MetadataAlgo.setReadOnly( exposureTweak, False )
 		inspection = self.__inspect( s["shaderTweaks"]["out"], "/light", "exposure", None )
 		self.assertTrue( inspection.canDisableEdit() )
-		self.assertEqual( inspection.nonDisableableReason(), "" )
+		self.assertEqual( inspection.cantDisableEditReason(), "" )
 		inspection.disableEdit()
 		self.assertFalse( exposureTweak["enabled"].getValue() )
 
@@ -493,40 +456,42 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 
 		inspection = self.__inspect( s["editScope"]["out"], "/light", "exposure", s["editScope2"] )
 		self.assertFalse( inspection.canDisableEdit() )
-		self.assertEqual( inspection.nonDisableableReason(), "The target edit scope editScope2 is not in the scene history." )
+		self.assertEqual( inspection.cantDisableEditReason(), "The target edit scope editScope2 is not in the scene history." )
 
+		lightEdit["enabled"].setValue( False )
 		inspection = self.__inspect( s["editScope2"]["out"], "/light", "exposure", None )
 		self.assertTrue( inspection.acquireEdit( False ).isSame( s["light"]["parameters"]["exposure"] ) )
 		self.assertFalse( inspection.canDisableEdit() )
-		self.assertEqual( inspection.nonDisableableReason(), "Disabling edits not supported for this plug." )
-		self.assertRaisesRegex( IECore.Exception, "Cannot disable edit : Disabling edits not supported for this plug.", inspection.disableEdit )
+		self.assertEqual( inspection.cantDisableEditReason(), "Disabling edits not supported for this plug." )
+		self.assertRaisesRegex( IECore.Exception, "Disabling edits not supported for this plug.", inspection.disableEdit )
 
+		lightEdit["enabled"].setValue( True )
 		inspection = self.__inspect( s["editScope2"]["out"], "/light", "exposure", s["editScope2"] )
 		self.assertFalse( inspection.canDisableEdit() )
-		self.assertEqual( inspection.nonDisableableReason(), "There is no edit in editScope2." )
-		self.assertRaisesRegex( IECore.Exception, "Cannot disable edit : There is no edit in editScope2.", inspection.disableEdit )
+		self.assertEqual( inspection.cantDisableEditReason(), "There is no edit in editScope2." )
+		self.assertRaisesRegex( IECore.Exception, "There is no edit in editScope2.", inspection.disableEdit )
 
 		Gaffer.MetadataAlgo.setReadOnly( s["editScope"], True )
 		inspection = self.__inspect( s["editScope"]["out"], "/light", "exposure", s["editScope"] )
 		self.assertFalse( inspection.canDisableEdit() )
-		self.assertEqual( inspection.nonDisableableReason(), "editScope is locked." )
-		self.assertRaisesRegex( IECore.Exception, "Cannot disable edit : editScope is locked.", inspection.disableEdit )
+		self.assertEqual( inspection.cantDisableEditReason(), "editScope is locked." )
+		self.assertRaisesRegex( IECore.Exception, "editScope is locked.", inspection.disableEdit )
 
 		Gaffer.MetadataAlgo.setReadOnly( s["editScope"], False )
 		inspection = self.__inspect( s["editScope"]["out"], "/light", "exposure", s["editScope"] )
 		self.assertTrue( inspection.canDisableEdit() )
-		self.assertEqual( inspection.nonDisableableReason(), "" )
+		self.assertEqual( inspection.cantDisableEditReason(), "" )
 		inspection.disableEdit()
 		self.assertFalse( lightEdit["enabled"].getValue() )
 
 		inspection = self.__inspect( s["editScope"]["out"], "/light", "exposure", s["editScope"] )
 		self.assertFalse( inspection.canDisableEdit() )
-		self.assertEqual( inspection.nonDisableableReason(), "There is no edit in editScope." )
+		self.assertEqual( inspection.cantDisableEditReason(), "There is no edit in editScope." )
 
 		inspection = self.__inspect( s["editScope"]["out"], "/light", "exposure", None )
-		self.assertEqual( inspection.source(), s["light"]["parameters"]["exposure"] )
+		self.assertEqual( inspection.source(), s["light"]["out"] )
 		self.assertFalse( inspection.canDisableEdit() )
-		self.assertEqual( inspection.nonDisableableReason(), "Disabling edits not supported for this plug." )
+		self.assertEqual( inspection.cantDisableEditReason(), "Disabling edits not supported for this plug." )
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testDisabledTweaks( self ) :
@@ -542,21 +507,22 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		s["shaderTweaks"] = GafferScene.ShaderTweaks()
 		s["shaderTweaks"]["in"].setInput( s["light"]["out"] )
 		s["shaderTweaks"]["filter"].setInput( s["lightFilter"]["out"] )
+		s["shaderTweaks"]["shader"].setValue( "light" )
 		exposureTweak = Gaffer.TweakPlug( "exposure", 10 )
 		s["shaderTweaks"]["tweaks"].addChild( exposureTweak )
 
 		self.__assertExpectedResult(
 			self.__inspect( s["shaderTweaks"]["out"], "/light", "exposure" ),
-			source = exposureTweak, sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
-			editable = True, edit = exposureTweak
+			source = s["shaderTweaks"]["out"], sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			canAcquireEdit = True, edit = exposureTweak
 		)
 
 		exposureTweak["enabled"].setValue( False )
 
 		self.__assertExpectedResult(
 			self.__inspect( s["shaderTweaks"]["out"], "/light", "exposure" ),
-			source = s["light"]["parameters"]["exposure"], sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
-			editable = True, edit = s["light"]["parameters"]["exposure"]
+			source = s["light"]["out"], sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			canAcquireEdit = True, edit = s["light"]["parameters"]["exposure"]
 		)
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
@@ -575,7 +541,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		s["shaderAssignment"]["in"].setInput( s["sphere"]["out"] )
 
 		i = self.__inspect( s["shaderAssignment"]["out"], "/sphere", "c", attribute="test:surface" )
-		self.assertTrue( i.editable() )
+		self.assertTrue( i.canAcquireEdit() )
 		self.assertEqual( i.acquireEdit(), s["shader"]["parameters"]["c"] )
 
 		s["switch"]= Gaffer.Switch()
@@ -584,14 +550,14 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		s["shaderAssignment"]["shader"].setInput( s["switch"]["out"] )
 
 		i = self.__inspect( s["shaderAssignment"]["out"], "/sphere", "c", attribute="test:surface" )
-		self.assertTrue( i.editable() )
+		self.assertTrue( i.canAcquireEdit() )
 		self.assertEqual( i.acquireEdit(), s["shader"]["parameters"]["c"] )
 
 		s["expr"] = Gaffer.Expression()
 		s["expr"].setExpression( 'parent["switch"]["index"] = 0', "python" )
 
 		i = self.__inspect( s["shaderAssignment"]["out"], "/sphere", "c", attribute="test:surface" )
-		self.assertTrue( i.editable() )
+		self.assertTrue( i.canAcquireEdit() )
 		self.assertEqual( i.acquireEdit(), s["shader"]["parameters"]["c"] )
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
@@ -620,7 +586,6 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 
 		i = self.__inspect( s["editScope1"]["out"], "/light", "intensity", editScope2 )
 		scope2Edit = i.acquireEdit()
-		scope2Edit["enabled"].setValue( True )
 		self.assertEqual( scope2Edit.ancestor( Gaffer.EditScope ), editScope2 )
 
 		# Check we still find the edit in scope 1
@@ -646,14 +611,14 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		s["shaderTweaks"] = GafferScene.ShaderTweaks()
 		s["shaderTweaks"]["in"].setInput( s["editScope"]["out"] )
 		s["shaderTweaks"]["filter"].setInput( s["lightFilter"]["out"] )
+		s["shaderTweaks"]["shader"].setValue( "light" )
 		exposureTweak = Gaffer.TweakPlug( "exposure", 10 )
 		s["shaderTweaks"]["tweaks"].addChild( exposureTweak )
 
 		self.__assertExpectedResult(
 			self.__inspect( s["shaderTweaks"]["out"], "/light", "exposure", s["editScope"] ),
-			source = exposureTweak, sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Downstream,
-			editable = True, edit = None,
-			editWarning = "Parameter has edits downstream in shaderTweaks."
+			source = s["shaderTweaks"]["out"], sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Downstream,
+			canAcquireEdit = False, cantAcquireEditReason = "Parameter has edits downstream in shaderTweaks."
 		)
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
@@ -670,28 +635,28 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		s["shaderTweaks"] = GafferScene.ShaderTweaks()
 		s["shaderTweaks"]["in"].setInput( s["light"]["out"] )
 		s["shaderTweaks"]["filter"].setInput( s["lightFilter"]["out"] )
+		s["shaderTweaks"]["shader"].setValue( "light" )
 		exposureTweak = Gaffer.TweakPlug( "exposure", 10 )
 		s["shaderTweaks"]["tweaks"].addChild( exposureTweak )
 
 		externalShaderTweaks = GafferScene.ShaderTweaks()
 		externalShaderTweaks["in"].setInput( s["light"]["out"] )
 		externalShaderTweaks["filter"].setInput( s["lightFilter"]["out"] )
+		externalShaderTweaks["shader"].setValue( "light" )
 		exposureTweak2 = Gaffer.TweakPlug( "exposure", 20 )
 		externalShaderTweaks["tweaks"].addChild( exposureTweak2 )
 
 		self.__assertExpectedResult(
 			self.__inspect( s["shaderTweaks"]["out"], "/light", "exposure", None ),
-			source = exposureTweak, sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
-			editable = True, edit = None,
-			editWarning = ""
+			source = s["shaderTweaks"]["out"], sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			canAcquireEdit = True, edit = None,
 		)
 
 		self.__assertExpectedResult(
 			self.__inspect( externalShaderTweaks["out"], "/light", "exposure", None ),
-			source = exposureTweak2, sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.External,
-			editable = False, edit = None,
-			editWarning = "",
-			nonEditableReason = "{} is external to the script.".format( externalShaderTweaks.fullName() )
+			source = externalShaderTweaks["out"], sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.External,
+			canAcquireEdit = False, edit = None,
+			cantAcquireEditReason = "{} is external to the script.".format( externalShaderTweaks.fullName() )
 		)
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
@@ -706,8 +671,8 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 
 		self.__assertExpectedResult(
 			self.__inspect( s["box"]["out"], "/light", "exposure" ),
-			source = s["box"]["light"]["parameters"]["exposure"], sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
-			editable = True, edit = s["box"]["light"]["parameters"]["exposure"],
+			source = s["box"]["light"]["out"], sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			canAcquireEdit = True, edit = s["box"]["light"]["parameters"]["exposure"],
 		)
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
@@ -788,12 +753,12 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		self.__assertExpectedResult(
 			self.__inspect( light["out"], "/light", "nothingHere" ),
 			source = None, sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
-			editable = False, nonEditableReason = "No editable source found in history."
+			canAcquireEdit = False, cantAcquireEditReason = "No editable source found in history."
 		)
 		self.__assertExpectedResult(
 			self.__inspect( editScope["out"], "/light", "nothingHere", editScope ),
 			source = None, sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
-			editable = False, nonEditableReason = "Parameter \"nothingHere\" does not exist."
+			canAcquireEdit = False, cantAcquireEditReason = "Parameter \"nothingHere\" does not exist."
 		)
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
@@ -822,16 +787,16 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 			self.__inspect( editScope["out"], "/light", "nothingHere", None, attribute = "test" ),
 			source = None,
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
-			editable = False,
-			nonEditableReason = "No editable source found in history."
+			canAcquireEdit = False,
+			cantAcquireEditReason = "No editable source found in history."
 		)
 
 		self.__assertExpectedResult(
 			self.__inspect( editScope["out"], "/light", "nothingHere", editScope, attribute = "test" ),
 			source = None,
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
-			editable = False,
-			nonEditableReason = 'Parameter "nothingHere" does not exist.'
+			canAcquireEdit = False,
+			cantAcquireEditReason = 'Parameter "nothingHere" does not exist.'
 		)
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
@@ -876,10 +841,10 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 
 		self.__assertExpectedResult(
 			self.__inspect( s["sceneReader"]["out"], "/SpotLight23", "intensity", None ),
-			source = None,
+			source = s["sceneReader"]["out"],
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
-			editable = False,
-			nonEditableReason = "No editable source found in history."
+			canAcquireEdit = False,
+			cantAcquireEditReason = "Editing not supported"
 		)
 
 		inspection = self.__inspect( s["editScope"]["out"], "/SpotLight23", "intensity", s["editScope"] )
@@ -889,9 +854,9 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 
 		self.__assertExpectedResult(
 			inspection,
-			source = None,
-			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
-			editable = True,
+			source = s["sceneReader"]["out"],
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Upstream,
+			canAcquireEdit = True,
 			edit = edit
 		)
 
@@ -907,20 +872,22 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 
 		self.__assertExpectedResult(
 			self.__inspect( s["light"]["out"], "/light", "intensity", None ),
-			source = s["light"]["parameters"]["intensity"],
+			source = s["light"]["out"].source(),
 			sourceType = SourceType.Other,
-			editable = True,
+			canAcquireEdit = True,
 			edit = s["light"]["parameters"]["intensity"]
 		)
+
+		# Being read-only does not stop the source being acquired for editing.
 
 		Gaffer.MetadataAlgo.setReadOnly( s["light"]["parameters"]["intensity"], True )
 
 		self.__assertExpectedResult(
 			self.__inspect( s["light"]["out"], "/light", "intensity", None ),
-			source = s["light"]["parameters"]["intensity"],
+			source = s["light"]["out"].source(),
 			sourceType = SourceType.Other,
-			editable = False,
-			nonEditableReason = "light.parameters.intensity is locked."
+			canAcquireEdit = True,
+			edit = s["light"]["parameters"]["intensity"]
 		)
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
@@ -944,11 +911,14 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 
 			self.__assertExpectedResult(
 				self.__inspect( s["light"]["out"], "/light", "exposure", None ),
-				source = s["light"]["parameters"]["exposure"],
+				source = s["light"]["out"],
 				sourceType = SourceType.Other,
-				editable = True,
+				canAcquireEdit = True,
 				edit = s["light"]["parameters"]["exposure"]
 			)
+
+		# Can still acquire edit when it is read-only. That's more
+		# useful than refusing to show anything to the user.
 
 		Gaffer.MetadataAlgo.setReadOnly( curve, True )
 
@@ -957,10 +927,10 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 
 			self.__assertExpectedResult(
 				self.__inspect( s["light"]["out"], "/light", "exposure", None ),
-				source = s["light"]["parameters"]["exposure"],
+				source = s["light"]["out"],
 				sourceType = SourceType.Other,
-				editable = False,
-				nonEditableReason = "Animation.curves.curve0 is locked."
+				canAcquireEdit = True,
+				edit = s["light"]["parameters"]["exposure"]
 			)
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
@@ -987,15 +957,14 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 
 		self.__assertExpectedResult(
 			self.__inspect( s["scope"]["out"], "/light", "exposure", None ),
-			source = s["light"]["parameters"]["exposure"],
+			source = s["light"]["out"].source(),
 			sourceType = SourceType.Other,
-			editable = False,
-			nonEditableReason = "light.parameters.exposure has a non-settable input."
+			canAcquireEdit = True,
 		)
 
 		inspection = self.__inspect( s["scope"]["out"], "/light", "exposure", s["scope"] )
 
-		self.assertTrue( inspection.editable() )
+		self.assertTrue( inspection.canAcquireEdit() )
 
 		edit = inspection.acquireEdit()
 		edit["enabled"].setValue( True )
@@ -1003,9 +972,9 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 
 		self.__assertExpectedResult(
 			self.__inspect( s["scope"]["out"], "/light", "exposure", s["scope"] ),
-			source = edit,
+			source = edit.node()["out"].source(),
 			sourceType = SourceType.EditScope,
-			editable = True,
+			canAcquireEdit = True,
 			edit = s["scope"]["LightEdits"]["edits"]["row1"]["cells"]["exposure"]["value"]
 		)
 
@@ -1017,10 +986,9 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 
 		self.__assertExpectedResult(
 			self.__inspect( s["scope"]["out"], "/light", "exposure", s["scope"] ),
-			source = edit,
+			source = edit.node()["out"].source(),
 			sourceType = SourceType.EditScope,
-			editable = False,
-			nonEditableReason = "scope.LightEdits.edits.row1.cells.exposure.value.value has a non-settable input."
+			canAcquireEdit = True
 		)
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
@@ -1040,10 +1008,10 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 
 		self.__assertExpectedResult(
 			self.__inspect( s["light"]["out"], "/light", "exposure", None ),
-			source = s["spreadsheet"]["rows"]["default"]["cells"]["exposure"]["value"],
+			source = s["light"]["out"],
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
-			editable = False,
-			nonEditableReason = "spreadsheet.rows.default.cells.exposure.value is a spreadsheet default row."
+			canAcquireEdit = False,
+			cantAcquireEditReason = "spreadsheet.rows.default.cells.exposure.value is a spreadsheet default row."
 		)
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
@@ -1063,12 +1031,12 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		self.__assertExpectedResult(
 			self.__inspect( s["editScope"]["out"], "/light", "testFloat" ),
 			source = None, sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
-			editable = False, nonEditableReason = "No editable source found in history."
+			canAcquireEdit = False, cantAcquireEditReason = "No editable source found in history."
 		)
 		self.__assertExpectedResult(
 			self.__inspect( s["editScope"]["out"], "/light", "testFloat", s["editScope"] ),
 			source = None, sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
-			editable = False, nonEditableReason = "Parameter \"testFloat\" does not exist."
+			canAcquireEdit = False, cantAcquireEditReason = "Parameter \"testFloat\" does not exist."
 		)
 
 		s["light"]["parameters"]["testFloat"]["enabled"].setValue( True )
@@ -1077,9 +1045,9 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 
 		self.__assertExpectedResult(
 			self.__inspect( s["editScope"]["out"], "/light", "testFloat" ),
-			source = s["light"]["parameters"]["testFloat"],
+			source = s["light"]["out"],
 			sourceType = SourceType.Other,
-			editable = True,
+			canAcquireEdit = True,
 			edit = s["light"]["parameters"]["testFloat"]
 		)
 
@@ -1091,9 +1059,9 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 
 		self.__assertExpectedResult(
 			self.__inspect( s["editScope"]["out"], "/light", "testFloat", s["editScope"] ),
-			source = edit,
+			source = edit.node()["out"].source(),
 			sourceType = SourceType.EditScope,
-			editable = True,
+			canAcquireEdit = True,
 			edit = edit
 		)
 
@@ -1117,14 +1085,15 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		s["tweaks"]["in"].setInput( s["light"]["out"] )
 
 		s["tweaks"]["filter"].setInput( s["filter"]["out"] )
+		s["tweaks"]["shader"].setValue( "light" )
 		addATweak = Gaffer.TweakPlug( "add.a", imath.Color3f( 0.0, 0.5, 1.0 ) )
 		s["tweaks"]["tweaks"].addChild( addATweak )
 
 		self.__assertExpectedResult(
 			self.__inspect( s["tweaks"]["out"], "/light", ( "add", "a" ) ),
-			source = addATweak,
+			source = s["tweaks"]["out"],
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
-			editable = True,
+			canAcquireEdit = True,
 			edit = addATweak
 		)
 
@@ -1186,38 +1155,34 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 
 		self.__assertExpectedResult(
 			self.__inspect( s["assign"]["out"], "/cube", ( "add", "a" ), attribute = "test:surface" ),
-			source = s["add"]["parameters"]["a"],
+			source = s["assign"]["out"],
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
-			editable = True,
-			edit = s["add"]["parameters"]["a"],
-			editWarning = "Edits to add may affect other locations in the scene."
+			canAcquireEdit = True,
+			edit = s["add"]["parameters"]["a"]
 		)
 
 		self.__assertExpectedResult(
 			self.__inspect( s["assign"]["out"], "/cube", ( "add1", "b" ), attribute = "test:surface" ),
-			source = s["add1"]["parameters"]["b"],
+			source = s["assign"]["out"],
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
-			editable = True,
-			edit = s["add1"]["parameters"]["b"],
-			editWarning = "Edits to add1 may affect other locations in the scene."
+			canAcquireEdit = True,
+			edit = s["add1"]["parameters"]["b"]
 		)
 
 		self.__assertExpectedResult(
 			self.__inspect( s["assign"]["out"], "/cube", ( "multiOut", "a" ), attribute = "test:surface" ),
-			source = s["multiOut"]["parameters"]["a"],
+			source = s["assign"]["out"],
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
-			editable = True,
-			edit = s["multiOut"]["parameters"]["a"],
-			editWarning = "Edits to multiOut may affect other locations in the scene."
+			canAcquireEdit = True,
+			edit = s["multiOut"]["parameters"]["a"]
 		)
 
 		self.__assertExpectedResult(
 			self.__inspect( s["assign"]["out"], "/cube", ( "add2", "a" ), attribute = "test:surface" ),
-			source = s["box"]["add"]["parameters"]["a"],
+			source = s["assign"]["out"],
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
-			editable = True,
+			canAcquireEdit = True,
 			edit = s["box"]["add"]["parameters"]["a"],
-			editWarning = "Edits to box.add may affect other locations in the scene."
 		)
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
@@ -1243,6 +1208,16 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		s["editScope2"].setup( s["editScope1"]["out"] )
 		s["editScope2"]["in"].setInput( s["editScope1"]["out"] )
 
+		# Check that we can edit in EditScope1.
+
+		self.__assertExpectedResult(
+			self.__inspect( s["editScope2"]["out"], "/light", "exposure", s["editScope1"] ),
+			source = light["out"],
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.EditScope,
+			canAcquireEdit = True,
+			edit = light["parameters"]["exposure"]
+		)
+
 		# Make edit in EditScope2.
 
 		i = self.__inspect( s["editScope2"]["out"], "/light", "exposure", s["editScope2"] )
@@ -1251,16 +1226,15 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		scope2Edit["enabled"].setValue( True )
 		scope2Edit["value"].setValue( 2 )
 
-		# Check that we can still edit in EditScope1, accompanied by
-		# a suitable warning.
+		# Check that we can't edit in EditScope1, because it is overridden
+		# downstream.
 
 		self.__assertExpectedResult(
 			self.__inspect( s["editScope2"]["out"], "/light", "exposure", s["editScope1"] ),
-			source = scope2Edit,
+			source = scope2Edit.node()["out"].source(),
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Downstream,
-			editable = True,
-			edit = light["parameters"]["exposure"],
-			editWarning = "Parameter has edits downstream in editScope2."
+			canAcquireEdit = False,
+			cantAcquireEditReason = "Parameter has edits downstream in editScope2."
 		)
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
@@ -1283,16 +1257,14 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		scopeEdit["enabled"].setValue( True )
 		scopeEdit["value"].setValue( 2 )
 
-		# Check that we can still edit the source, accompanied by
-		# a suitable warning.
+		# Check that we can't edit the source.
 
 		self.__assertExpectedResult(
 			self.__inspect( s["editScope"]["out"], "/light", "exposure", editScope = None ),
-			source = scopeEdit,
+			source = s["editScope"]["LightEdits"]["out"].source(),
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Downstream,
-			editable = True,
-			edit = s["light"]["parameters"]["exposure"],
-			editWarning = "Parameter has edits downstream in editScope."
+			canAcquireEdit = False,
+			cantAcquireEditReason = "Parameter has edits downstream in editScope."
 		)
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
@@ -1318,10 +1290,10 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		s["editScope"].setup( s["shaderTweaks"]["out"] )
 		s["editScope"]["in"].setInput( s["shaderTweaks"]["out"] )
 
-		def assertCanEdit( inspection, data, nonEditableReason ) :
+		def assertCanEdit( inspection, data, cantEditReason ) :
 
-			self.assertEqual( inspection.canEdit( data ), nonEditableReason == "" )
-			self.assertEqual( inspection.nonEditableReason( data ), nonEditableReason )
+			self.assertEqual( inspection.canEdit( data ), cantEditReason == "" )
+			self.assertEqual( inspection.cantEditReason( data ), cantEditReason )
 
 		inspection = self.__inspect( s["shaderTweaks"]["out"], "/light", "exposure", None )
 		assertCanEdit( inspection, IECore.FloatData( 123.0 ), "" )
@@ -1361,6 +1333,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		s["shaderTweaks"] = GafferScene.ShaderTweaks()
 		s["shaderTweaks"]["in"].setInput( s["light"]["out"] )
 		s["shaderTweaks"]["filter"].setInput( s["lightFilter"]["out"] )
+		s["shaderTweaks"]["shader"].setValue( "light" )
 		exposureTweak = Gaffer.TweakPlug( "exposure", 10 )
 		s["shaderTweaks"]["tweaks"].addChild( exposureTweak )
 
@@ -1368,14 +1341,14 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		s["editScope"].setup( s["shaderTweaks"]["out"] )
 		s["editScope"]["in"].setInput( s["shaderTweaks"]["out"] )
 
-		def assertEdit( inspection, data, nonEditableReason ) :
+		def assertEdit( inspection, data, cantEditReason ) :
 
-			self.assertEqual( inspection.canEdit( data ), nonEditableReason == "" )
-			self.assertEqual( inspection.nonEditableReason( data ), nonEditableReason )
-			if nonEditableReason == "" :
+			self.assertEqual( inspection.canEdit( data ), cantEditReason == "" )
+			self.assertEqual( inspection.cantEditReason( data ), cantEditReason )
+			if cantEditReason == "" :
 				inspection.edit( data )
 			else :
-				self.assertRaisesRegex( IECore.Exception, "Not editable : " + nonEditableReason, inspection.edit, data )
+				self.assertRaisesRegex( IECore.Exception, cantEditReason, inspection.edit, data )
 
 		Gaffer.MetadataAlgo.setReadOnly( s["shaderTweaks"], True )
 		inspection = self.__inspect( s["shaderTweaks"]["out"], "/light", "exposure", None )
@@ -1392,7 +1365,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		assertEdit( inspection, IECore.StringData( "test" ), "Data of type \"StringData\" is not compatible." )
 
 		inspection = self.__inspect( s["shaderTweaks"]["out"], "/light", "exposure", None )
-		self.assertEqual( inspection.source(), exposureTweak )
+		self.assertEqual( inspection.source(), s["shaderTweaks"]["out"] )
 		self.assertEqual( exposureTweak["value"].getValue(), 123.0 )
 
 		inspection = self.__inspect( s["editScope"]["out"], "/light", "exposure", s["editScope"] )
@@ -1454,8 +1427,8 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 			source = None,
 			sourceType = SourceType.None_,
 			fallbackDescription = "Inherited from /group",
-			editable = False,
-			nonEditableReason = "No editable source found in history."
+			canAcquireEdit = False,
+			cantAcquireEditReason = "No editable source found in history."
 		)
 
 		s["planeShader"] = GafferSceneTest.TestShader()
@@ -1477,11 +1450,10 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 				self.assertEqual( inspection.value().value, imath.Color3f( 4, 5, 6 ) )
 				self.__assertExpectedResult(
 					inspection,
-					source = s["planeShader"]["parameters"]["c"],
+					source = s["planeShaderAssignment"]["out"],
 					sourceType = SourceType.Other,
-					editable = True,
-					edit = s["planeShader"]["parameters"]["c"],
-					editWarning = "Edits to planeShader may affect other locations in the scene."
+					canAcquireEdit = True,
+					edit = s["planeShader"]["parameters"]["c"]
 				)
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
@@ -1515,30 +1487,30 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		self.assertEqual( connectionSource( inspection.value() ), ( "add", "c" ) )
 		self.__assertExpectedResult(
 			inspection,
-			source = s["srf"]["parameters"]["a"],
+			source = s["assign"]["out"],
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
-			editable = False,
-			nonEditableReason = "srf.parameters.a has a non-settable input."
+			canAcquireEdit = True,
+			edit = s["srf"]["parameters"]["a"]
 		)
 
 		inspection = self.__inspect( s["assign"]["out"], "/cube", ( "srf", "b" ), attribute = "test:surface" )
 		self.assertEqual( connectionSource( inspection.value() ), ( "multiOut", "a" ) )
 		self.__assertExpectedResult(
 			inspection,
-			source = s["srf"]["parameters"]["b"],
+			source = s["assign"]["out"],
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
-			editable = False,
-			nonEditableReason = "srf.parameters.b has a non-settable input."
+			canAcquireEdit = True,
+			edit = s["srf"]["parameters"]["b"]
 		)
 
 		inspection = self.__inspect( s["assign"]["out"], "/cube", "mix", attribute = "test:surface" )
 		self.assertEqual( connectionSource( inspection.value() ), ( "multiOut", "b" ) )
 		self.__assertExpectedResult(
 			inspection,
-			source = s["srf"]["parameters"]["mix"],
+			source = s["assign"]["out"],
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
-			editable = False,
-			nonEditableReason = "srf.parameters.mix has a non-settable input."
+			canAcquireEdit = True,
+			edit = s["srf"]["parameters"]["mix"]
 		)
 
 		s["editScope"] = Gaffer.EditScope()
@@ -1549,22 +1521,21 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		self.assertEqual( connectionSource( inspection.value() ), ( "add", "c" ) )
 		self.__assertExpectedResult(
 			inspection,
-			source = s["srf"]["parameters"]["a"],
+			source = s["assign"]["out"],
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Upstream,
-			editable = True,
+			canAcquireEdit = True,
 		)
 
 		edit = inspection.acquireEdit()
 		edit["enabled"].setValue( True )
 		edit["value"].setValue( imath.Color3f( 1, 2, 3 ) )
-
 		inspection = self.__inspect( s["editScope"]["out"], "/cube", ( "srf", "a" ), s["editScope"], "test:surface" )
 		self.assertEqual( inspection.value().value, imath.Color3f( 1, 2, 3 ) )
 		self.__assertExpectedResult(
 			inspection,
-			source = edit,
+			source = edit.node()["out"].source(),
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.EditScope,
-			editable = True,
+			canAcquireEdit = True,
 			edit = edit
 		)
 
@@ -1572,9 +1543,9 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		self.assertEqual( connectionSource( inspection.value() ), ( "multiOut", "a" ) )
 		self.__assertExpectedResult(
 			inspection,
-			source = s["srf"]["parameters"]["b"],
+			source = s["assign"]["out"],
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Upstream,
-			editable = True,
+			canAcquireEdit = True,
 		)
 
 		edit = inspection.acquireEdit()
@@ -1585,9 +1556,9 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		self.assertEqual( inspection.value().value, imath.Color3f( 4, 5, 6 ) )
 		self.__assertExpectedResult(
 			inspection,
-			source = edit,
+			source = edit.node()["out"].source(),
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.EditScope,
-			editable = True,
+			canAcquireEdit = True,
 			edit = edit
 		)
 
@@ -1595,9 +1566,9 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		self.assertEqual( connectionSource( inspection.value() ), ( "multiOut", "b" ) )
 		self.__assertExpectedResult(
 			inspection,
-			source = s["srf"]["parameters"]["mix"],
+			source = s["assign"]["out"],
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Upstream,
-			editable = True,
+			canAcquireEdit = True,
 		)
 
 		edit = inspection.acquireEdit()
@@ -1608,9 +1579,9 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		self.assertEqual( inspection.value().value, 2.0 )
 		self.__assertExpectedResult(
 			inspection,
-			source = edit,
+			source = edit.node()["out"].source(),
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.EditScope,
-			editable = True,
+			canAcquireEdit = True,
 			edit = edit
 		)
 
@@ -1632,8 +1603,8 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 			self.__inspect( s["assign"]["out"], "/cube", ( "bogusShader", "a" ), attribute = "test:surface" ),
 			source = None,
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
-			editable = False,
-			nonEditableReason = "No editable source found in history."
+			canAcquireEdit = False,
+			cantAcquireEditReason = "No editable source found in history."
 		)
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
@@ -1665,7 +1636,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		self.assertEqual( connectionSource( inspection.value() ), ( "", "" ) )
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
-	def testSourceIgnoresGlobaShaderTweaks( self ) :
+	def testSourceIgnoresGlobalShaderTweaks( self ) :
 
 		script = Gaffer.ScriptNode()
 
@@ -1682,7 +1653,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		script["shaderTweaks"]["tweaks"].addChild( Gaffer.TweakPlug( "exposure", 10 ) )
 
 		inspection = self.__inspect( script["shaderTweaks"]["out"], "/light", "exposure" )
-		self.assertEqual( inspection.source(), script["light"]["parameters"]["exposure"] )
+		self.assertEqual( inspection.source(), script["light"]["out"] )
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testSourceIgnoresGlobalShaderAssignment( self ) :
@@ -1714,7 +1685,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		script["globalAssignment"]["shader"].setInput( script["globalShader"]["out"] )
 
 		inspection = self.__inspect( script["globalAssignment"]["out"], "/cube", "c", attribute="test:surface" )
-		self.assertEqual( inspection.source(), script["localShader"]["parameters"]["c"] )
+		self.assertEqual( inspection.source(), script["localAssignment"]["out"] )
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testDefaultValueMetadata( self ) :
@@ -1742,12 +1713,12 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		self.__assertExpectedResult(
 			self.__inspect( s["editScope"]["out"], "/light", "testParameter" ),
 			source = None, sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
-			editable = False, nonEditableReason = "No editable source found in history."
+			canAcquireEdit = False, cantAcquireEditReason = "No editable source found in history."
 		)
 		self.__assertExpectedResult(
 			self.__inspect( s["editScope"]["out"], "/light", "testParameter", s["editScope"] ),
 			source = None, sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
-			editable = False, nonEditableReason = "Parameter \"testParameter\" does not exist."
+			canAcquireEdit = False, cantAcquireEditReason = "Parameter \"testParameter\" does not exist."
 		)
 
 		# Registering "defaultValue" metadata for the parameter allows it to be
@@ -1772,7 +1743,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		inspection = self.__inspect( s["editScope"]["out"], "/light", "testParameter" )
 		self.assertEqual( inspection.value(), IECore.FloatData( 4.0 ) )
 		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.Other )
-		self.assertEqual( inspection.source(), lightTweakPlug )
+		self.assertEqual( inspection.source(), s["shaderTweak"]["out"] )
 		self.assertEqual( inspection.fallbackDescription(), "" )
 
 		# Disabling the parameter should revert to the fallback.
@@ -1810,9 +1781,89 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 
 		self.__assertExpectedResult(
 			inspection,
-			source = edit,
+			source = edit.node()["out"].source(),
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.EditScope,
-			editable = True,
+			canAcquireEdit = True,
 			edit = edit,
 			fallbackDescription = ""
 		)
+
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
+	def testAcquireGangedPlug( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["light"] = GafferSceneTest.TestLight()
+		script["light"].loadShader( "simpleLight" )
+		script["light"]["parameters"]["intensity"].gang()
+
+		script["lightFilter"] = GafferScene.PathFilter()
+		script["lightFilter"]["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )
+
+		script["shaderTweaks"] = GafferScene.ShaderTweaks()
+		script["shaderTweaks"]["in"].setInput( script["light"]["out"] )
+		script["shaderTweaks"]["filter"].setInput( script["lightFilter"]["out"] )
+		script["shaderTweaks"]["shader"].setValue( "light" )
+
+		self.__assertExpectedResult(
+			self.__inspect( script["shaderTweaks"]["out"], "/light", "intensity" ),
+			source = script["light"]["out"],
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			canAcquireEdit = True,
+			edit = script["light"]["parameters"]["intensity"],
+		)
+
+		script["shaderTweaks"]["tweaks"].addChild( Gaffer.TweakPlug( "intensity", imath.Color3f() ) )
+		script["shaderTweaks"]["tweaks"][0]["value"].gang()
+
+		self.__assertExpectedResult(
+			self.__inspect( script["shaderTweaks"]["out"], "/light", "intensity" ),
+			source = script["shaderTweaks"]["out"],
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			canAcquireEdit = True,
+			edit = script["shaderTweaks"]["tweaks"][0],
+		)
+
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
+	def testDisabledNodeIsNotSource( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["light"] = GafferSceneTest.TestLight()
+		script["light"].loadShader( "simpleLight" )
+
+		script["lightFilter"] = GafferScene.PathFilter()
+		script["lightFilter"]["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )
+
+		script["shaderTweaks"] = GafferScene.ShaderTweaks()
+		script["shaderTweaks"]["enabled"].setValue( False )
+		script["shaderTweaks"]["in"].setInput( script["light"]["out"] )
+		script["shaderTweaks"]["filter"].setInput( script["lightFilter"]["out"] )
+		script["shaderTweaks"]["tweaks"].addChild( Gaffer.TweakPlug( "exposure", 2.0 ) )
+
+		inspection = self.__inspect( script["shaderTweaks"]["out"], "/light", "exposure", None )
+		self.assertEqual( inspection.source(), script["light"]["out"] )
+
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
+	def testShaderTweaksWithWrongAttributeIsNotSource( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["light"] = GafferSceneTest.TestLight()
+		script["light"].loadShader( "simpleLight" )
+
+		script["lightFilter"] = GafferScene.PathFilter()
+		script["lightFilter"]["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )
+
+		script["shaderTweaks"] = GafferScene.ShaderTweaks()
+		script["shaderTweaks"]["in"].setInput( script["light"]["out"] )
+		script["shaderTweaks"]["filter"].setInput( script["lightFilter"]["out"] )
+		script["shaderTweaks"]["shader"].setValue( "light" )
+		script["shaderTweaks"]["tweaks"].addChild( Gaffer.TweakPlug( "exposure", 2.0 ) )
+
+		inspection = self.__inspect( script["shaderTweaks"]["out"], "/light", "exposure", None )
+		self.assertEqual( inspection.source(), script["shaderTweaks"]["out"] )
+
+		script["shaderTweaks"]["shader"].setValue( "someOtherAttribute" )
+		inspection = self.__inspect( script["shaderTweaks"]["out"], "/light", "exposure", None )
+		self.assertEqual( inspection.source(), script["light"]["out"] )

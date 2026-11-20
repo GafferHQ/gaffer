@@ -933,14 +933,14 @@ class LightLinkingEditor( GafferSceneUI.SceneEditor ) :
 					if inclusionsInspection.canEdit( value ) :
 						edits.append( ( inclusionsInspection, value ) )
 					else :
-						warnings.add( f"{inclusionsColumn.headerData( rootPath ).value} : {inclusionsInspection.nonEditableReason( value )}" )
+						warnings.add( f"{inclusionsColumn.headerData( rootPath ).value} : {inclusionsInspection.cantEditReason( value )}" )
 
 				if newExclusions != exclusions :
 					value = IECore.StringData( newExclusions )
 					if exclusionsInspection.canEdit( value ) :
 						edits.append( ( exclusionsInspection, value ) )
 					else :
-						warnings.add( f"{exclusionsColumn.headerData( rootPath ).value} : {exclusionsInspection.nonEditableReason( value )}" )
+						warnings.add( f"{exclusionsColumn.headerData( rootPath ).value} : {exclusionsInspection.cantEditReason( value )}" )
 
 			if warnings :
 				GafferUI.PopupWindow.showWarning( "<br>".join( sorted( warnings ) ), parent = self )
