@@ -1256,3 +1256,18 @@ class GraphComponentTest( GafferTest.TestCase ) :
 		self.assertNotIn( "gc1", g["c2"] )
 		self.assertIsNone( g["c2"].getChild( "gc1alias" ) )
 		self.assertIsNone( g["c2"].getChild( "gc1" ) )
+
+	def testChildAliasToDescendant( self ) :
+
+		node = Gaffer.Node()
+		node["namespace"] = Gaffer.Plug()
+		node["namespace"]["moved"] = Gaffer.IntPlug()
+
+		Gaffer.Metadata.registerValue( node, "compatibility:childAlias:original", "namespace.moved" )
+
+		self.assertTrue( node["original"].isSame( node["namespace"]["moved"] ) )
+		self.assertTrue( node.getChild( "original" ).isSame( node["namespace"]["moved"] ) )
+		self.assertTrue( "original" in node )
+
+		del node["original"]
+		self.assertNotIn( "moved", node["namespace"] )
