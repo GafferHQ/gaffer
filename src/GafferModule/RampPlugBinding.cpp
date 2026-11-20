@@ -56,9 +56,9 @@ using namespace Gaffer;
 namespace
 {
 
-const IECore::InternedString g_interpolation( "interpolation" );
 const IECore::InternedString g_omitParentNodePlugValues( "valuePlugSerialiser:omitParentNodePlugValues" );
 
+template<typename T>
 class RampPlugSerialiser : public ValuePlugSerialiser
 {
 
@@ -70,22 +70,20 @@ class RampPlugSerialiser : public ValuePlugSerialiser
 			if( !omitValue( plug, serialisation ) )
 			{
 				// This isn't ideal, but the newly constructed ramp plug will already have child plugs representing the points for the
-				// default value. So we get rid of those so the real value can be loaded appropriately by serialising plug constructors
-				// (see below).
+				// default value. So we get rid of those and then add the points we actually want via `addPoint()`.
 				result += identifier + ".clearPoints()\n";
+				auto rampPlug = static_cast<const T *>( plug );
+				for( unsigned i = 0, n = rampPlug->numPoints(); i < n; ++i )
+				{
+					result += fmt::format(
+						"{}.addPoint( {}, {} )\n",
+						identifier,
+						valueRepr( object( rampPlug->pointXPlug( i )->defaultValue() ), &serialisation ),
+						valueRepr( object( rampPlug->pointYPlug( i )->defaultValue() ), &serialisation )
+					);
+				}
 			}
 			return result;
-		}
-
-		bool childNeedsSerialisation( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const override
-		{
-			if( child->getName() == g_interpolation )
-			{
-				return ValuePlugSerialiser::childNeedsSerialisation( child, serialisation );
-			}
-			// Plug representing a point. These are added dynamically so we need to serialise them
-			// if we want to serialise the value.
-			return !omitValue( child, serialisation );
 		}
 
 	private :
@@ -142,6 +140,13 @@ unsigned addPoint( T &plug )
 }
 
 template<typename T>
+unsigned addPoint2( T &plug, typename T::XType xDefaultValue, const typename T::YType &yDefaultValue )
+{
+	IECorePython::ScopedGILRelease r;
+	return plug.addPoint( xDefaultValue, yDefaultValue );
+}
+
+template<typename T>
 void removePoint( T &plug, unsigned pointIndex )
 {
 	IECorePython::ScopedGILRelease r;
@@ -173,6 +178,7 @@ void bind()
 		.def( "getValue", &getValue<T> )
 		.def( "numPoints", &T::numPoints )
 		.def( "addPoint", &addPoint<T> )
+		.def( "addPoint", &addPoint2<T> )
 		.def( "removePoint", &removePoint<T> )
 		.def( "clearPoints", &clearPoints<T> )
 		.def( "pointPlug",  &pointPlug<T> )
@@ -180,7 +186,7 @@ void bind()
 		.def( "pointYPlug", &pointYPlug<T> )
 	;
 
-	Serialisation::registerSerialiser( T::staticTypeId(), new RampPlugSerialiser );
+	Serialisation::registerSerialiser( T::staticTypeId(), new RampPlugSerialiser<T> );
 
 }
 

@@ -677,11 +677,10 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		n1["parameters"]["ramp"].addPoint()
 		n1["parameters"]["ramp"].addPoint()
 		n1["parameters"]["ramp"].addPoint()
-		n1["parameters"]["ramp"]["p1"]["x"].setValue( 1 )
-		n1["parameters"]["ramp"]["p1"]["y"].setValue( imath.Color3f( 1 ) )
-		n1["parameters"]["ramp"]["p2"]["x"].setValue( 0.6 )
-		n1["parameters"]["ramp"]["p2"]["y"].setValue( imath.Color3f( 0.4, 0.5, 0.7 ) )
-
+		n1["parameters"]["ramp"]["points"][1]["x"].setValue( 1 )
+		n1["parameters"]["ramp"]["points"][1]["y"].setValue( imath.Color3f( 1 ) )
+		n1["parameters"]["ramp"]["points"][2]["x"].setValue( 0.6 )
+		n1["parameters"]["ramp"]["points"][2]["y"].setValue( imath.Color3f( 0.4, 0.5, 0.7 ) )
 
 		network = n1.attributes()["test:surface"]
 
@@ -695,8 +694,8 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		inN1 = GafferSceneTest.TestShader( "inN1" )
 		inN1.loadShader( "simpleShader" )
 
-		n1["parameters"]["ramp"]["p0"]["y"].setInput( inN1["out"]["c"] )
-		n1["parameters"]["ramp"]["p1"]["y"]["b"].setInput( inN1["out"]["c"]["g"] )
+		n1["parameters"]["ramp"]["points"][0]["y"].setInput( inN1["out"]["c"] )
+		n1["parameters"]["ramp"]["points"][1]["y"]["b"].setInput( inN1["out"]["c"]["g"] )
 
 		network = n1.attributes()["test:surface"]
 
@@ -708,12 +707,12 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 			]
 		)
 
-		n1["parameters"]["ramp"]["p1"]["x"].setInput( inN1["out"]["c"]["g"] )
+		n1["parameters"]["ramp"]["points"][1]["x"].setInput( inN1["out"]["c"]["g"] )
 
-		with self.assertRaisesRegex( RuntimeError, "n1.__outAttributes : Shader connections to n1.parameters.ramp.p1.x are not supported." ) :
+		with self.assertRaisesRegex( RuntimeError, "n1.__outAttributes : Shader connections to n1.parameters.ramp.points.p1.x are not supported." ) :
 			network = n1.attributes()["test:surface"]
 
-		n1["parameters"]["ramp"]["p1"]["x"].setInput( None )
+		n1["parameters"]["ramp"]["points"][1]["x"].setInput( None )
 
 		n1["parameters"]["ramp"]["interpolation"].setValue( IECore.RampInterpolation.Linear )
 

@@ -35,6 +35,10 @@
 #
 ##########################################################################
 
+import pathlib
+
+import imath
+
 import IECore
 
 import Gaffer
@@ -189,7 +193,7 @@ class RampPlugTest( GafferTest.TestCase ) :
 			self.assertIsNotNone( p.pointXPlug( i ) )
 			self.assertIsNotNone( p.pointYPlug( i ) )
 
-		p.removeChild( p.pointPlug( 0 ) )
+		p["points"].removeChild( p.pointPlug( 0 ) )
 
 		self.assertEqual( p.numPoints(), 2 )
 		for i in range( p.numPoints() ) :
@@ -354,8 +358,8 @@ class RampPlugTest( GafferTest.TestCase ) :
 		)
 
 		p = Gaffer.RampffPlug( "a", defaultValue=s )
-		self.assertEqual( p.pointXPlug( 0 ).getFlags(), Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		self.assertEqual( p.pointYPlug( 0 ).getFlags(), Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		self.assertEqual( p.pointXPlug( 0 ).getFlags(), Gaffer.Plug.Flags.Default )
+		self.assertEqual( p.pointYPlug( 0 ).getFlags(), Gaffer.Plug.Flags.Default )
 
 	def testConnection( self ) :
 
@@ -442,8 +446,8 @@ class RampPlugTest( GafferTest.TestCase ) :
 		s["n"] = Gaffer.Node()
 		s["n"]["p"] = Gaffer.RampffPlug( defaultValue=ramp )
 		i = s["n"]["p"].addPoint()
-		s["n"]["p"][i]["x"].setValue( 0.1 )
-		s["n"]["p"][i]["y"].setValue( 0.2 )
+		s["n"]["p"]["points"][i]["x"].setValue( 0.1 )
+		s["n"]["p"]["points"][i]["y"].setValue( 0.2 )
 
 		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n"] ] ) )
 		p = Gaffer.PlugAlgo.promote( b["n"]["p"] )
@@ -692,3 +696,55 @@ class RampPlugTest( GafferTest.TestCase ) :
 		computedInput = GafferTest.AddNode()
 		plug.pointPlug( 0 )["x"].setInput( computedInput["sum"] )
 		self.assertFalse( plug.isSetToDefault() )
+
+	def testSerialisationAfterRemovePoint( self ) :
+
+		defaultValue = IECore.Rampff(
+			(
+				( 0, 0 ),
+				( 0.5, 0.5 ),
+				( 1, 1 ),
+			),
+			IECore.RampInterpolation.Linear
+		)
+
+		script = Gaffer.ScriptNode()
+		script["node"] = Gaffer.Node()
+		script["node"]["ramp"] = Gaffer.RampffPlug( defaultValue = defaultValue, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		self.assertEqual( script["node"]["ramp"].numPoints(), 3 )
+		script["node"]["ramp"].pointXPlug( 0 ).setValue( 0.1 )
+		script["node"]["ramp"].pointXPlug( 2 ).setValue( 0.9 )
+		script["node"]["ramp"].removePoint( 1 )
+
+		script2 = Gaffer.ScriptNode()
+		script2.execute( script.serialise( script ) )
+
+		self.assertEqual( script2["node"]["ramp"].defaultValue(), script["node"]["ramp"].defaultValue() )
+		self.assertEqual( script2["node"]["ramp"].getValue(), script["node"]["ramp"].getValue() )
+
+	def testLoadFromVersion1_7( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["fileName"].setValue( pathlib.Path( __file__ ).parent / "scripts" / "rampPlug-1.7.6.0.gfr" )
+		script.load()
+
+		self.assertEqual(
+			script["Node"]["user"]["floatRamp"].defaultValue(),
+			IECore.Rampff( ( ( 0, 0 ), ( 1, 1 ), ), IECore.RampInterpolation.Linear )
+		)
+
+		self.assertEqual(
+			script["Node"]["user"]["floatRamp"].getValue(),
+			IECore.Rampff( ( ( 0, 1 ), ( 0.5, 0.5 ), ( 1, 0 ), ), IECore.RampInterpolation.Linear )
+		)
+
+		self.assertEqual(
+			script["Node"]["user"]["colorRamp"].defaultValue(),
+			IECore.RampfColor3f( ( ( 0, imath.Color3f( 1, 0, 0 ) ), ( 0.5, imath.Color3f( 1 ) ), ( 1, imath.Color3f( 0, 1, 0 ) ) ), IECore.RampInterpolation.CatmullRom )
+		)
+
+		self.assertEqual(
+			script["Node"]["user"]["colorRamp"].getValue(),
+			IECore.RampfColor3f( ( ( 0.25, imath.Color3f( 0, 1, 0 ) ), ( 0.75, imath.Color3f( 1, 0, 0 ) ) ), IECore.RampInterpolation.Linear )
+		)

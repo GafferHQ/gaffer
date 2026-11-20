@@ -297,8 +297,8 @@ class SATBlurTest( GafferImageTest.ImageTestCase ) :
 		depthRamp = GafferImage.Ramp()
 		depthRamp["format"].setValue( GafferImage.Format( 100, 100, 1.000 ) )
 		depthRamp["endPosition"].setValue( imath.V2f( 100, 0 ) )
-		depthRamp["ramp"]["p0"]["y"].setValue( imath.Color4f( -0.5, 0, 0, 0 ) )
-		depthRamp["ramp"]["p1"]["y"].setValue( imath.Color4f( 1.5, 1, 1, 1 ) )
+		depthRamp["ramp"]["points"][0]["y"].setValue( imath.Color4f( -0.5, 0, 0, 0 ) )
+		depthRamp["ramp"]["points"][1]["y"].setValue( imath.Color4f( 1.5, 1, 1, 1 ) )
 		depthRamp["layer"].setValue( 'depth' )
 
 		copyDepth = GafferImage.CopyChannels( "copyDepth" )
@@ -326,14 +326,11 @@ class SATBlurTest( GafferImageTest.ImageTestCase ) :
 		deleteChannels["in"].setInput( satBlur["out"] )
 		deleteChannels["channels"].setValue( "depth.R depthLookup" )
 
-
 		referenceMask = GafferImage.Ramp( "referenceMask" )
 		referenceMask["format"].setValue( GafferImage.Format( 100, 100, 1.000 ) )
 		referenceMask["endPosition"].setValue( imath.V2f( 100, 0 ) )
 		referenceMask["ramp"]["interpolation"].setValue( 4 )
-		referenceMask["ramp"].addChild( Gaffer.ValuePlug( "p2" ) )
-		referenceMask["ramp"]["p2"].addChild( Gaffer.FloatPlug( "x" ) )
-		referenceMask["ramp"]["p2"].addChild( Gaffer.Color4fPlug( "y" ) )
+		referenceMask["ramp"].addPoint()
 
 		referenceMultiply = GafferImage.Merge( "reference" )
 		referenceMultiply["in"].resize( 3 )
@@ -374,9 +371,9 @@ class SATBlurTest( GafferImageTest.ImageTestCase ) :
 
 				gradeDepthLookup["multiply"].setValue( imath.Color4f( 0.05, 1, 1, 1 ) )
 				referenceMultiply["enabled"].setValue( True )
-				referenceMask["ramp"]["p2"]["x"].setValue( 0.0 )
-				referenceMask["ramp"]["p1"]["x"].setValue( 0.3 )
-				referenceMask["ramp"]["p2"]["y"].setValue( imath.Color4f( 0.51 ) )
+				referenceMask["ramp"]["points"][2]["x"].setValue( 0.0 )
+				referenceMask["ramp"]["points"][1]["x"].setValue( 0.3 )
+				referenceMask["ramp"]["points"][2]["y"].setValue( imath.Color4f( 0.51 ) )
 
 				self.assertImagesEqual( deleteChannels["out"], referenceBlur["out"], maxDifference = tolerance )
 
@@ -387,35 +384,35 @@ class SATBlurTest( GafferImageTest.ImageTestCase ) :
 				# 0.101
 				gradeDepthLookup["multiply"].setValue( imath.Color4f( 0.1, 1, 1, 1 ) )
 
-				referenceMask["ramp"]["p2"]["x"].setValue( 0.0 )
-				referenceMask["ramp"]["p1"]["x"].setValue( 0.3 )
-				referenceMask["ramp"]["p2"]["y"].setValue( imath.Color4f( 0.01 ) )
+				referenceMask["ramp"]["points"][2]["x"].setValue( 0.0 )
+				referenceMask["ramp"]["points"][1]["x"].setValue( 0.3 )
+				referenceMask["ramp"]["points"][2]["y"].setValue( imath.Color4f( 0.01 ) )
 
 				self.assertImagesEqual( deleteChannels["out"], referenceBlur["out"], maxDifference = tolerance )
 
 				gradeDepthLookup["multiply"].setValue( imath.Color4f( 0.101, 1, 1, 1 ) )
 
-				referenceMask["ramp"]["p2"]["x"].setValue( 0.0 )
-				referenceMask["ramp"]["p1"]["x"].setValue( 0.3 )
-				referenceMask["ramp"]["p2"]["y"].setValue( imath.Color4f( 0.0 ) )
+				referenceMask["ramp"]["points"][2]["x"].setValue( 0.0 )
+				referenceMask["ramp"]["points"][1]["x"].setValue( 0.3 )
+				referenceMask["ramp"]["points"][2]["y"].setValue( imath.Color4f( 0.0 ) )
 
 				self.assertImagesEqual( deleteChannels["out"], referenceBlur["out"], maxDifference = tolerance )
 
 				# Now increase depth so the first band is completely omitted, and the second band is half omitted
 				gradeDepthLookup["multiply"].setValue( imath.Color4f( 0.15, 1, 1, 1 ) )
 
-				referenceMask["ramp"]["p2"]["x"].setValue( 0.3 )
-				referenceMask["ramp"]["p1"]["x"].setValue( 0.35 )
-				referenceMask["ramp"]["p2"]["y"].setValue( imath.Color4f( 0.51 ) )
+				referenceMask["ramp"]["points"][2]["x"].setValue( 0.3 )
+				referenceMask["ramp"]["points"][1]["x"].setValue( 0.35 )
+				referenceMask["ramp"]["points"][2]["y"].setValue( imath.Color4f( 0.51 ) )
 
 				self.assertImagesEqual( deleteChannels["out"], referenceBlur["out"], maxDifference = tolerance )
 
 				# Now the second band is completely omitted
 				gradeDepthLookup["multiply"].setValue( imath.Color4f( 0.201, 1, 1, 1 ) )
 
-				referenceMask["ramp"]["p2"]["x"].setValue( 0.0 )
-				referenceMask["ramp"]["p1"]["x"].setValue( 0.35 )
-				referenceMask["ramp"]["p2"]["y"].setValue( imath.Color4f( 0.0 ) )
+				referenceMask["ramp"]["points"][2]["x"].setValue( 0.0 )
+				referenceMask["ramp"]["points"][1]["x"].setValue( 0.35 )
+				referenceMask["ramp"]["points"][2]["y"].setValue( imath.Color4f( 0.0 ) )
 
 				self.assertImagesEqual( deleteChannels["out"], referenceBlur["out"], maxDifference = tolerance )
 
@@ -424,9 +421,9 @@ class SATBlurTest( GafferImageTest.ImageTestCase ) :
 				gradeDepthLookup["multiply"].setValue( imath.Color4f( 0.57, 1, 1, 1 ) )
 
 				referenceMultiply["enabled"].setValue( True )
-				referenceMask["ramp"]["p2"]["x"].setValue( 0.5 )
-				referenceMask["ramp"]["p1"]["x"].setValue( 0.55 )
-				referenceMask["ramp"]["p2"]["y"].setValue( imath.Color4f( 0.31 ) )
+				referenceMask["ramp"]["points"][2]["x"].setValue( 0.5 )
+				referenceMask["ramp"]["points"][1]["x"].setValue( 0.55 )
+				referenceMask["ramp"]["points"][2]["y"].setValue( imath.Color4f( 0.31 ) )
 
 				self.assertImagesEqual( deleteChannels["out"], referenceBlur["out"], maxDifference = tolerance )
 
@@ -435,9 +432,9 @@ class SATBlurTest( GafferImageTest.ImageTestCase ) :
 				gradeDepthLookup["multiply"].setValue( imath.Color4f( 0.95, 1, 1, 1 ) )
 
 				referenceMultiply["enabled"].setValue( True )
-				referenceMask["ramp"]["p2"]["x"].setValue( 0.7 )
-				referenceMask["ramp"]["p1"]["x"].setValue( 0.75 )
-				referenceMask["ramp"]["p2"]["y"].setValue( imath.Color4f( 0.51 ) )
+				referenceMask["ramp"]["points"][2]["x"].setValue( 0.7 )
+				referenceMask["ramp"]["points"][1]["x"].setValue( 0.75 )
+				referenceMask["ramp"]["points"][2]["y"].setValue( imath.Color4f( 0.51 ) )
 
 				self.assertImagesEqual( deleteChannels["out"], referenceBlur["out"], maxDifference = tolerance )
 
@@ -446,9 +443,9 @@ class SATBlurTest( GafferImageTest.ImageTestCase ) :
 				gradeDepthLookup["multiply"].setValue( imath.Color4f( 1, 1, 1, 1 ) )
 
 				referenceMultiply["enabled"].setValue( True )
-				referenceMask["ramp"]["p2"]["x"].setValue( 0.7 )
-				referenceMask["ramp"]["p1"]["x"].setValue( 0.75 )
-				referenceMask["ramp"]["p2"]["y"].setValue( imath.Color4f( 0.01 ) )
+				referenceMask["ramp"]["points"][2]["x"].setValue( 0.7 )
+				referenceMask["ramp"]["points"][1]["x"].setValue( 0.75 )
+				referenceMask["ramp"]["points"][2]["y"].setValue( imath.Color4f( 0.01 ) )
 
 				self.assertImagesEqual( deleteChannels["out"], referenceBlur["out"], maxDifference = tolerance )
 
@@ -457,9 +454,9 @@ class SATBlurTest( GafferImageTest.ImageTestCase ) :
 				gradeDepthLookup["multiply"].setValue( imath.Color4f( 1.01, 1, 1, 1 ) )
 
 				referenceMultiply["enabled"].setValue( True )
-				referenceMask["ramp"]["p2"]["x"].setValue( 0.0 )
-				referenceMask["ramp"]["p1"]["x"].setValue( 0.75 )
-				referenceMask["ramp"]["p2"]["y"].setValue( imath.Color4f( 0 ) )
+				referenceMask["ramp"]["points"][2]["x"].setValue( 0.0 )
+				referenceMask["ramp"]["points"][1]["x"].setValue( 0.75 )
+				referenceMask["ramp"]["points"][2]["y"].setValue( imath.Color4f( 0 ) )
 
 				self.assertImagesEqual( deleteChannels["out"], referenceBlur["out"], maxDifference = tolerance )
 

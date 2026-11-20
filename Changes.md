@@ -28,6 +28,9 @@ Improvements
 - Outputs : Default output presets are now registered in the modules for each renderer, making them available outside of the GUI (#6403).
 - SceneEditor : Pop-up editors are no longer provided when a downstream edit would override their action.
 - ImageWriter : Added `iff.dataType` plug.
+- RampPlug :
+  - Points are now stored in a child `points` container, instead of being alongside the `interpolation` plug.
+  - Serialisations use the `addPoint()` API, and reference points by index rather than name.
 
 Fixes
 -----
@@ -50,6 +53,7 @@ API
 - GafferUI : Qt is now accessed directly via PySide6 rather than via Qt.py. Qt.py is still provided, but will be removed in a future release.
 - GraphComponent : Improved exception message when `removeChild()` is called with a GraphComponent that is not a child.
 - Metadata : `compatibility:childAlias` metadata can now refer to descendants, to account for children moving to a container within the original parent.
+- RampPlug : Added `addPoint( xDefaultValue, yDefaultValue )` overload and `XType` and `YType` type aliases.
 
 Breaking Changes
 ----------------
@@ -82,6 +86,7 @@ Breaking Changes
   - Removed `_Variant` class.
 - MeshSegments : Changed behaviour when setting `connectivity` to "". Previously, this used vertex topology, now it passes through the input unchanged. This aligns better with other geometry processing nodes.
 - EditScopeAlgo : Removed `acquireSetEdits()` function.
+- RampPlug : Moved point plugs to a `points` child container. Old `.gfr` files are converted automatically on load.
 
 Build
 -----

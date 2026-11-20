@@ -1223,8 +1223,8 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		# Expect a clearPoint line to get serialised
 		self.assertEqual( 1, sum( "clearPoints" in i for i in colorSplineLines ) )
 
-		# Expect 3 addChilds per point ( The parent plug, and x and y )
-		self.assertEqual( 30, sum( "addChild" in i for i in colorSplineLines ) )
+		# Expect an addPoint call per point
+		self.assertEqual( 10, sum( "addPoint" in i for i in colorSplineLines ) )
 
 		s2 = Gaffer.ScriptNode()
 		s2.execute( serialised )

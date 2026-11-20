@@ -51,6 +51,9 @@ RampPlug<T>::RampPlug( const std::string &name, Direction direction, const Value
 {
 	addChild( new IntPlug( "interpolation", direction, (int)IECore::RampInterpolation::CatmullRom,
 		(int)IECore::RampInterpolation::Linear, (int)IECore::RampInterpolation::Constant ) );
+	// We'd really like to use an ArrayPlug here, but since it isn't a ValuePlug we're
+	// not allowed to parent one to ourselves.
+	addChild( new ValuePlug( "points", direction ) );
 
 	setToDefault();
 }
@@ -63,39 +66,12 @@ RampPlug<T>::~RampPlug()
 template<typename T>
 bool RampPlug<T>::acceptsChild( const GraphComponent *potentialChild ) const
 {
-	if( children().size() < 1 )
-	{
-		// to let the interpolation plug through during construction
-		return true;
-	}
-
-	const ValuePlug *c = IECore::runTimeCast<const ValuePlug>( potentialChild );
-	if( !c )
+	if( !ValuePlug::acceptsChild( potentialChild ) )
 	{
 		return false;
 	}
-
-	if( c->children().size()==0 )
-	{
-		// when we're getting loaded from a serialisation, the point plugs are
-		// added before the point.x and point.y plugs are added, so we have to
-		// make this concession.
-		return true;
-	}
-
-	if( c->children().size()!=2 )
-	{
-		return false;
-	}
-	if( !c->getChild<XPlugType>( "x" ) )
-	{
-		return false;
-	}
-	if( !c->getChild<YPlugType>( "y" ) )
-	{
-		return false;
-	}
-	return true;
+	// Just accept the plugs we make during construction.
+	return children().size() < 2;
 }
 
 template<typename T>
@@ -105,8 +81,7 @@ PlugPtr RampPlug<T>::createCounterpart( const std::string &name, Direction direc
 	result->clearPoints();
 	for( unsigned i = 0; i < numPoints(); ++i )
 	{
-		const ValuePlug *p = pointPlug( i );
-		result->addChild( p->createCounterpart( p->getName(), direction ) );
+		result->addPoint( pointXPlug( i )->defaultValue(), pointYPlug( i )->defaultValue() );
 	}
 	return result;
 }
@@ -121,7 +96,8 @@ template<typename T>
 void RampPlug<T>::setToDefault()
 {
 	setValue( m_defaultValue );
-	for( const auto &p : ValuePlug::Range( *this ) )
+	interpolationPlug()->resetDefault();
+	for( const auto &p : ValuePlug::Range( *pointsPlug() ) )
 	{
 		p->resetDefault();
 	}
@@ -198,7 +174,7 @@ void RampPlug<T>::setValue( const T &value )
 	// remove unneeded preexisting points
 	while( numPoints() > i )
 	{
-		removeChild( pointPlug( i ) );
+		removePoint( numPoints() - 1 );
 	}
 }
 
@@ -217,63 +193,65 @@ T RampPlug<T>::getValue() const
 	return result;
 }
 
-
 template<typename T>
 IntPlug *RampPlug<T>::interpolationPlug()
 {
-	return getChild<IntPlug>( "interpolation" );
+	return getChild<IntPlug>( 0 );
 }
 
 template<typename T>
 const IntPlug *RampPlug<T>::interpolationPlug() const
 {
-	return getChild<IntPlug>( "interpolation" );
+	return getChild<IntPlug>( 0 );
+}
+
+template<typename T>
+ValuePlug *RampPlug<T>::pointsPlug()
+{
+	return getChild<ValuePlug>( 1 );
+}
+
+template<typename T>
+const ValuePlug *RampPlug<T>::pointsPlug() const
+{
+	return getChild<ValuePlug>( 1 );
 }
 
 template<typename T>
 unsigned RampPlug<T>::numPoints() const
 {
-	return children().size() - 1;
+	return pointsPlug()->children().size();
 }
 
 template<typename T>
 unsigned RampPlug<T>::addPoint()
 {
+	return addPoint( XType( 0 ), YType( 0 ) );
+}
+
+template<typename T>
+unsigned RampPlug<T>::addPoint( XType xDefaultValue, const YType &yDefaultValue )
+{
 	const unsigned n = numPoints();
 	ValuePlugPtr p = new ValuePlug( "p0", direction() );
-	p->setFlags( Plug::Dynamic, true );
-
-	typename XPlugType::Ptr x = new XPlugType( "x", direction(), typename T::XType( 0 ) );
-	x->setFlags( Plug::Dynamic, true );
+	typename XPlugType::Ptr x = new XPlugType( "x", direction(), xDefaultValue );
 	p->addChild( x );
-
-	typename YPlugType::Ptr y = new YPlugType( "y", direction(), typename T::YType( 0 ) );
-	y->setFlags( Plug::Dynamic, true );
+	typename YPlugType::Ptr y = new YPlugType( "y", direction(), yDefaultValue );
 	p->addChild( y );
-
-	addChild( p );
-
+	pointsPlug()->addChild( p );
 	return n;
 }
 
 template<typename T>
 void RampPlug<T>::removePoint( unsigned pointIndex )
 {
-	removeChild( pointPlug( pointIndex ) );
+	pointsPlug()->removeChild( pointPlug( pointIndex ) );
 }
 
 template<typename T>
 void RampPlug<T>::clearPoints()
 {
-	unsigned i = numPoints();
-	if( !i )
-	{
-		return;
-	}
-
-	do {
-		removePoint( --i );
-	} while( i!=0 );
+	pointsPlug()->clearChildren();
 }
 
 template<typename T>
@@ -283,7 +261,7 @@ ValuePlug *RampPlug<T>::pointPlug( unsigned pointIndex )
 	{
 		throw IECore::Exception( "Point index out of range." );
 	}
-	return getChild<ValuePlug>( pointIndex + 1 ); // plus one is to skip interpolation plug
+	return pointsPlug()->template getChild<ValuePlug>( pointIndex );
 }
 
 template<typename T>
@@ -293,7 +271,7 @@ const ValuePlug *RampPlug<T>::pointPlug( unsigned pointIndex ) const
 	{
 		throw IECore::Exception( "Point index out of range." );
 	}
-	return getChild<ValuePlug>( pointIndex + 1 ); // plus one is to skip interpolation plug
+	return pointsPlug()->template getChild<ValuePlug>( pointIndex );
 }
 
 template<typename T>

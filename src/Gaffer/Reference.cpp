@@ -103,7 +103,7 @@ bool conformRampPlugs( const Gaffer::Plug *srcPlug, Gaffer::Plug *dstPlug, bool 
 		for( size_t i = 0, n = typedSrc->numPoints(); i < n; ++i )
 		{
 			const Plug *point = typedSrc->pointPlug( i );
-			typedDest->addChild( point->createCounterpart( point->getName(), point->direction() ) );
+			typedDest->pointsPlug()->addChild( point->createCounterpart( point->getName(), point->direction() ) );
 		}
 		return true;
 	};
@@ -641,19 +641,6 @@ void Reference::loadInternal( const std::filesystem::path &fileName )
 			/// alternative mechanism based on querying parent nodes/plugs
 			/// for serialisation requirements at the point of serialisation.
 			plug->setFlags( Plug::Dynamic, false );
-
-			if(
-				runTimeCast<const RampffPlug>( plug ) ||
-				runTimeCast<const RampfColor3fPlug>( plug ) ||
-				runTimeCast<const RampfColor4fPlug>( plug )
-			)
-			{
-				// Avoid recursion as it makes it impossible to serialise
-				// the `x/y` children of ramp points. See RampPlugSerialiser
-				// for further details of ramp serialisation.
-				continue;
-			}
-
 			for( Plug::RecursiveIterator it( plug ); !it.done(); ++it )
 			{
 				(*it)->setFlags( Plug::Dynamic, false );
