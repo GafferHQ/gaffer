@@ -132,7 +132,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 				{ 'value': "float", 'metadata': { 'oiio:BitsPerSample': IECore.IntData( 32 ) } },
 			]
 
-		self.__testExtension( "tif", "tiff", options = options, metadataToIgnore = [ "tiff:RowsPerStrip", "IPTC:Creator" ] )
+		self.__testExtension( "tif", "tiff", options = options, metadataToIgnore = [ "tiff:RowsPerStrip", "IPTC:Creator", "oiio:RowsPerChunk" ] )
 
 	def testJpgWrite( self ) :
 
@@ -216,7 +216,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 				{ 'value': "half" },
 			]
 
-		self.__testExtension( "exr", "openexr", options = options )
+		self.__testExtension( "exr", "openexr", options = options, metadataToIgnore = [ "oiio:RowsPerChunk" ] )
 
 	def testPngWrite( self ) :
 
@@ -882,6 +882,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 			overrideMetadata = {
 				"compression" : IECore.StringData( "zips" )
 			},
+			metadataToIgnore = [ "oiio:RowsPerChunk" ],
 		)
 
 	def testTiffMetadata( self ) :
