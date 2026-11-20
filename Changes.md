@@ -119,7 +119,9 @@ Improvements
 Fixes
 -----
 
-- Cycles : Fixed bug which passed unsupported attribute types to Cycles as empty attributes. Unsupported attributes now emit warnings at render time (#6315).
+- Cycles :
+  - Fixed bug which passed unsupported attribute types to Cycles as empty attributes. Unsupported attributes now emit warnings at render time (#6315).
+  - Fixed unstable Cryptomatte material IDs for objects with more than one AOV shader.
 - StandardLightVisualiser, RenderManLightVisualiser : Fixed bug where disabling the 3d viewer's "Use GL Lines" option could cause crashes or incorrect drawing when viewing lights with ray or portal visualisations (#7241).
 - GoboVisualiser : Fixed bug where disabling the 3d viewer's "Use GL Lines" option could cause crashes or incorrect drawing when the `gl:light:drawingMode` attribute is set to wireframe.
 - Light : Fixed duplicate set names if `defaultLights` or `__lights` was entered via the `sets` plug.
