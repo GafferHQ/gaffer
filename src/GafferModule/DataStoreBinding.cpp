@@ -44,6 +44,8 @@
 #include "Gaffer/DataStore.h"
 #include "Gaffer/ScriptNode.h"
 
+#include "IECorePython/ScopedGILRelease.h"
+
 #include "boost/bind/placeholders.hpp"
 
 #include "tbb/concurrent_hash_map.h"
@@ -218,6 +220,18 @@ namespace
 
 GafferModule::DataStorePostSerialisationSignalHandler g_postSerialisationSignalHandler;
 
+void setEntryWrapper( DataStore &dataStore, const std::string &key, IECore::ConstObjectPtr value )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	dataStore.setEntry( key, value );
+}
+
+void removeEntryWrapper( DataStore &dataStore, const std::string &key )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	dataStore.removeEntry( key );
+}
+
 IECore::ObjectPtr getEntryWrapper( const DataStore &dataStore, const std::string &key, bool throwExceptions )
 {
 	IECore::ConstObjectPtr result = dataStore.getEntry( key, throwExceptions );
@@ -238,8 +252,8 @@ void GafferModule::bindDataStore()
 
 	scope s = DependencyNodeClass<DataStore>()
 		.def( init<std::string>( ( arg( "name" )=GraphComponent::defaultName<DataStore>() ) ) )
-		.def( "setEntry", &DataStore::setEntry )
-		.def( "removeEntry", &DataStore::removeEntry )
+		.def( "setEntry", &setEntryWrapper )
+		.def( "removeEntry", &removeEntryWrapper )
 		.def( "getEntry", &getEntryWrapper, ( arg_( "key" ), arg_( "throwExceptions" ) = true ) )
 		.def( "isLive", &DataStore::isLive, ( arg_( "key" ) ) )
 		.def( "_loadEntries", &DataStoreWrapperFunctionContainer::loadEntriesWrapper, ( arg( "entries" ), arg( "loadFrom") = "") )

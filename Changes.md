@@ -18,6 +18,7 @@ Fixes
 - GoboVisualiser : Fixed bug where disabling the 3d viewer's "Use GL Lines" option could cause crashes or incorrect drawing when the `gl:light:drawingMode` attribute is set to wireframe.
 - Light : Fixed duplicate set names if `defaultLights` or `__lights` was entered via the `sets` plug.
 - PaintTool : Fixed overlapping rendering when using raytraced viewport.
+- DataStore : Fixed potential hang calling `setEntry()` or `removeEntry()` from Python.
 
 API
 ---
