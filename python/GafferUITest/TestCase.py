@@ -168,32 +168,34 @@ class TestCase( GafferTest.TestCase ) :
 			if not inspect.isclass( cls ) or not issubclass( cls, Gaffer.Node ) :
 				continue
 
-			script = Gaffer.ScriptNode()
+			with self.subTest( node = cls.staticTypeName() ) :
 
-			try :
-				script["node"] = cls()
-			except :
-				continue
+				script = Gaffer.ScriptNode()
 
-			with GafferUI.Window() as window :
-				nodeUI = GafferUI.NodeUI.create( script["node"] )
-			window.setVisible( True )
-			self.waitForIdle( 10000 )
+				try :
+					script["node"] = cls()
+				except :
+					continue
 
-			weakNodeUI = weakref.ref( nodeUI )
-			weakScript = weakref.ref( script )
+				with GafferUI.Window() as window :
+					nodeUI = GafferUI.NodeUI.create( script["node"] )
+				window.setVisible( True )
+				self.waitForIdle( 10000 )
 
-			nodeGadget = GafferUI.NodeGadget.create( script["node"] )
-			if nodeGadget :
-				weakNodeGadget = weakref.ref( nodeGadget )
-				del nodeGadget
-				self.assertIsNone( weakNodeGadget() )
+				weakNodeUI = weakref.ref( nodeUI )
+				weakScript = weakref.ref( script )
 
-			del window, nodeUI
-			self.assertIsNone( weakNodeUI() )
+				nodeGadget = GafferUI.NodeGadget.create( script["node"] )
+				if nodeGadget :
+					weakNodeGadget = weakref.ref( nodeGadget )
+					del nodeGadget
+					self.assertIsNone( weakNodeGadget() )
 
-			del script
-			self.assertIsNone( weakScript() )
+				del window, nodeUI
+				self.assertIsNone( weakNodeUI() )
+
+				del script
+				self.assertIsNone( weakScript() )
 
 	def assertCanLoadGUIConfigs( self ) :
 
