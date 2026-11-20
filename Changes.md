@@ -19,6 +19,7 @@ Fixes
 - Light : Fixed duplicate set names if `defaultLights` or `__lights` was entered via the `sets` plug.
 - PaintTool : Fixed overlapping rendering when using raytraced viewport.
 - DataStore : Fixed potential hang calling `setEntry()` or `removeEntry()` from Python.
+- Plug : Fixed potential hang calling `removeOutputs()` from Python.
 
 API
 ---

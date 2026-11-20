@@ -85,6 +85,12 @@ void setFlags2( Plug &p, unsigned flags, bool enable )
 	p.setFlags( flags, enable );
 }
 
+void removeOutputsWrapper( Plug &p )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	p.removeOutputs();
+}
+
 PlugPtr getInput( Plug &p )
 {
 	return p.getInput();
@@ -139,7 +145,7 @@ void GafferModule::bindPlug()
 		.def( "setFlags", &setFlags2 )
 		.def( "getInput", &getInput )
 		.def( "source", &source )
-		.def( "removeOutputs", &Plug::removeOutputs )
+		.def( "removeOutputs", &removeOutputsWrapper )
 		.def( "outputs", &outputs )
 		.def( "__repr__", &repr )
 	;
