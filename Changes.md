@@ -20,6 +20,7 @@ Fixes
 - PaintTool : Fixed overlapping rendering when using raytraced viewport.
 - DataStore : Fixed potential hang calling `setEntry()` or `removeEntry()` from Python.
 - Plug : Fixed potential hang calling `removeOutputs()` from Python.
+- Display : Fixed potential hang calling `setDriver()` from Python.
 
 API
 ---
