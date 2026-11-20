@@ -743,7 +743,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 			source = None,
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
 			canAcquireEdit = False,
-			cantAcquireEditReason = "No editable source found in history."
+			cantAcquireEditReason = "Editing not supported"
 		)
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
@@ -950,7 +950,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 			source = None,
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
 			canAcquireEdit = False,
-			cantAcquireEditReason = "No editable source found in history."
+			cantAcquireEditReason = "Editing not supported"
 		)
 
 		inspection = self.__inspect( s["editScope"]["out"], "/lightFilter", "filteredLights", s["editScope"] )

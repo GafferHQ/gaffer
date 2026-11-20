@@ -118,7 +118,7 @@ class PrimitiveVariableInspectorTest( GafferUITest.TestCase ) :
 			source = None,
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
 			canAcquireEdit = False,
-			cantAcquireEditReason = "No editable source found in history.",
+			cantAcquireEditReason = "Editing not supported",
 		)
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
@@ -312,7 +312,7 @@ class PrimitiveVariableInspectorTest( GafferUITest.TestCase ) :
 			source = None,
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
 			canAcquireEdit = False,
-			cantAcquireEditReason = "No editable source found in history.",
+			cantAcquireEditReason = "Editing not supported",
 		)
 
 		self.assertEqual(
@@ -336,7 +336,7 @@ class PrimitiveVariableInspectorTest( GafferUITest.TestCase ) :
 					source = None,
 					sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
 					canAcquireEdit = False,
-					cantAcquireEditReason = "No editable source found in history.",
+					cantAcquireEditReason = "Editing not supported",
 				)
 
 	def __assertExpectedResult(
