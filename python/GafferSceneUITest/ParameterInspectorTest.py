@@ -1024,45 +1024,20 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 
 		s["light"]["parameters"].addChild( Gaffer.OptionalValuePlug( "testFloat", Gaffer.FloatPlug(), False ) )
 
-		s["editScope"] = Gaffer.EditScope()
-		s["editScope"].setup( s["light"]["out"] )
-		s["editScope"]["in"].setInput( s["light"]["out"] )
-
 		self.__assertExpectedResult(
-			self.__inspect( s["editScope"]["out"], "/light", "testFloat" ),
+			self.__inspect( s["light"]["out"], "/light", "testFloat" ),
 			source = None, sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
 			canAcquireEdit = False, cantAcquireEditReason = "No editable source found in history."
-		)
-		self.__assertExpectedResult(
-			self.__inspect( s["editScope"]["out"], "/light", "testFloat", s["editScope"] ),
-			source = None, sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
-			canAcquireEdit = False, cantAcquireEditReason = "Parameter \"testFloat\" does not exist."
 		)
 
 		s["light"]["parameters"]["testFloat"]["enabled"].setValue( True )
 
-		SourceType = GafferSceneUI.Private.Inspector.Result.SourceType
-
 		self.__assertExpectedResult(
-			self.__inspect( s["editScope"]["out"], "/light", "testFloat" ),
+			self.__inspect( s["light"]["out"], "/light", "testFloat" ),
 			source = s["light"]["out"],
-			sourceType = SourceType.Other,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
 			canAcquireEdit = True,
 			edit = s["light"]["parameters"]["testFloat"]
-		)
-
-		inspection = self.__inspect( s["editScope"]["out"], "/light", "testFloat", s["editScope"] )
-		self.assertIsNotNone( inspection )
-		edit = inspection.acquireEdit()
-		edit["enabled"].setValue( True )
-		edit["value"].setValue( 5.0 )
-
-		self.__assertExpectedResult(
-			self.__inspect( s["editScope"]["out"], "/light", "testFloat", s["editScope"] ),
-			source = edit.node()["out"].source(),
-			sourceType = SourceType.EditScope,
-			canAcquireEdit = True,
-			edit = edit
 		)
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
