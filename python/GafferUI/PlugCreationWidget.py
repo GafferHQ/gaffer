@@ -210,9 +210,9 @@ class PlugCreationWidget( GafferUI.Widget ) :
 		appendDivider( "/ObjectDivider" )
 		appendItem( "/Object", Gaffer.ObjectPlug, { "defaultValue" : IECore.NullObject.defaultNullObject() } )
 
-		# Arrays
+		# Arrays and Ramps
 
-		appendDivider( "/ArrayDivider" )
+		appendDivider( "/ArrayRampDivider" )
 		appendItem( "/Array/Bool", Gaffer.BoolVectorDataPlug )
 		appendItem( "/Array/Float", Gaffer.FloatVectorDataPlug )
 		appendItem( "/Array/Int", Gaffer.IntVectorDataPlug )
@@ -226,6 +226,10 @@ class PlugCreationWidget( GafferUI.Widget ) :
 		appendDivider( "/Array/ColorDivider" )
 		appendItem( "/Array/Color3f", Gaffer.Color3fVectorDataPlug )
 		appendItem( "/Array/Color4f", Gaffer.Color4fVectorDataPlug )
+
+		appendItem( "/Ramp/Float", Gaffer.RampffPlug, { "defaultValue" : IECore.Rampff( ( ( 0, 0 ), ( 1, 1 ), ), IECore.RampInterpolation.Linear ) } )
+		appendItem( "/Ramp/Color3f", Gaffer.RampfColor3fPlug, { "defaultValue" : IECore.RampfColor3f( ( ( 0, imath.Color3f( 0 ) ), ( 1, imath.Color3f( 1 ) ), ), IECore.RampInterpolation.Linear ) } )
+		appendItem( "/Ramp/Color4f", Gaffer.RampfColor4fPlug, { "defaultValue" : IECore.RampfColor4f( ( ( 0, imath.Color4f( 0, 0, 0, 1 ) ), ( 1, imath.Color4f( 1 ) ), ), IECore.RampInterpolation.Linear ) } )
 
 		with self.__contextTracker.context( self.__plugParent ) :
 			self.plugCreationMenuSignal()( result, self )
