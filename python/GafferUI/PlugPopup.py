@@ -38,6 +38,7 @@ import imath
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import translate as _translate
 
 from GafferUI.PlugValueWidget import sole
 
@@ -70,7 +71,7 @@ class PlugPopup( GafferUI.PopupWindow ) :
 					nodes = { Gaffer.MetadataAlgo.firstViewableNode( plug ) for plug in plugs }
 					plugSummary = "{} plugs{}".format(
 						len( plugs ),
-						" on {} nodes".format( len( nodes ) ) if len( nodes ) > 1 else ""
+						_translate( " on {} nodes" ).format( len( nodes ) ) if len( nodes ) > 1 else ""
 					)
 
 					for plug in plugs[1:] :
@@ -81,7 +82,7 @@ class PlugPopup( GafferUI.PopupWindow ) :
 					plugSummary = ""
 
 				target = "<b>{}</b>".format( commonNode.relativeName( script ) ) if script.isAncestorOf( commonNode ) else ""
-				title = "Editing {}{}".format(
+				title = _translate( "Editing {}{}" ).format(
 					target,
 					" ({})".format( plugSummary ) if plugSummary != "" and target != "" else plugSummary
 				)
