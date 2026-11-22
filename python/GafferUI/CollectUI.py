@@ -46,16 +46,17 @@ import GafferUI
 from ._TableView import _TableView
 
 from Qt import QtCore
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	Gaffer.Collect,
 
 	"description",
-	"""
+	_("""
 	Collects arbitrary input values across a range of contexts, outputting
 	arrays containing the values collected across that range.
-	""",
+	"""),
 
 	"layout:section:Settings.Inputs:collapsed", False,
 
@@ -64,11 +65,11 @@ Gaffer.Metadata.registerNode(
 		"contextVariable" : {
 
 			"description" :
-			"""
+			_("""
 			The context variable used to vary the values of the inputs being
 			collected. This should be used in the node network upstream of the
 			inputs.
-			""",
+			"""),
 
 			"noduleLayout:visible" : False,
 
@@ -77,10 +78,10 @@ Gaffer.Metadata.registerNode(
 		"indexContextVariable" : {
 
 			"description" :
-			"""
+			_("""
 			The context variable used to specify the index being collected. This
 			may be used in the node network upstream of the inputs.
-			""",
+			"""),
 
 			"noduleLayout:visible" : False,
 
@@ -89,10 +90,10 @@ Gaffer.Metadata.registerNode(
 		"contextValues" : {
 
 			"description" :
-			"""
+			_("""
 			The values of the context variable. Collection will be performed once
 			for each context value.
-			""",
+			"""),
 
 			"nodule:type" : "",
 
@@ -101,12 +102,12 @@ Gaffer.Metadata.registerNode(
 		"enabled" : {
 
 			"description" :
-			"""
+			_("""
 			Enables or disables collection. This may be varied based on the
 			context variable, so that collection may be disabled in some
 			contexts but not others. Only values for enabled contexts are
 			included in the output arrays.
-			""",
+			"""),
 
 			"layout:section" : "Settings",
 			"nodule:type" : "GafferUI::StandardNodule",
@@ -116,11 +117,11 @@ Gaffer.Metadata.registerNode(
 		"in" : {
 
 			"description" :
-			"""
+			_("""
 			Container of inputs to be collected from. Inputs may be added by
 			calling `collectNode.addInput( plug )` or using the UI. Each input
 			provides a corresponding output parented under the `out` plug.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 
@@ -148,9 +149,9 @@ Gaffer.Metadata.registerNode(
 		"enabledValues" : {
 
 			"description" :
-			"""
+			_("""
 			Outputs an array of the context values for which collection was enabled by the `enabled` plug.
-			""",
+			"""),
 
 			# We show the value for this plug in the `_OutputPlugValueWidget`.
 			"plugValueWidget:type" : "",
@@ -161,9 +162,9 @@ Gaffer.Metadata.registerNode(
 		"out" : {
 
 			"description" :
-			"""
+			_("""
 			Container of array outputs corresponding to the inputs provided by the `in` plug.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.CollectUI._OutputPlugValueWidget",
 			"layout:section" : "Results",
@@ -390,7 +391,7 @@ def __plugPopupMenu( menuDefinition, plug ) :
 	if len( menuDefinition.items() ) :
 		menuDefinition.append( "/DeleteDivider", { "divider" : True } )
 
-	menuDefinition.append( "/Delete", { "command" : functools.partial( __deletePlug, plug ), "active" : not Gaffer.MetadataAlgo.readOnly( plug ) } )
+	menuDefinition.append( "/" + _("Delete"), { "command" : functools.partial( __deletePlug, plug ), "active" : not Gaffer.MetadataAlgo.readOnly( plug ) } )
 
 def __deletePlug( plug ) :
 

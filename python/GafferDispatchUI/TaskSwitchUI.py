@@ -36,28 +36,29 @@
 
 import Gaffer
 import GafferDispatch
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferDispatch.TaskSwitch,
 
 	"description",
-	"""
+	_("""
 	Switches between upstream tasks, so that only
 	one is chosen for execution.
-	""",
+	"""),
 
 	plugs = {
 
 		"index" : {
 
 			"description" :
-			"""
+			_("""
 			The index of the input task which is executed. A value
 			of 0 chooses the first input, 1 the second and so on. Values
 			larger than the number of available inputs wrap back around to
 			the beginning.
-			""",
+			"""),
 
 		},
 

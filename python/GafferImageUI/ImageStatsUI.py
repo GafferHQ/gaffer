@@ -38,17 +38,18 @@ import Gaffer
 import GafferUI
 import GafferImage
 import GafferImageUI
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.ImageStats,
 
 	"description",
-	"""
+	_("""
 	Calculates minimum, maximum and average colours for a region of
 	an image. These outputs can then be used to drive other plugs
 	within the node graph.
-	""",
+	"""),
 
 	"layout:activator:areaSourceIsArea", lambda node : node["areaSource"].getValue() == GafferImage.ImageStats.AreaSource.Area,
 
@@ -57,18 +58,18 @@ Gaffer.Metadata.registerNode(
 		"in" : {
 
 			"description" :
-			"""
+			_("""
 			The input image to be analysed.
-			""",
+			"""),
 
 		},
 
 		"view" : {
 
 			"description" :
-			"""
+			_("""
 			The view to be analysed.
-			""",
+			"""),
 
 			"nodule:type" : "",
 			"plugValueWidget:type" : "GafferImageUI.ViewPlugValueWidget",
@@ -79,9 +80,9 @@ Gaffer.Metadata.registerNode(
 		"channels" : {
 
 			"description" :
-			"""
+			_("""
 			The names of the four channels to be analysed.
-			""",
+			"""),
 
 			"nodule:type" : "",
 			"plugValueWidget:type" : "GafferImageUI.RGBAChannelsPlugValueWidget",
@@ -91,13 +92,13 @@ Gaffer.Metadata.registerNode(
 		"areaSource" : {
 
 			"description" :
-			"""
+			_("""
 			Where to source the area to be analysed. If this is
 			set to DataWindow, it will use the input's Data Window,
 			if it is set to DisplayWindow, it will use the input's
 			Display Window, and if it is set to Area, it will use
 			the Area plug.
-			""",
+			"""),
 
 			"preset:Area" : GafferImage.ImageStats.AreaSource.Area,
 			"preset:DataWindow" : GafferImage.ImageStats.AreaSource.DataWindow,
@@ -112,10 +113,10 @@ Gaffer.Metadata.registerNode(
 		"area" : {
 
 			"description" :
-			"""
+			_("""
 			The area of the image to be analysed.
 			This plug is only used if 'Area Source' is set to Area.
-			""",
+			"""),
 
 			"layout:activator" : "areaSourceIsArea",
 			"userDefault" : lambda plug : GafferImage.FormatPlug.getDefaultFormat( Gaffer.Context.current() ).getDisplayWindow()
@@ -125,27 +126,27 @@ Gaffer.Metadata.registerNode(
 		"average" : {
 
 			"description" :
-			"""
+			_("""
 			The per-channel mean values computed from the input image region.
-			""",
+			"""),
 
 		},
 
 		"min" : {
 
 			"description" :
-			"""
+			_("""
 			The per-channel minimum values computed from the input image region.
-			""",
+			"""),
 
 		},
 
 		"max" : {
 
 			"description" :
-			"""
+			_("""
 			The per-channel maximum values computed from the input image region.
-			""",
+			"""),
 
 		},
 

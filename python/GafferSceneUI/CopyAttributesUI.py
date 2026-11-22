@@ -36,47 +36,48 @@
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.CopyAttributes,
 
 	"description",
-	"""
+	_("""
 	Copies attributes from a source scene, adding them to the attributes
 	of the main input scene.
-	""",
+	"""),
 
 	plugs = {
 
 		"source" : {
 
 			"description" :
-			"""
+			_("""
 			The scene from which the attributes are copied.
-			""",
+			"""),
 
 		},
 
 		"attributes" : {
 
 			"description" :
-			"""
+			_("""
 			The names of the attributes to be copied. These should be
 			separated by spaces and can use Gaffer's standard wildcards
 			to match multiple attributes.
-			""",
+			"""),
 
 		},
 
 		"sourceLocation" : {
 
 			"description" :
-			"""
+			_("""
 			The location in the source scene that attributes are copied from.
 			By default, attributes are copied from the location equivalent to the one
 			they are being copied to.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
 			"scenePathPlugValueWidget:scene" : "source",
@@ -86,10 +87,10 @@ Gaffer.Metadata.registerNode(
 		"deleteExisting" : {
 
 			"description" :
-			"""
+			_("""
 			Deletes all attributes from the input scene before adding the copied
 			attributes.
-			""",
+			"""),
 
 		},
 

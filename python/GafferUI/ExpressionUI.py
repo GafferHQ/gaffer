@@ -42,16 +42,17 @@ import imath
 import IECore
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	Gaffer.Expression,
 
 	"description",
-	"""
+	_("""
 	Utility node for computing values via
 	scripted expressions.
-	""",
+	"""),
 
 	"layout:customWidget:Expression:widgetType", "GafferUI.ExpressionUI.ExpressionWidget",
 	"nodeGadget:type", "GafferUI::AuxiliaryNodeGadget",
@@ -119,7 +120,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 	menuDefinition.prepend( "/ExpressionDivider", { "divider" : True } )
 	for language in languages :
 		menuDefinition.prepend(
-			"/Create " + IECore.CamelCase.toSpaced( language ) + " Expression...",
+			"/" + _("Create %s Expression...") % IECore.CamelCase.toSpaced( language ),
 			{
 				"command" : functools.partial( __createExpression, plug, language )
 			}
@@ -143,7 +144,7 @@ class ExpressionWidget( GafferUI.Widget ) :
 
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 
-				GafferUI.Label( "Language" )
+				GafferUI.Label( _("Language") )
 				self.__languageMenu = GafferUI.MenuButton( "", menu = GafferUI.Menu( Gaffer.WeakMethod( self.__languageMenuDefinition ) ) )
 				self.__languageMenu.setEnabled( not Gaffer.MetadataAlgo.readOnly( node ) )
 
@@ -250,7 +251,7 @@ class ExpressionWidget( GafferUI.Widget ) :
 
 			return bookmarkMenuDefinition
 
-		menuDefinition.append( "/Insert Bookmark", { "subMenu" : functools.partial( __bookmarkMenu, bookmarks ) } )
+		menuDefinition.append( "/" + _("Insert Bookmark"), { "subMenu" : functools.partial( __bookmarkMenu, bookmarks ) } )
 
 		self.expressionContextMenuSignal()( menuDefinition, self )
 
@@ -276,7 +277,7 @@ class ExpressionWidget( GafferUI.Widget ) :
 
 		self.__textWidget.setText( expression )
 		self.__textWidget.setEnabled( bool( language ) )
-		self.__languageMenu.setText( IECore.CamelCase.toSpaced( language ) if language else "Choose..." )
+		self.__languageMenu.setText( IECore.CamelCase.toSpaced( language ) if language else _("Choose...") )
 
 		completer = self.__completers.get( language )
 		self.__textWidget.setCompleter( completer( self.__node ) if completer is not None else None )

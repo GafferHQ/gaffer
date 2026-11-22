@@ -44,46 +44,48 @@ import IECore
 import Gaffer
 import GafferUI
 
+from GafferUI.i18n import _
+
 def appendDefinitions( menuDefinition, prefix="" ) :
 
-	menuDefinition.append( prefix + "/Undo", { "command" : undo, "shortCut" : "Ctrl+Z", "active" : __undoAvailable } )
-	menuDefinition.append( prefix + "/Redo", { "command" : redo, "shortCut" : "Shift+Ctrl+Z", "active" : __redoAvailable } )
+	menuDefinition.append( prefix + "/Undo", { "command" : undo, "shortCut" : "Ctrl+Z", "active" : __undoAvailable, "label" : _( "Undo" ) } )
+	menuDefinition.append( prefix + "/Redo", { "command" : redo, "shortCut" : "Shift+Ctrl+Z", "active" : __redoAvailable, "label" : _( "Redo" ) } )
 	menuDefinition.append( prefix + "/UndoDivider", { "divider" : True } )
 
-	menuDefinition.append( prefix + "/Cut", { "command" : cut, "shortCut" : "Ctrl+X", "active" : __mutableSelectionAvailable } )
-	menuDefinition.append( prefix + "/Copy", { "command" : copy, "shortCut" : "Ctrl+C", "active" : selectionAvailable } )
-	menuDefinition.append( prefix + "/Paste", { "command" : paste, "shortCut" : "Ctrl+V", "active" : __pasteAvailable } )
-	menuDefinition.append( prefix + "/Duplicate with Inputs", { "command" : duplicateWithInputs, "shortCut" : "Ctrl+D", "active" : selectionAvailable } )
-	menuDefinition.append( prefix + "/Delete", { "command" : delete, "shortCut" : "Backspace, Delete", "active" : __mutableSelectionAvailable } )
-	menuDefinition.append( prefix + "/Rename", { "command" : rename, "shortCut" : "F2", "active" : __renameAvailable } )
+	menuDefinition.append( prefix + "/Cut", { "command" : cut, "shortCut" : "Ctrl+X", "active" : __mutableSelectionAvailable, "label" : _( "Cut" ) } )
+	menuDefinition.append( prefix + "/Copy", { "command" : copy, "shortCut" : "Ctrl+C", "active" : selectionAvailable, "label" : _( "Copy" ) } )
+	menuDefinition.append( prefix + "/Paste", { "command" : paste, "shortCut" : "Ctrl+V", "active" : __pasteAvailable, "label" : _( "Paste" ) } )
+	menuDefinition.append( prefix + "/Duplicate with Inputs", { "command" : duplicateWithInputs, "shortCut" : "Ctrl+D", "active" : selectionAvailable, "label" : _( "Duplicate with Inputs" ) } )
+	menuDefinition.append( prefix + "/Delete", { "command" : delete, "shortCut" : "Backspace, Delete", "active" : __mutableSelectionAvailable, "label" : _( "Delete" ) } )
+	menuDefinition.append( prefix + "/Rename", { "command" : rename, "shortCut" : "F2", "active" : __renameAvailable, "label" : _( "Rename" ) } )
 	menuDefinition.append( prefix + "/CutCopyPasteDeleteDivider", { "divider" : True } )
 
-	menuDefinition.append( prefix + "/Find...", { "command" : find, "shortCut" : "Ctrl+F" } )
+	menuDefinition.append( prefix + "/Find...", { "command" : find, "shortCut" : "Ctrl+F", "label" : _( "Find..." ) } )
 	menuDefinition.append( prefix + "/FindDivider", { "divider" : True } )
 
-	menuDefinition.append( prefix + "/Arrange", { "command" : arrange, "shortCut" : "Ctrl+L", "active" : __arrangeAvailable } )
+	menuDefinition.append( prefix + "/Arrange", { "command" : arrange, "shortCut" : "Ctrl+L", "active" : __arrangeAvailable, "label" : _( "Arrange" ) } )
 	menuDefinition.append( prefix + "/ArrangeDivider", { "divider" : True } )
 
-	menuDefinition.append( prefix + "/Select All", { "command" : selectAll, "shortCut" : "Ctrl+A" } )
-	menuDefinition.append( prefix + "/Select None", { "command" : selectNone, "shortCut" : "Shift+Ctrl+A", "active" : selectionAvailable } )
+	menuDefinition.append( prefix + "/Select All", { "command" : selectAll, "shortCut" : "Ctrl+A", "label" : _( "Select All" ) } )
+	menuDefinition.append( prefix + "/Select None", { "command" : selectNone, "shortCut" : "Shift+Ctrl+A", "active" : selectionAvailable, "label" : _( "Select None" ) } )
 
-	menuDefinition.append( prefix + "/Select Connected/Inputs", { "command" : selectInputs, "active" : selectionAvailable } )
-	menuDefinition.append( prefix + "/Select Connected/Add Inputs", { "command" : selectAddInputs, "active" : selectionAvailable } )
+	menuDefinition.append( prefix + "/Select Connected/Inputs", { "command" : selectInputs, "active" : selectionAvailable, "label" : _("Inputs") } )
+	menuDefinition.append( prefix + "/Select Connected/Add Inputs", { "command" : selectAddInputs, "active" : selectionAvailable, "label" : _("Add Inputs") } )
 	menuDefinition.append( prefix + "/Select Connected/InputsDivider", { "divider" : True } )
 
-	menuDefinition.append( prefix + "/Select Connected/Upstream", { "command" : selectUpstream, "active" : selectionAvailable } )
-	menuDefinition.append( prefix + "/Select Connected/Add Upstream", { "command" : selectAddUpstream, "active" : selectionAvailable } )
+	menuDefinition.append( prefix + "/Select Connected/Upstream", { "command" : selectUpstream, "active" : selectionAvailable, "label" : _("Upstream") } )
+	menuDefinition.append( prefix + "/Select Connected/Add Upstream", { "command" : selectAddUpstream, "active" : selectionAvailable, "label" : _("Add Upstream") } )
 	menuDefinition.append( prefix + "/Select Connected/UpstreamDivider", { "divider" : True } )
 
-	menuDefinition.append( prefix + "/Select Connected/Outputs", { "command" : selectOutputs, "active" : selectionAvailable } )
-	menuDefinition.append( prefix + "/Select Connected/Add Outputs", { "command" : selectAddOutputs, "active" : selectionAvailable } )
+	menuDefinition.append( prefix + "/Select Connected/Outputs", { "command" : selectOutputs, "active" : selectionAvailable, "label" : _("Outputs") } )
+	menuDefinition.append( prefix + "/Select Connected/Add Outputs", { "command" : selectAddOutputs, "active" : selectionAvailable, "label" : _("Add Outputs") } )
 	menuDefinition.append( prefix + "/Select Connected/OutputsDivider", { "divider" : True } )
 
-	menuDefinition.append( prefix + "/Select Connected/Downstream", { "command" : selectDownstream, "active" : selectionAvailable } )
-	menuDefinition.append( prefix + "/Select Connected/Add Downstream", { "command" : selectAddDownstream, "active" : selectionAvailable } )
+	menuDefinition.append( prefix + "/Select Connected/Downstream", { "command" : selectDownstream, "active" : selectionAvailable, "label" : _("Downstream") } )
+	menuDefinition.append( prefix + "/Select Connected/Add Downstream", { "command" : selectAddDownstream, "active" : selectionAvailable, "label" : _("Add Downstream") } )
 	menuDefinition.append( prefix + "/Select Connected/DownstreamDivider", { "divider" : True } )
 
-	menuDefinition.append( prefix + "/Select Connected/Add All", { "command" : selectConnected, "active" : selectionAvailable } )
+	menuDefinition.append( prefix + "/Select Connected/Add All", { "command" : selectConnected, "active" : selectionAvailable, "label" : _("Add All") } )
 
 ## \todo: Remove nodeGraph fallback when all client code has been updated
 __Scope = collections.namedtuple( "Scope", [ "scriptWindow", "script", "parent", "graphEditor", "nodeGraph" ] )
@@ -152,8 +154,8 @@ def paste( menu ) :
 	originalSelection = Gaffer.StandardSet( iter( s.script.selection() ) )
 
 	errorHandler = GafferUI.ErrorDialogue.ErrorHandler(
-		title = "Errors Occurred During Pasting",
-		closeLabel = "Oy vey",
+		title = _( "Errors Occurred During Pasting" ),
+		closeLabel = _( "Oy vey" ),
 		parentWindow = s.scriptWindow
 	)
 
@@ -200,8 +202,8 @@ def duplicateWithInputs( menu ) :
 	s = scope( menu )
 
 	errorHandler = GafferUI.ErrorDialogue.ErrorHandler(
-		title = "Errors Occurred During Duplication",
-		closeLabel = "Oy vey",
+		title = _( "Errors Occurred During Duplication" ),
+		closeLabel = _( "Oy vey" ),
 		parentWindow = s.scriptWindow
 	)
 
@@ -274,8 +276,8 @@ def rename( menu ) :
 
 	d = GafferUI.TextInputDialogue(
 		initialText = s.script.selection()[-1].getName(),
-		title = "Enter name",
-		confirmLabel = "Rename"
+		title = _( "Enter name" ),
+		confirmLabel = _( "Rename" )
 	)
 
 	# Hack to borrow the input validation from NameWidget so we can prevent the

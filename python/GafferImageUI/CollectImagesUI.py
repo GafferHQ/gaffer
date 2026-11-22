@@ -37,16 +37,17 @@
 import Gaffer
 import GafferUI
 import GafferImage
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.CollectImages,
 
 	"description",
-	"""
+	_("""
 	Forms a series of image layers by repeatedly evaluating the input with different Contexts.
 	Useful for networks that need to dynamically build an unknown number of image layers.
-	""",
+	"""),
 
 	"ui:spreadsheet:activeRowNamesConnection", "rootLayers",
 	"ui:spreadsheet:selectorContextVariablePlug", "layerVariable",
@@ -56,52 +57,52 @@ Gaffer.Metadata.registerNode(
 		"in" : {
 
 			"description" :
-			"""
+			_("""
 			The image which will be evaluated for each layer.
-			""",
+			"""),
 
 		},
 
 		"rootLayers" : {
 
 			"description" :
-			"""
+			_("""
 			A list of values for the `layerVariable`, defining the layers to be collected.
-			""",
+			"""),
 
 		},
 
 		"layerVariable" : {
 
 			"description" :
-			"""
+			_("""
 			This Context Variable will be set with the current layer name when evaluating the in plug.
 			This allows you to vary the upstream processing for each new layer.
-			""",
+			"""),
 
 		},
 
 		"addLayerPrefix" : {
 
 			"description" :
-			"""
+			_("""
 			When on, the output channel names are automatically prefixed with
 			the name of the layer being collected. Should be turned off when
 			the input channel names already contain the layer name.
-			""",
+			"""),
 
 		},
 
 		"mergeMetadata" : {
 
 			"description" :
-			"""
+			_("""
 			Controls how the output metadata is generated from the collected
 			images. By default, the metadata from the first image alone
 			is passed through. When `mergeMetadata` is on, the metadata from
 			all collected images is merged, with the last image winning
 			in the case of multiple image specifying the same piece of metadata.
-			""",
+			"""),
 
 		},
 	}

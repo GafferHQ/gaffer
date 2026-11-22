@@ -40,6 +40,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 from GafferUI.PlugValueWidget import sole
 
@@ -103,9 +104,9 @@ Gaffer.Metadata.registerNode(
 		"displayTransform.name" : {
 
 			"description" :
-			"""
+			_("""
 			The colour transform used for correcting the Viewer output for display.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 			"label" : "",
@@ -125,9 +126,9 @@ Gaffer.Metadata.registerNode(
 		"displayTransform.clipping" : {
 
 			"description" :
-			"""
+			_("""
 			Highlights the regions in which the colour values go above 1 or below 0.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.TogglePlugValueWidget",
 			"togglePlugValueWidget:image:on" : "clippingOn.png",
@@ -138,9 +139,9 @@ Gaffer.Metadata.registerNode(
 		"displayTransform.exposure" : {
 
 			"description" :
-			"""
+			_("""
 			Applies an exposure adjustment to the image.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.TogglePlugValueWidget",
 			"togglePlugValueWidget:image:on" : "exposureOn.png",
@@ -153,9 +154,9 @@ Gaffer.Metadata.registerNode(
 		"displayTransform.gamma" : {
 
 			"description" :
-			"""
+			_("""
 			Applies a gamma correction to the image.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.TogglePlugValueWidget",
 			"togglePlugValueWidget:image:on" : "gammaOn.png",
@@ -168,9 +169,9 @@ Gaffer.Metadata.registerNode(
 		"displayTransform.absolute" : {
 
 			"description" :
-			"""
+			_("""
 			Converts negative values to positive.
-			""",
+			"""),
 
 			"layout:visibilityActivator" : False,
 
@@ -189,7 +190,7 @@ class _SoloChannelPlugValueWidget( GafferUI.PlugValueWidget ) :
 			hasFrame = False,
 			menu = GafferUI.Menu(
 				Gaffer.WeakMethod( self.__menuDefinition ),
-				title = "Channel",
+				title = _("Channel"),
 			)
 		)
 
@@ -213,7 +214,7 @@ class _SoloChannelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		m = IECore.MenuDefinition()
 		m.append(
-			"/All",
+			"/" + _("All"),
 			{
 				"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), -1 ),
 				"checkBox" : soloChannel == -1
@@ -237,7 +238,7 @@ class _SoloChannelPlugValueWidget( GafferUI.PlugValueWidget ) :
 		m.append( "/LuminanceDivider", { "divider" : True, })
 
 		m.append(
-				"/Luminance",
+				"/" + _("Luminance"),
 				{
 					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), -2 ),
 					"checkBox" : soloChannel == -2,

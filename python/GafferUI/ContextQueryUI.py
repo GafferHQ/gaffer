@@ -41,6 +41,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 ##########################################################################
 # Internal utilities
@@ -156,9 +157,9 @@ Gaffer.Metadata.registerNode(
 	Gaffer.ContextQuery,
 
 	"description",
-	"""
+	_("""
 	Queries variables from the current context, creating outputs for each variable.
-	""",
+	"""),
 
 	"nodeGadget:type", "GafferUI::AuxiliaryNodeGadget",
 	"nodeGadget:shape", "oval",
@@ -171,14 +172,14 @@ Gaffer.Metadata.registerNode(
 		"queries" : {
 
 			"description" :
-			"""
+			_("""
 			The context variables to be queried - arbitrary numbers of context
 			variables may be added as children of this plug via the user interface,
 			or via python. Each child is a `NameValuePlug` whose `name` plug is
 			the context variable to query, and whose `value` plug is the default
 			value to use if the variable does not exist in the context with an
 			appropriate type.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 
@@ -194,37 +195,37 @@ Gaffer.Metadata.registerNode(
 		"queries.*" : {
 
 			"description" :
-			"""
+			_("""
 			A pair of variable name to query and default value.
-			""",
+			"""),
 
 		},
 
 		"queries.*.name" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the variable to query.
-			""",
+			"""),
 
 		},
 
 		"queries.*.value" : {
 
 			"description" :
-			"""
+			_("""
 			The value to output if the variable does not exist.
-			""",
+			"""),
 
 		},
 
 		"out" : {
 
 			"description" :
-			"""
+			_("""
 			The parent plug of the query outputs. The order of outputs corresponds
 			to the order of children of `queries`.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 
@@ -239,9 +240,9 @@ Gaffer.Metadata.registerNode(
 		"out.*" : {
 
 			"description" :
-			"""
+			_("""
 			The result of the query.
-			""",
+			"""),
 
 			"label" : functools.partial( __getLabel, parentPlug = ""),
 
@@ -254,9 +255,9 @@ Gaffer.Metadata.registerNode(
 		"out.*.exists" : {
 
 			"description" :
-			"""
+			_("""
 			Outputs true if the variable exists in the context, and is a compatible type.
-			""",
+			"""),
 
 			"noduleLayout:label" : functools.partial( __getLabel, parentPlug = "exists" ),
 
@@ -265,10 +266,10 @@ Gaffer.Metadata.registerNode(
 		"out.*.value" : {
 
 			"description" :
-			"""
+			_("""
 			Outputs the value of the specified variable, or the default value
 			if the variable does not exist ( or is incompatible ).
-			""",
+			"""),
 
 		},
 
@@ -348,7 +349,7 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 		if len( menuDefinition.items() ) :
 			menuDefinition.append( "/DeleteDivider", { "divider" : True } )
 
-		menuDefinition.append( "/Delete", { "command" : functools.partial( __deletePlug, queryPlug ), "active" : not Gaffer.MetadataAlgo.readOnly( queryPlug ) } )
+		menuDefinition.append( "/" + _("Delete"), { "command" : functools.partial( __deletePlug, queryPlug ), "active" : not Gaffer.MetadataAlgo.readOnly( queryPlug ) } )
 		return
 
 	# For ValuePlug in general, we offer the option to drive them with ContextQuery
@@ -366,7 +367,7 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 
 	menuDefinition.prepend( "/ContextQueryDivider", { "divider" : True } )
 	menuDefinition.prepend(
-		"/Create Context Query...",
+		"/" + _("Create Context Query..."),
 		{
 			"command" : functools.partial( __createContextQuery, plug )
 		}

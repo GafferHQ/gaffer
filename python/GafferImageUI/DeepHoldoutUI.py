@@ -36,24 +36,25 @@
 
 import Gaffer
 import GafferImage
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.DeepHoldout,
 
 	"description",
-	"""
+	_("""
 	Flattens the part of the input which is not hidden by the holdout input.
-	""",
+	"""),
 
 	plugs = {
 
 		"holdout" : {
 
 			"description" :
-			"""
+			_("""
 			Hides the parts of the main input which are behind this image, based on its Z, ZBack and A channels.
-			""",
+			"""),
 
 		},
 

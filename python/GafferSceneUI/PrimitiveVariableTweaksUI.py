@@ -45,6 +45,7 @@ import Gaffer
 import GafferUI
 import GafferScene
 import GafferSceneUI
+from GafferUI.i18n import _
 
 def __primVarTweaksSelectionModeEnabled( node ):
 	return not node["interpolation"].getValue() in [
@@ -57,10 +58,10 @@ Gaffer.Metadata.registerNode(
 	GafferScene.PrimitiveVariableTweaks,
 
 	"description",
-	"""
+	_("""
 	Modify primitive variable values. Supports modifying values just for specific elements of the
 	primitive.
-	""",
+	"""),
 
 	"layout:activator:selectionModeEnabled", lambda node : __primVarTweaksSelectionModeEnabled( node ),
 	"layout:activator:idListExplicitVisible", lambda node : __primVarTweaksSelectionModeEnabled( node ) and node["selectionMode"].getValue() == GafferScene.PrimitiveVariableTweaks.SelectionMode.IdList,
@@ -76,13 +77,13 @@ Gaffer.Metadata.registerNode(
 		"interpolation" : {
 
 			"description" :
-			"""
+			_("""
 			The interpolation of the target primitive variables. Using "Any" allows you to
 			operate on any primitive variable, but if you know your target, using a more
 			specific interpolation offers benefits: you can specify an idList to operate
 			on specific elements, and you can use "Create" mode to create new primitive
 			variables.
-			""",
+			"""),
 
 			"preset:Any" : IECoreScene.PrimitiveVariable.Interpolation.Invalid,
 			"preset:Constant" : IECoreScene.PrimitiveVariable.Interpolation.Constant,
@@ -98,7 +99,7 @@ Gaffer.Metadata.registerNode(
 		"selectionMode" : {
 
 			"description" :
-			"""
+			_("""
 			Chooses how to select which elements are affected. Only takes effect if you
 			choose an interpolation other than "Any" or "Constant". "Id List" shows a
 			list plug to manually select ids. "Id List Primitive Variable" takes
@@ -106,7 +107,7 @@ Gaffer.Metadata.registerNode(
 			"Mask Primitive Variable" takes the name of a primvar that must match the
 			selected interpolation - the tweak will apply to all elements where the primitive
 			variable is non-zero.
-			""",
+			"""),
 
 			"preset:All" : GafferScene.PrimitiveVariableTweaks.SelectionMode.All,
 			"preset:Id List" : GafferScene.PrimitiveVariableTweaks.SelectionMode.IdList,
@@ -122,12 +123,12 @@ Gaffer.Metadata.registerNode(
 		"idList" : {
 
 			"description" :
-			"""
+			_("""
 			A list of ids for the elements to affect, corresponding to the current interpolation. For
 			example, if you choose "Vertex" interpolation, these will be vertex ids. By default, ids
 			are based on the index, but if you specify an id primitive variable below, the ids in
 			this list will match the id primitive variable.
-			""",
+			"""),
 
 			"layout:visibilityActivator" : "idListExplicitVisible",
 
@@ -136,12 +137,12 @@ Gaffer.Metadata.registerNode(
 		"idListVariable" : {
 
 			"description" :
-			"""
+			_("""
 			The name of a constant primitive variable containing a list of ids for the elements to affect,
 			corresponding to the current interpolation. For example, if you choose "Vertex" interpolation,
 			these will be vertex ids. By default, ids are based on the index, but if you specify an id
 			primitive variable below, the ids in this list will match the id primitive variable.
-			""",
+			"""),
 
 			"layout:visibilityActivator" : "idListVarVisible",
 
@@ -150,9 +151,9 @@ Gaffer.Metadata.registerNode(
 		"id" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the primitive variable to use as ids. Affects which elements are selected by the idList.
-			""",
+			"""),
 
 			"layout:visibilityActivator" : "idListVisible",
 
@@ -161,10 +162,10 @@ Gaffer.Metadata.registerNode(
 		"maskVariable" : {
 
 			"description" :
-			"""
+			_("""
 			The name of a primitive variable containing a mask. The variable must match the specified interpolation.
 			Any elements where the mask variable is non-zero will be tweaked.
-			""",
+			"""),
 
 			"layout:visibilityActivator" : "maskVarVisible",
 
@@ -173,9 +174,9 @@ Gaffer.Metadata.registerNode(
 		"invertSelection" : {
 
 			"description" :
-			"""
+			_("""
 			Swaps which elements are tweaked/not tweaked.
-			""",
+			"""),
 
 			"layout:visibilityActivator" : "selectionNotAll",
 
@@ -184,20 +185,20 @@ Gaffer.Metadata.registerNode(
 		"ignoreMissing" : {
 
 			"description" :
-			"""
+			_("""
 			Ignores tweaks targeting missing primitive variables. When off, missing primitive variables
 			cause the node to error.
-			""",
+			"""),
 
 		},
 
 		"tweaks" : {
 
 			"description" :
-			"""
+			_("""
 			The tweaks to be made to the primitive variables. Arbitrary numbers of user defined
 			tweaks may be added as children of this plug.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 			"layout:customWidget:footer:widgetType" : "GafferSceneUI.PrimitiveVariableTweaksUI._TweaksFooter",
@@ -216,10 +217,10 @@ Gaffer.Metadata.registerNode(
 
 		"tweaks.*.value" : {
 			"description" :
-			"""
+			_("""
 			For a constant primitive variable, this is just the value of the primitive variable. For
 			non-constant primitive variables, this is the value for each element.
-			""",
+			"""),
 		}
 	}
 )

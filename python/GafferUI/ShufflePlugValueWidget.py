@@ -44,6 +44,7 @@ import Gaffer
 import GafferUI
 
 from Qt import QtWidgets
+from GafferUI.i18n import _
 
 ##########################################################################
 # ShufflePlug Widget
@@ -136,19 +137,19 @@ GafferUI.PlugValueWidget.registerType( Gaffer.ShufflePlug, ShufflePlugValueWidge
 # ShufflePlug Metadata
 ##########################################################################
 
-Gaffer.Metadata.registerValue( Gaffer.ShufflePlug, "source", "description", "The name(s) of the source data to be shuffled. Accepts standard matching syntax (eg \"a*b\")." )
+Gaffer.Metadata.registerValue( Gaffer.ShufflePlug, "source", "description", _("""The name(s) of the source data to be shuffled. Accepts standard matching syntax (eg \")a*b\").""") )
 Gaffer.Metadata.registerValue( Gaffer.ShufflePlug,
 	"destination",
 	"description",
-	"""
+	_("""
 	The name of the destination data to be created. Use `${source}` to insert
 	the name of the source data. For example, to prepend `prefix:` set the
 	destination to `prefix:${source}`.
-	"""
+	""")
 )
-Gaffer.Metadata.registerValue( Gaffer.ShufflePlug, "deleteSource", "description", "Enable to delete the source data after shuffling to the destination(s)." )
-Gaffer.Metadata.registerValue( Gaffer.ShufflePlug, "replaceDestination", "description", "Enable to replace already written destination data with the same name as destination(s)." )
-Gaffer.Metadata.registerValue( Gaffer.ShufflePlug, "enabled", "description", "Used to enable/disable this shuffle operation." )
+Gaffer.Metadata.registerValue( Gaffer.ShufflePlug, "deleteSource", "description", _("Enable to delete the source data after shuffling to the destination(s).") )
+Gaffer.Metadata.registerValue( Gaffer.ShufflePlug, "replaceDestination", "description", _("Enable to replace already written destination data with the same name as destination(s).") )
+Gaffer.Metadata.registerValue( Gaffer.ShufflePlug, "enabled", "description", _("Used to enable/disable this shuffle operation.") )
 Gaffer.Metadata.registerValue( Gaffer.ShufflePlug, "nodule:type", "" )
 Gaffer.Metadata.registerValue( Gaffer.ShufflePlug, "*", "nodule:type", "" )
 
@@ -167,11 +168,11 @@ class ShufflesPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		with column :
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
-				GafferUI.Label( "<h4><b>Source</b></h4>" )._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
+				GafferUI.Label( _("<h4><b>Source</b></h4>") )._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
 				GafferUI.Spacer( imath.V2i( 25, 2 ) ) # approximate width of a BoolWidget Switch
-				GafferUI.Label( "<h4><b>Destination</b></h4>" )._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
-				GafferUI.Label( "<h4><b>Delete Source</b></h4>" )._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() - 40 )
-				GafferUI.Label( "<h4><b>Replace</b></h4>" )._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
+				GafferUI.Label( _("<h4><b>Destination</b></h4>") )._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
+				GafferUI.Label( _("<h4><b>Delete Source</b></h4>") )._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() - 40 )
+				GafferUI.Label( _("<h4><b>Replace</b></h4>") )._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
 
 			self.__plugLayout = GafferUI.PlugLayout( plug )
 			self.__addButton = GafferUI.Button( image = "plus.png", hasFrame = False )

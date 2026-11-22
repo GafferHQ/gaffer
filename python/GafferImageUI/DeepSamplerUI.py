@@ -36,43 +36,44 @@
 
 import Gaffer
 import GafferImage
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.DeepSampler,
 
 	"description",
-	"""
+	_("""
 	Samples the full channel data of an image at a specified pixel location,
 	including all deep samples.
-	""",
+	"""),
 
 	plugs = {
 
 		"image" : {
 
 			"description" :
-			"""
+			_("""
 			The image to be sampled.
-			""",
+			"""),
 
 		},
 
 		"pixel" : {
 
 			"description" :
-			"""
+			_("""
 			The integer coordinates of the pixel to sample.
-			""",
+			"""),
 
 		},
 
 		"pixelData" : {
 
 			"description" :
-			"""
+			_("""
 			The sampled data, as a CompoundData with one FloatVectorData per channel.
-			""",
+			"""),
 
 		}
 

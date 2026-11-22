@@ -36,27 +36,28 @@
 
 import Gaffer
 import GafferImage
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.ColorProcessor,
 
 	"description",
-	"""
+	_("""
 	Base class for nodes which process RGB layers with cross
 	talk between channels.
-	""",
+	"""),
 
 	plugs = {
 
 		"channels" : {
 
 			"description" :
-			"""
+			_("""
 			The names of the channels to process. Names should be
 			separated by spaces and can use Gaffer's standard
 			wildcards.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferImageUI.ChannelMaskPlugValueWidget",
 
@@ -65,11 +66,11 @@ Gaffer.Metadata.registerNode(
 		"processUnpremultiplied" : {
 
 			"description" :
-			"""
+			_("""
 			Unpremultiplies data before processing, and premultiply again after processing.  This allows
 			accurate processing of nodes that deal with color, when running on partially transparent or
 			deep images.
-			""",
+			"""),
 
 		},
 

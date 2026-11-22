@@ -40,6 +40,7 @@ import Gaffer
 import GafferUI
 import GafferImage
 import GafferImageUI
+from GafferUI.i18n import _
 
 ##########################################################################
 # Metadata
@@ -50,11 +51,11 @@ Gaffer.Metadata.registerNode(
 	GafferImage.OpenColorIOContext,
 
 	"description",
-	"""
+	_("""
 	Creates Gaffer context variables which define the OpenColorIO config
 	to be used by upstream nodes. This allows different configs to be used
 	in different contexts.
-	""",
+	"""),
 
 	"layout:section:Settings.Variables:collapsed", False,
 
@@ -75,9 +76,9 @@ Gaffer.Metadata.registerNode(
 		"config" : {
 
 			"description" :
-			"""
+			_("""
 			The OpenColorIO config to use.
-			""",
+			"""),
 
 			"nodule:type" : "",
 
@@ -86,19 +87,19 @@ Gaffer.Metadata.registerNode(
 		"config.enabled" : {
 
 			"description" :
-			"""
+			_("""
 			Enables the `config.value` plug, allowing the OpenColorIO config
 			to be specified.
-			""",
+			"""),
 
 		},
 
 		"config.value" : {
 
 			"description" :
-			"""
+			_("""
 			Specifies the OpenColorIO config to be used.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 			"presetsPlugValueWidget:allowCustom" : True,
@@ -118,9 +119,9 @@ Gaffer.Metadata.registerNode(
 		"workingSpace" : {
 
 			"description" :
-			"""
+			_("""
 			Specifies the color space in which Gaffer processes images.
-			""",
+			"""),
 
 			"nodule:type" : "",
 
@@ -129,19 +130,19 @@ Gaffer.Metadata.registerNode(
 		"workingSpace.enabled" : {
 
 			"description" :
-			"""
+			_("""
 			Enables the `workingSpace.value` plug, allowing the working space
 			to be specified.
-			""",
+			"""),
 
 		},
 
 		"workingSpace.value" : {
 
 			"description" :
-			"""
+			_("""
 			Specifies the working color space to be used.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 			"presetNames" : GafferImageUI.OpenColorIOTransformUI.colorSpacePresetNames,
@@ -154,12 +155,12 @@ Gaffer.Metadata.registerNode(
 		"variables" : {
 
 			"description" :
-			"""
+			_("""
 			Context variables used to customise the
 			[OpenColorIO context](https://opencolorio.readthedocs.io/en/latest/guides/authoring/overview.html#environment)
 			used by upstream nodes. OpenColorIO refers to these variously as "string vars", "context vars" or
 			"environment vars".
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 			"layout:section" : "Settings.Variables",
@@ -181,25 +182,25 @@ Gaffer.Metadata.registerNode(
 		"variables.*.name" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the variable to be created.
-			""",
+			"""),
 
 		},
 
 		"variables.*.value" : {
 
 			"description" :
-			"""
+			_("""
 			The value to be given to the variable.
-			""",
+			"""),
 
 		},
 
 		"extraVariables" : {
 
 			"description" :
-			"""
+			_("""
 			An additional set of variables to be created. These are defined as
 			key/value pairs in an `IECore::CompoundData` object, which
 			allows a single expression to define a dynamic number of variables.
@@ -207,7 +208,7 @@ Gaffer.Metadata.registerNode(
 			If the same variable is defined by both the `variables` and the
 			`extraVariables` plugs, then the value from the `variables` plug
 			is taken.
-			""",
+			"""),
 
 			"layout:section" : "Extra",
 			"nodule:type" : "",

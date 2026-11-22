@@ -42,13 +42,14 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	Gaffer.Box,
 
 	"description",
-	"""
+	_("""
 	A container for "subgraphs" - node networks which exist inside the
 	Box and can be exposed by promoting selected internal plugs onto the
 	outside of the Box.
@@ -57,7 +58,7 @@ Gaffer.Metadata.registerNode(
 	graphs by collapsing them into sections which perform distinct tasks.
 	They are also used for authoring files to be used with the Reference
 	node.
-	""",
+	"""),
 
 	"icon", "boxNode.png",
 
@@ -129,7 +130,7 @@ def appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition ) :
 		return
 
 	menuDefinition.append( "/BoxDivider", { "divider" : True } )
-	menuDefinition.append( "/Show Contents...", { "command" : functools.partial( __showContents, graphEditor, node ) } )
+	menuDefinition.append( "/" + _("Show Contents..."), { "command" : functools.partial( __showContents, graphEditor, node ) } )
 
 ## A callback suitable for use with NodeEditor.toolMenuSignal() - it provides
 # menu options specific to Boxes. We don't actually register it automatically,
@@ -144,19 +145,19 @@ def appendNodeEditorToolMenuDefinitions( nodeEditor, node, menuDefinition ) :
 
 	menuDefinition.append( "/ResetDefaultsDivider", { "divider" : True } )
 	menuDefinition.append(
-		"/Reset Default Values",
+		"/" + _("Reset Default Values"),
 		{
 			"command" : functools.partial( __resetDefaultValues, plugs = nonDefaultPlugs ),
 			"active" : len( nonDefaultPlugs ) and all( not Gaffer.MetadataAlgo.readOnly( p ) for p in nonDefaultPlugs )
 		}
 	)
 	menuDefinition.append( "/BoxDivider", { "divider" : True } )
-	menuDefinition.append( "/Export Reference...", { "command" : functools.partial( __exportForReferencing, node = node ) } )
-	menuDefinition.append( "/Import Reference...", { "command" : functools.partial( __importReference, node = node ) } )
+	menuDefinition.append( "/" + _("Export Reference..."), { "command" : functools.partial( __exportForReferencing, node = node ) } )
+	menuDefinition.append( "/" + _("Import Reference..."), { "command" : functools.partial( __importReference, node = node ) } )
 
 	if Gaffer.BoxIO.canInsert( node ) :
 		menuDefinition.append( "/UpgradeDivider", { "divider" : True } )
-		menuDefinition.append( "/Upgrade to use BoxIO", { "command" : functools.partial( __upgradeToUseBoxIO, node = node ) } )
+		menuDefinition.append( "/" + _("Upgrade to use BoxIO"), { "command" : functools.partial( __upgradeToUseBoxIO, node = node ) } )
 
 def __showContents( graphEditor, box ) :
 
@@ -219,7 +220,7 @@ def __exportForReferencing( menu, node ) :
 	nonDefaultPlugs = __nonDefaultPlugs( node )
 	if len( nonDefaultPlugs ) :
 		dialogue = GafferUI.ConfirmationDialogue(
-			title = "Export without current values?",
+			title = _("Export without current values?"),
 			message = inspect.cleandoc(
 				"""
 				Not all plugs are at their default values, and non-default
@@ -234,7 +235,7 @@ def __exportForReferencing( menu, node ) :
 				using "Reset Default Value" in the plug context menu.
 				"""
 			).replace( "\n", " " ),
-			confirmLabel = "Export"
+			confirmLabel = _("Export")
 		)
 		if not dialogue.waitForConfirmation() :
 			return
@@ -244,7 +245,7 @@ def __exportForReferencing( menu, node ) :
 	path = Gaffer.FileSystemPath( bookmarks.getDefault( menu ) )
 	path.setFilter( Gaffer.FileSystemPath.createStandardFilter( [ "grf" ] ) )
 
-	dialogue = GafferUI.PathChooserDialogue( path, title="Export reference", confirmLabel="Export", leaf=True, bookmarks=bookmarks )
+	dialogue = GafferUI.PathChooserDialogue( path, title=_("Export reference"), confirmLabel="Export", leaf=True, bookmarks=bookmarks )
 	path = dialogue.waitForPath( parentWindow = menu.ancestor( GafferUI.Window ) )
 
 	if not path :
@@ -264,7 +265,7 @@ def __importReference( menu, node ) :
 	path.setFilter( Gaffer.FileSystemPath.createStandardFilter( [ "grf" ] ) )
 
 	window = menu.ancestor( GafferUI.Window )
-	dialogue = GafferUI.PathChooserDialogue( path, title="Import reference", confirmLabel="Import", leaf=True, valid=True, bookmarks=bookmarks )
+	dialogue = GafferUI.PathChooserDialogue( path, title=_("Import reference"), confirmLabel=_("Import"), leaf=True, valid=True, bookmarks=bookmarks )
 	path = dialogue.waitForPath( parentWindow = window )
 
 	if not path :
@@ -272,7 +273,7 @@ def __importReference( menu, node ) :
 
 	scriptNode = node.ancestor( Gaffer.ScriptNode )
 	with GafferUI.ErrorDialogue.ErrorHandler(
-		title = "Error Importing Reference",
+		title = _("Error Importing Reference"),
 		closeLabel = "Oy vey",
 		parentWindow = window
 	) :
@@ -332,13 +333,13 @@ def __appendPlugPromotionMenuItems( menuDefinition, plug ) :
 		if len( menuDefinition.items() ) :
 			menuDefinition.append( "/BoxDivider", { "divider" : True } )
 
-		menuDefinition.append( "/Promote to %s" % box.getName(), {
+		menuDefinition.append( "/" + _("Promote to %s") % box.getName(), {
 			"command" : functools.partial( __promote, plug ),
 			"active" : not readOnly,
 		} )
 
 		if ancestorLabel and Gaffer.PlugAlgo.canPromote( ancestor ) :
-			menuDefinition.append( "/Promote %s to %s" % ( ancestorLabel, box.getName() ), {
+			menuDefinition.append( "/" + _("Promote %s to %s") % ( ancestorLabel, box.getName() ), {
 				"command" : functools.partial( __promote, ancestor ),
 				"active" : not readOnly,
 			} )
@@ -351,7 +352,7 @@ def __appendPlugPromotionMenuItems( menuDefinition, plug ) :
 			menuDefinition.append( "/BoxDivider", { "divider" : True } )
 
 		if ancestorLabel and Gaffer.PlugAlgo.isPromoted( ancestor ) :
-			menuDefinition.append( "/Unpromote %s from %s" % ( ancestorLabel, box.getName() ), {
+			menuDefinition.append( "/" + _("Unpromote %s from %s") % ( ancestorLabel, box.getName() ), {
 				"command" : functools.partial( __unpromote, ancestor ),
 				"active" : not readOnly,
 			} )
@@ -359,7 +360,7 @@ def __appendPlugPromotionMenuItems( menuDefinition, plug ) :
 			# We dont want to allow unpromoting for individual children of promoted
 			# parents because that would lead to ArrayPlugs and TransformPlugs with
 			# the unexpected number of children, which would cause crashes.
-			menuDefinition.append( "/Unpromote from %s" % box.getName(), {
+			menuDefinition.append( "/" + _("Unpromote from %s") % box.getName(), {
 				"command" : functools.partial( __unpromote, plug ),
 				"active" : not readOnly,
 			} )
@@ -375,7 +376,7 @@ def __appendPlugResetDefaultMenuItems( menuDefinition, plug ) :
 	readOnly = Gaffer.MetadataAlgo.readOnly( plug )
 
 	menuDefinition.append(
-		"/Reset Default Value",
+		"/" + _("Reset Default Value"),
 		{
 			"command" : functools.partial( __resetDefaultValues, [ plug ] ),
 			"active" : isinstance( plug, Gaffer.ValuePlug ) and not plug.isSetToDefault() and not readOnly,
@@ -394,7 +395,7 @@ GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )
 
 def __renamePlug( menu, plug ) :
 
-	d = GafferUI.TextInputDialogue( initialText = plug.getName(), title = "Enter name", confirmLabel = "Rename" )
+	d = GafferUI.TextInputDialogue( initialText = plug.getName(), title = _("Enter name"), confirmLabel = "Rename" )
 
 	# Hack to borrow the input validation from NameWidget so we can prevent the
 	# user entering an invalid name.

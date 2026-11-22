@@ -36,27 +36,28 @@
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.UVSampler,
 
 	"description",
-	"""
+	_("""
 	Samples primitive variables from specified UV positions on
 	the surface of a source primitive, and transfers the
 	values onto new primitive variables on the sampling object.
-	""",
+	"""),
 
 	plugs = {
 
 		"uv" : {
 
 			"description" :
-			"""
+			_("""
 			The primitive variable that provides the UV positions to
 			sample on the source primitive.
-			""",
+			"""),
 
 			"layout:section" : "Settings.Input",
 			# Put the Input section before the Output section

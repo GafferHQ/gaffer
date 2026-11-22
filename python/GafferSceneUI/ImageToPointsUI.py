@@ -38,6 +38,7 @@ import IECore
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 ##########################################################################
 # Metadata
@@ -48,7 +49,7 @@ Gaffer.Metadata.registerNode(
 	GafferScene.ImageToPoints,
 
 	"description",
-	"""
+	_("""
 	Converts an image into a points primitive, with a point for each pixel
 	in the image. Point positions may be defined either by the original
 	pixel coordinates or an image layer providing position data.
@@ -59,7 +60,7 @@ Gaffer.Metadata.registerNode(
 	> Note : Only pixels within the display window are converted. To
 	> include overscan pixels, use a Crop node to extend the display
 	> window.
-	""",
+	"""),
 
 	plugs = {
 
@@ -72,9 +73,9 @@ Gaffer.Metadata.registerNode(
 		"image" : {
 
 			"description" :
-			"""
+			_("""
 			The image to be converted into a points primitive.
-			""",
+			"""),
 
 			"nodule:type" : "GafferUI::StandardNodule",
 
@@ -83,9 +84,9 @@ Gaffer.Metadata.registerNode(
 		"view" : {
 
 			"description" :
-			"""
+			_("""
 			The view within the image to be converted.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferImageUI.ViewPlugValueWidget",
 			"layout:divider" : True,
@@ -95,10 +96,10 @@ Gaffer.Metadata.registerNode(
 		"position" : {
 
 			"description" :
-			"""
+			_("""
 			The image channels used to provide 3d positions for the points.
 			If `None`, the pixel's 2d position within the image is used instead.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferImageUI.RGBAChannelsPlugValueWidget",
 			"rgbaChannelsPlugValueWidget:allowNone" : True,
@@ -108,7 +109,7 @@ Gaffer.Metadata.registerNode(
 		"primitiveVariables" : {
 
 			"description" :
-			"""
+			_("""
 			The image channels to be converted to primitive variables on
 			the points primitive. The chosen channels are converted using the
 			following rules :
@@ -116,7 +117,7 @@ Gaffer.Metadata.registerNode(
 			- The main `RGB` channels are converted to a colour primitive variable called `Cs`.
 			- `<layerName>.RGB` channels are converted to a colour primitive variable called `<layerName>`.
 			- Other channels are converted to individual float primitive variables.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferImageUI.ChannelMaskPlugValueWidget",
 
@@ -125,19 +126,19 @@ Gaffer.Metadata.registerNode(
 		"width" : {
 
 			"description" :
-			"""
+			_("""
 			The width of the points. If `widthChannel` is used as well, then this acts as
 			a multiplier on the channel values.
-			"""
+			""")
 
 		},
 
 		"widthChannel" : {
 
 			"description" :
-			"""
+			_("""
 			The channel used to provide per-point width values for the points primitive.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferImageUI.ChannelPlugValueWidget",
 			"channelPlugValueWidget:imagePlugName" : "image",
@@ -150,20 +151,20 @@ Gaffer.Metadata.registerNode(
 		"ignoreTransparent" : {
 
 			"description" :
-			"""
+			_("""
 			Omits pixels from the points primitive if their alpha value is less than or equal
 			to `alphaThreshold`.
-			""",
+			"""),
 
 		},
 
 		"alphaThreshold" : {
 
 			"description" :
-			"""
+			_("""
 			Threshold used to exclude pixels from the points primitive when `ignoreTransparent`
 			is on.
-			""",
+			"""),
 
 			"layout:activator" : lambda plug : plug.node()["ignoreTransparent"].getValue()
 

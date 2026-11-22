@@ -39,25 +39,26 @@ import IECore
 import Gaffer
 import GafferUI
 import GafferArnold
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferArnold.ArnoldAOVShader,
 
 	"description",
-	"""
+	_("""
 	Sets up global shaders in the Arnold options which can be used to populate global AOVs.
-	""",
+	"""),
 
 	plugs = {
 
 		"optionSuffix" : {
 
 			"description" :
-			"""
+			_("""
 			This suffix defines where the aov shader is stored in the render options. If you use
 			an existing suffix, you will overwrite instead of creating a new AOV shader.
-			""",
+			"""),
 		},
 
 	}

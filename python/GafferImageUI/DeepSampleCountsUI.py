@@ -36,13 +36,14 @@
 
 import Gaffer
 import GafferImage
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.DeepSampleCounts,
 
 	"description",
-	"""
+	_("""
 	Outputs an image showing the deep sample counts for each pixel.
-	""",
+	"""),
 )

@@ -38,6 +38,7 @@ import Gaffer
 import GafferUI
 import GafferScene
 import GafferSceneUI
+from GafferUI.i18n import _
 
 ##########################################################################
 # Metadata
@@ -48,9 +49,9 @@ Gaffer.Metadata.registerNode(
 	GafferScene.FramingConstraint,
 
 	"description",
-	"""
+	_("""
 	Position a camera so that all of a target is visible.
-	""",
+	"""),
 
 	"layout:activator:useTargetFrame", lambda node : node["useTargetFrame"].getValue(),
 
@@ -59,20 +60,20 @@ Gaffer.Metadata.registerNode(
 		"targetScene" : {
 
 			"description" :
-			"""
+			_("""
 			The scene containing the target location to which cameras are
 			pointed. If this is unconnected, the main input scene
 			is used instead.
-			""",
+			"""),
 
 		},
 
 		"target" : {
 
 			"description" :
-			"""
+			_("""
 			The scene location to which the cameras are pointed.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
 			"scenePathPlugValueWidget:scene" : "targetScene in",
@@ -82,23 +83,23 @@ Gaffer.Metadata.registerNode(
 		"ignoreMissingTarget" : {
 
 			"description" :
-			"""
+			_("""
 			Causes the constraint to do nothing if the target location
 			doesn't exist in the scene, instead of erroring.
-			""",
+			"""),
 			"divider" : True,
 		},
 
 		"boundMode" : {
 
 			"description" :
-			"""
+			_("""
 			How the camera frustum is fit to the target. `Sphere` approximates the bounding
 			box of the target  with a sphere.  `Box` uses the actual bounding box, which
 			allows framing closer, but means the camera will move closer or farther depending
 			on the exact alignment of the box to the view ( which makes for a bumpy looking
 			turntable ).
-			""",
+			"""),
 
 			"preset:Box" : "box",
 			"preset:Sphere" : "sphere",
@@ -110,37 +111,37 @@ Gaffer.Metadata.registerNode(
 		"padding" : {
 
 			"description" :
-			"""
+			_("""
 			Add a border between the edge of the camera frustum and the target.
 			0.1 adds a 10% border.  Using negative padding moves the camera closer.
-			""",
+			"""),
 		},
 
 		"extendFarClip" : {
 
 			"description" :
-			"""
+			_("""
 			If the target is larger than the current clipping planes, increase
 			the far clipping plane to enclose it.
-			""",
+			"""),
 			"divider" : True,
 		},
 
 		"useTargetFrame" : {
 
 			"description" :
-			"""
+			_("""
 			Use a fixed frame to access the target at.  This can be used to produce a consistent
 			framing if the target has high-frequency animation you want to ignore.
-			""",
+			"""),
 		},
 
 		"targetFrame" : {
 
 			"description" :
-			"""
+			_("""
 			The frame used to access the target when `useTargetFrame` is set.
-			""",
+			"""),
 
 			"layout:activator" : "useTargetFrame",
 		},

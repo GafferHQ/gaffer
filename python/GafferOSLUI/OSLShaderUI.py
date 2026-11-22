@@ -40,6 +40,8 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
+from GafferUI import i18n as _i18n
 import GafferSceneUI
 
 import GafferOSL
@@ -200,12 +202,10 @@ def __plugNoduleLabel( plug ) :
 
 	label = __plugLabel( plug )
 	if label is None :
-		return None
+		label = IECore.CamelCase.toSpaced( plug.getName() )
 
-	page = __plugPage( plug )
-	if page is not None :
-		label = page + "." + label
-
+	if _i18n.translateNodeNames() :
+		return _i18n.translateLabel( label )
 	return label
 
 def __plugActivator( plug ) :

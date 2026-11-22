@@ -37,16 +37,17 @@
 import IECore
 
 import Gaffer
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	Gaffer.PatternMatch,
 
 	"description",
-	"""
+	_("""
 	Tests an input string against a pattern, outputting true if the string
 	matches.
-	""",
+	"""),
 
 	"nodeGadget:type", "GafferUI::AuxiliaryNodeGadget",
 	"auxiliaryNodeGadget:label", "*",
@@ -59,9 +60,9 @@ Gaffer.Metadata.registerNode(
 		"string" : {
 
 			"description" :
-			"""
+			_("""
 			The string to be tested.
-			""",
+			"""),
 
 			"nodule:type" : "",
 
@@ -70,7 +71,7 @@ Gaffer.Metadata.registerNode(
 		"pattern" : {
 
 			"description" :
-			"""
+			_("""
 			The pattern to match the string against. This can use any of
 			Gaffer's standard wildcards :
 
@@ -83,7 +84,7 @@ Gaffer.Metadata.registerNode(
 			| [a-z]     | Matches any single character in a range      |
 			| [!a-z]    | Matches any single character not in a range  |
 			| \\        | Escapes the next character                   |
-			""",
+			"""),
 
 			"nodule:type" : "",
 
@@ -92,18 +93,18 @@ Gaffer.Metadata.registerNode(
 		"enabled" : {
 
 			"description" :
-			"""
+			_("""
 			Turns the node on and off. When off, `match` always outputs `false`.
-			""",
+			"""),
 
 		},
 
 		"match" : {
 
 			"description" :
-			"""
+			_("""
 			Outputs `true` if the string matches the pattern, and `false` otherwise.
-			""",
+			"""),
 
 			"nodule:type" : "",
 

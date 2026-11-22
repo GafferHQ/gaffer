@@ -43,6 +43,7 @@ import GafferScene
 import GafferSceneUI
 
 import IECore
+from GafferUI.i18n import _
 
 ##########################################################################
 # Metadata
@@ -53,16 +54,16 @@ Gaffer.Metadata.registerNode(
 	GafferScene.SetFilter,
 
 	"description",
-	"""
+	_("""
 	A filter which uses sets to define which locations are matched.
-	""",
+	"""),
 
 	plugs = {
 
 		"setExpression" : {
 
 			"description" :
-			"""
+			_("""
 			A set expression that computes a set that defines
 			the locations to be matched.
 
@@ -90,7 +91,7 @@ Gaffer.Metadata.registerNode(
 
 			The context menu of the set expression text field provides
 			entries that help construct set expressions.
-			""",
+			"""),
 
 			"ui:scene:acceptsSetExpression" : True,
 			"plugValueWidget:type" : "GafferSceneUI.SetExpressionPlugValueWidget",

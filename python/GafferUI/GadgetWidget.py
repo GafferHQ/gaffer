@@ -42,6 +42,8 @@ import IECoreGL
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
+from GafferUI import i18n as _i18n
 
 import OpenGL.GL as GL
 
@@ -300,6 +302,49 @@ class GadgetWidget( GafferUI.GLWidget ) :
 
 		self.__viewportGadget.setVisible( self.visible() )
 
+def _translateGadgetToolTip( toolTip ) :
+
+	if not _i18n.translateNodeNames() :
+		return toolTip
+
+	import re
+
+	# C++ gadget tooltips have the format:
+	#   # NodeTypeName\n\nDescription text...
+	# or for plugs:
+	#   # plug.path\n\nDescription text...
+	m = re.match( r'^(#+ )(.+?)(\n.*)?$', toolTip, re.DOTALL )
+	if m :
+		prefix = m.group( 1 )
+		heading = m.group( 2 )
+		rest = m.group( 3 ) or ""
+
+		# Translate the heading (node type name)
+		# C++ gives CamelCase like "OSLShader", .po has spaced "OSL Shader"
+		translated_heading = _( IECore.CamelCase.toSpaced( heading ) )
+
+		# Translate the description if present
+		if rest and _i18n.translateTooltips() :
+			# Split into paragraphs and translate each
+			parts = rest.split( "\n\n" )
+			translated_parts = []
+			for part in parts :
+				stripped = part.strip()
+				if stripped :
+					tr = _( stripped )
+					translated_parts.append( tr )
+				else :
+					translated_parts.append( part )
+			rest = "\n\n".join( translated_parts )
+
+		return prefix + translated_heading + rest
+
+	# For non-heading tooltips, try translating the whole thing
+	if _i18n.translateTooltips() :
+		return _( toolTip )
+
+	return toolTip
+
 ## Used to make the tooltips dependent on which gadget is under the mouse
 class _EventFilter( QtCore.QObject ) :
 
@@ -327,6 +372,7 @@ class _EventFilter( QtCore.QObject ) :
 			if not toolTip :
 				return False
 
+			toolTip = _translateGadgetToolTip( toolTip )
 			toolTip = GafferUI.DocumentationAlgo.markdownToHTML( toolTip )
 			QtWidgets.QToolTip.showText( qEvent.globalPos(), toolTip, qObject )
 

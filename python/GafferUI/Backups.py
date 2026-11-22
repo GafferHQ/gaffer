@@ -45,6 +45,7 @@ import pathlib
 import re
 import stat
 import weakref
+from GafferUI.i18n import _
 
 class Backups( object ) :
 
@@ -292,10 +293,10 @@ Gaffer.Metadata.registerNode(
 		"backups" : {
 
 			"description" :
-			"""
+			_("""
 			Controls a mechanism used to create automatic
 			backup copies of scripts.
-			""",
+			"""),
 
 			"layout:section" : "Backups",
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
@@ -308,18 +309,18 @@ Gaffer.Metadata.registerNode(
 		"backups.enabled" : {
 
 			"description" :
-			"""
+			_("""
 			Turns the backup system on and off.
-			""",
+			"""),
 
 		},
 
 		"backups.frequency" : {
 
 			"description" :
-			"""
+			_("""
 			How often backups are made, measured in minutes.
-			""",
+			"""),
 
 			"layout:activator" : "backupsEnabled",
 
@@ -328,7 +329,7 @@ Gaffer.Metadata.registerNode(
 		"backups.fileName" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the backup file to be created. This may
 			use any of the following variables :
 
@@ -341,7 +342,7 @@ Gaffer.Metadata.registerNode(
 			- `${backup:number}` : the number of this backup, used
 			  to keep more than one backup per file.
 			- `#` : the same as `${backup:number}`.
-			""",
+			"""),
 
 			"layout:activator" : "backupsEnabled",
 
@@ -350,12 +351,12 @@ Gaffer.Metadata.registerNode(
 		"backups.files" : {
 
 			"description" :
-			"""
+			_("""
 			The number of backups to keep for each script. Only
 			used if the backup filename includes `${backup:number}`.
 			When the backup limit is reached, the oldest backup
 			will be overwritten.
-			""",
+			"""),
 
 			"layout:activator" : "backupNumberEnabled",
 

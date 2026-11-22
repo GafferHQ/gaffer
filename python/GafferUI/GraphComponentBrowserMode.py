@@ -38,6 +38,7 @@ import re
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 class GraphComponentBrowserMode( GafferUI.BrowserEditor.Mode ) :
 
@@ -62,7 +63,7 @@ class GraphComponentBrowserMode( GafferUI.BrowserEditor.Mode ) :
 						leafOnly = False,
 						userData = {
 							"UI" : {
-								"label" : "Show hidden",
+								"label" : _("Show hidden"),
 								"invertEnabled" : True,
 							}
 						}

@@ -44,6 +44,7 @@ import GafferUI
 import GafferScene
 
 from GafferUI.PlugValueWidget import sole
+from GafferUI.i18n import _
 
 ##########################################################################
 # Internal utilities
@@ -170,9 +171,9 @@ Gaffer.Metadata.registerNode(
 	GafferScene.CameraQuery,
 
 	"description",
-	"""
+	_("""
 	Queries parameters from a camera, creating an output for each query.
-	""",
+	"""),
 
 	"layout:activator:cameraModeIsLocation", lambda node : node["cameraMode"].getValue() == int( GafferScene.CameraQuery.CameraMode.Location ),
 
@@ -183,21 +184,21 @@ Gaffer.Metadata.registerNode(
 		"scene" : {
 
 			"description" :
-			"""
+			_("""
 			The scene to query the camera from.
-			""",
+			"""),
 
 		},
 
 		"cameraMode" : {
 
 			"description" :
-			"""
+			_("""
 			How the camera to be queried is specified.
 
 			- Render Camera : Uses the value of the `render:camera` option in the scene globals.
 			- Location : Uses the camera specified on the `location` plug.
-			""",
+			"""),
 
 			"preset:Render Camera" : GafferScene.CameraQuery.CameraMode.RenderCamera,
 			"preset:Location" : GafferScene.CameraQuery.CameraMode.Location,
@@ -210,12 +211,12 @@ Gaffer.Metadata.registerNode(
 		"location" : {
 
 			"description" :
-			"""
+			_("""
 			The location within the scene containing a camera to query.
 			> Note : If the location does not exist then the query will not be
 			> performed and all outputs will be set to their default values with
 			> each output `source` plug set to "None" (`0`).
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
 			"scenePathPlugValueWidget:scene" : "scene",
@@ -230,7 +231,7 @@ Gaffer.Metadata.registerNode(
 		"queries" : {
 
 			"description" :
-			"""
+			_("""
 			The camera parameters to be queried - arbitrary numbers of queries may
 			be added as children of this plug via the user interface, or via python.
 			Each child is a `StringPlug` whose value is the parameter to query.
@@ -244,7 +245,7 @@ Gaffer.Metadata.registerNode(
 			> - `frustum` : The screen window at a distance of 1 unit from the camera, taking
 			> into account `filmFit`, `resolution`, and `pixelAspectRatio` render overrides
 			> on the camera or values from the scene globals.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 			"layout:section" : "Settings.Queries",
@@ -259,9 +260,9 @@ Gaffer.Metadata.registerNode(
 		"queries.*" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the parameter to query.
-			""",
+			"""),
 
 			"layout:label" : "",
 
@@ -272,10 +273,10 @@ Gaffer.Metadata.registerNode(
 		"out" : {
 
 			"description" :
-			"""
+			_("""
 			The parent plug of the query outputs. The order of outputs corresponds
 			to the order of children of `queries`.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "",
 
@@ -288,9 +289,9 @@ Gaffer.Metadata.registerNode(
 		"out.*" : {
 
 			"description" :
-			"""
+			_("""
 			The result of the query.
-			""",
+			"""),
 
 			"nodule:type" : "GafferUI::CompoundNodule",
 
@@ -299,14 +300,14 @@ Gaffer.Metadata.registerNode(
 		"out.*.source" : {
 
 			"description" :
-			"""
+			_("""
 			Outputs the source of the value returned by the query.
 
 			- None (`0`) : No source was found. Either the parameter does not exist and has no default value, or the camera does not exist.
 			- Camera (`1`) : The camera.
 			- Globals (`2`) : An option in the scene globals.
 			- Fallback (`3`) : The query did not find a result and fell back to returning the default value of the parameter.
-			""",
+			"""),
 
 			"nodule:type" : "",
 
@@ -315,9 +316,9 @@ Gaffer.Metadata.registerNode(
 		"out.*.value" : {
 
 			"description" :
-			"""
+			_("""
 			Outputs the value returned by the query.
-			""",
+			"""),
 
 		},
 
@@ -415,7 +416,7 @@ class _CameraQueryFooter( GafferUI.PlugValueWidget ) :
 					Gaffer.WeakMethod( self.__addQuery ), "frustum", functools.partial( Gaffer.Box2fPlug, defaultValue = imath.Box2f( imath.V2f( 0.0 ) ) )
 				),
 				"active" : "frustum" not in existingQueries,
-				"description" : "The screen window at a distance of 1 unit from the camera.",
+				"description" : _("The screen window at a distance of 1 unit from the camera."),
 			}
 		)
 
@@ -491,7 +492,7 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 		if len( menuDefinition.items() ) :
 			menuDefinition.append( "/DeleteDivider", { "divider" : True } )
 
-		menuDefinition.append( "/Delete", { "command" : functools.partial( __deletePlug, plug ), "active" : not Gaffer.MetadataAlgo.readOnly( plug.node()["queries"] ) } )
+		menuDefinition.append( "/" + _("Delete"), { "command" : functools.partial( __deletePlug, plug ), "active" : not Gaffer.MetadataAlgo.readOnly( plug.node()["queries"] ) } )
 
 def __deletePlug( plug ) :
 

@@ -36,16 +36,17 @@
 
 import Gaffer
 import GafferDispatch
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferDispatch.LocalDispatcher,
 
 	"description",
-	"""
+	_("""
 	Schedules execution of task graphs on the local machine. Tasks
 	may be dispatched in the background to keep the UI responsive.
-	""",
+	"""),
 
 	"layout:activator:executeInBackgroundIsOn", lambda node : node["executeInBackground"].getValue(),
 
@@ -54,20 +55,20 @@ Gaffer.Metadata.registerNode(
 		"executeInBackground" : {
 
 			"description" :
-			"""
+			_("""
 			Executes the dispatched tasks in separate processes via a
 			background thread.
-			""",
+			"""),
 
 		},
 
 		"ignoreScriptLoadErrors" : {
 
 			"description" :
-			"""
+			_("""
 			Ignores errors loading the script when executing in the background.
 			This is not recommended - fix the problem instead.
-			""",
+			"""),
 
 			"layout:activator" : "executeInBackgroundIsOn",
 
@@ -76,7 +77,7 @@ Gaffer.Metadata.registerNode(
 		"environmentCommand" : {
 
 			"description" :
-			"""
+			_("""
 			Optional system command to modify the environment when launching
 			tasks in the background. Background tasks are launched in a separate
 			process using a `gaffer execute ...` command, and they inherit the
@@ -91,7 +92,7 @@ Gaffer.Metadata.registerNode(
 			```
 			/usr/bin/env FOO=BAR TOTO=TATA
 			```
-			""",
+			"""),
 
 			"layout:activator" : "executeInBackgroundIsOn",
 

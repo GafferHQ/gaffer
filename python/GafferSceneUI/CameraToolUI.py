@@ -36,17 +36,18 @@
 
 import Gaffer
 import GafferSceneUI
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferSceneUI.CameraTool,
 
 	"description",
-	"""
+	_("""
 	Tool for moving the current camera. Use the Camera dropdown menu
 	in the upper toolbar to choose a camera or light to look through
 	and edit.
-	""",
+	"""),
 
 	"viewer:shortCut", "T",
 	"order", 4,

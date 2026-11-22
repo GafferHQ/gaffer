@@ -42,6 +42,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 def __documentationURL( node ) :
 
@@ -54,9 +55,9 @@ Gaffer.Metadata.registerNode(
 	Gaffer.Node,
 
 	"description",
-	"""
+	_("""
 	A container for plugs.
-	""",
+	"""),
 
 	"documentation:url", __documentationURL,
 	"renameable", True,
@@ -66,11 +67,11 @@ Gaffer.Metadata.registerNode(
 		"user" : {
 
 			"description" :
-			"""
+			_("""
 			Container for user-defined plugs. Nodes
 			should never make their own plugs here,
 			so users are free to do as they wish.
-			""",
+			"""),
 
 			"layout:index" : -1, # Last
 			"layout:section" : "User",
@@ -179,7 +180,7 @@ class NodeUI( GafferUI.Widget ) :
 		if len( menuDefinition.items() ) :
 			menuDefinition.append( "/DeleteDivider", { "divider" : True } )
 
-		menuDefinition.append( "/Delete", { "command" : functools.partial( NodeUI.__deletePlug, plug ), "active" : not Gaffer.MetadataAlgo.readOnly( plug ) } )
+		menuDefinition.append( "/" + _("Delete"), { "command" : functools.partial( NodeUI.__deletePlug, plug ), "active" : not Gaffer.MetadataAlgo.readOnly( plug ) } )
 
 	@staticmethod
 	def __deletePlug( plug ) :

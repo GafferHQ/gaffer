@@ -40,16 +40,17 @@ import Gaffer
 import GafferUI
 import GafferImage
 import GafferImageUI
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.Resize,
 
 	"description",
-	"""
+	_("""
 	Resizes the image to a new resolution, scaling the
 	contents to fit the new size.
-	""",
+	"""),
 
 	"layout:customWidget:filterDeepWarning:widgetType", "GafferImageUI.ResampleUI._FilterDeepWarningWidget",
 	"layout:customWidget:filterDeepWarning:section", "Settings",
@@ -61,17 +62,17 @@ Gaffer.Metadata.registerNode(
 		"format" : {
 
 			"description" :
-			"""
+			_("""
 			The new format (resolution and pixel aspect ratio)
 			of the output image.
-			""",
+			"""),
 
 		},
 
 		"fitMode" : {
 
 			"description" :
-			"""
+			_("""
 			Determines how the image is scaled to fit the new
 			resolution. If the aspect ratios of the input and
 			the output images are the same, then this has no
@@ -105,7 +106,7 @@ Gaffer.Metadata.registerNode(
 			:	Distorts the image so that the input display
 				window is fitted exactly to the output display
 				window.
-			""",
+			"""),
 
 			"preset:Horizontal" : GafferImage.Resize.FitMode.Horizontal,
 			"preset:Vertical" : GafferImage.Resize.FitMode.Vertical,
@@ -120,11 +121,11 @@ Gaffer.Metadata.registerNode(
 		"filter" : {
 
 			"description" :
-			"""
+			_("""
 			The filter used when transforming the image. Each
 			filter provides different tradeoffs between sharpness and
 			the danger of aliasing or ringing.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 

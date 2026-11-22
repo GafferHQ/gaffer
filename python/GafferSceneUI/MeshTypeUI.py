@@ -39,6 +39,7 @@ import GafferUI
 import GafferScene
 
 import IECoreScene
+from GafferUI.i18n import _
 
 ##########################################################################
 # Metadata
@@ -49,7 +50,7 @@ Gaffer.Metadata.registerNode(
 	GafferScene.MeshType,
 
 	"description",
-	"""
+	_("""
 	Changes between polygon and subdivision representations
 	for mesh objects, and optionally recalculates vertex
 	normals for polygon meshes.
@@ -57,16 +58,16 @@ Gaffer.Metadata.registerNode(
 	Note that currently the Gaffer viewport does not display
 	subdivision meshes with smoothing, so the results of using
 	this node will not be seen until a render is performed.
-	""",
+	"""),
 
 	plugs = {
 
 		"meshType" : {
 
 			"description" :
-			"""
+			_("""
 			The interpolation type to apply to the mesh.
-			""",
+			"""),
 
 			"preset:Unchanged" : "",
 			"preset:Polygon" : "linear",
@@ -79,32 +80,32 @@ Gaffer.Metadata.registerNode(
 		"calculatePolygonNormals" : {
 
 			"description" :
-			"""
+			_("""
 			Causes new vertex normals to be calculated for
 			polygon meshes. Has no effect for subdivision
 			surfaces, since those are naturally smooth and do
 			not require surface normals. Vertex normals are
 			represented as primitive variables named "N".
-			""",
+			"""),
 
 		},
 
 		"overwriteExistingNormals" : {
 
 			"description" :
-			"""
+			_("""
 			By default, vertex normals will only be calculated for
 			polygon meshes which don't already have them. Turning
 			this on will force new normals to be calculated even for
 			meshes which had them already.
-			""",
+			"""),
 
 		},
 
 		"interpolateBoundary" : {
 
 			"description" :
-			"""
+			_("""
 			Specifies which parts of mesh boundaries are forced to exactly meet the boundary.
 			Without this forcing, a subdivision surface will naturally shrink back from the boundary as it
 			smooths out.
@@ -113,7 +114,7 @@ Gaffer.Metadata.registerNode(
 			change this are to use `Edge Only` if you want to produce curved edges from polygonal boundaries,
 			or to use `None` if you're doing something tricky with seamlessly splitting subdiv meshes by
 			providing the split meshes with a border of shared polygons in order to get continuous tangents.
-			""",
+			"""),
 
 			"preset:Unchanged" : "",
 			"preset:None" : IECoreScene.MeshPrimitive.interpolateBoundaryNone,
@@ -127,10 +128,10 @@ Gaffer.Metadata.registerNode(
 		"faceVaryingLinearInterpolation" : {
 
 			# This name is so long it's getting cropped ... better to lose the end than the start.
-			"label" : "Face Varying Linear Interp..",
+			"label" : _("Face Varying Linear Interp.."),
 
 			"description" :
-			"""
+			_("""
 			Specifies where face varying primitive variables should use a simple linear interpolation instead
 			of being smoothed.
 
@@ -140,7 +141,7 @@ Gaffer.Metadata.registerNode(
 
 			See the OpenSubdiv docs for explanation of the details of options like `Corners Plus 1`:
 			https://graphics.pixar.com/opensubdiv/docs/subdivision_surfaces.html#schemes-and-options
-			""",
+			"""),
 
 			"preset:Unchanged" : "",
 			"preset:None" : IECoreScene.MeshPrimitive.faceVaryingLinearInterpolationNone,
@@ -157,10 +158,10 @@ Gaffer.Metadata.registerNode(
 		"triangleSubdivisionRule" : {
 
 			"description" :
-			"""
+			_("""
 			Option to use a non-standard `Smooth` subdivision rule that provides slightly better results
 			at triangular faces in Catmull-Clark meshes than the standard Catmull-Clark algorithm.
-			""",
+			"""),
 
 			"preset:Unchanged" : "",
 			"preset:CatmullClark" : IECoreScene.MeshPrimitive.triangleSubdivisionRuleCatmullClark,

@@ -41,6 +41,7 @@ import GafferUI
 
 import GafferScene
 import GafferSceneUI
+from GafferUI.i18n import _
 
 ##########################################################################
 # Metadata
@@ -51,11 +52,11 @@ Gaffer.Metadata.registerNode(
 	GafferScene.MergeObjects,
 
 	"description",
-	"""
+	_("""
 	The base type for scene nodes that merge locations into combined
 	locations. Appropriate for nodes which merge primitives, or convert
 	transforms to points.
-	""",
+	"""),
 
 	"layout:activator:sortKeyIsPrimVar", lambda node : node["sortKey"].getValue() == GafferScene.MergeObjects.SortKey.PrimitiveVariable,
 
@@ -66,22 +67,22 @@ Gaffer.Metadata.registerNode(
 		"filter" : {
 
 			"description" :
-			"""
+			_("""
 			The filter used to choose the source locations to be merged. Source locations are
 			pruned from the output scene, unless they are reused as part of a destination location
 			(or a separate source scene is connected).
-			"""
+			""")
 		},
 
 		"source" : {
 
 			"description" :
-			"""
+			_("""
 			An optional alternate scene to provide the locations to be merged. When connected :
 
 			- The `filter` chooses locations to be merged from the `source` scene rather than then `in` scene.
 			- Source locations are not pruned from the output scene.
-			"""
+			""")
 
 		},
 
@@ -89,12 +90,12 @@ Gaffer.Metadata.registerNode(
 		"destination" : {
 
 			"description" :
-			"""
+			_("""
 			The destination location where filtered locations will be merged to. The destination
 			location will be created if it doesn't exist already. If the name overlaps with an existing
 			location that isn't filtered, the name will get a suffix. May depend on the current value
 			of scene:path in order to individually map input locations to different destinations.
-			""",
+			"""),
 
 		},
 

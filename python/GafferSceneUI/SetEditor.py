@@ -42,9 +42,50 @@ import IECore
 import Gaffer
 import GafferScene
 import GafferUI
+from GafferUI.i18n import _
 import GafferSceneUI
 
 from . import _GafferSceneUI
+
+class _TranslatedColumn( GafferUI.PathColumn ) :
+
+	def __init__( self, column, header ) :
+
+		GafferUI.PathColumn.__init__( self )
+		self._inner = column
+		self._header = header
+		self._inner.changedSignal().connect( Gaffer.WeakMethod( self.__innerChanged ) )
+
+	def cellData( self, path, canceller = None ) :
+
+		return self._inner.cellData( path, canceller )
+
+	def headerData( self, canceller = None ) :
+
+		d = self._inner.headerData( canceller )
+		return GafferUI.PathColumn.CellData( value = _( self._header ), icon = d.icon, toolTip = d.toolTip )
+
+	def inspect( self, path ) :
+
+		if hasattr( self._inner, "inspect" ) :
+			return self._inner.inspect( path )
+		return None
+
+	def inspector( self, path ) :
+
+		if hasattr( self._inner, "inspector" ) :
+			return self._inner.inspector( path )
+		return None
+
+	def inspectorContext( self, path ) :
+
+		if hasattr( self._inner, "inspectorContext" ) :
+			return self._inner.inspectorContext( path )
+		return None
+
+	def __innerChanged( self, column ) :
+
+		self.changedSignal()( self )
 
 class SetEditor( GafferSceneUI.SceneEditor ) :
 
@@ -78,8 +119,9 @@ class SetEditor( GafferSceneUI.SceneEditor ) :
 
 			GafferUI.PlugLayout( self.settings(), orientation = GafferUI.ListContainer.Orientation.Horizontal, rootSection = "Filter" )
 
-			self.__setMembersColumn = _GafferSceneUI._SetEditor.SetMembersColumn()
-			self.__selectedSetMembersColumn = _GafferSceneUI._SetEditor.SetSelectionColumn( scriptNode )
+			self.__setNameColumn = _TranslatedColumn( _GafferSceneUI._SetEditor.SetNameColumn(), "Name" )
+			self.__setMembersColumn = _TranslatedColumn( _GafferSceneUI._SetEditor.SetMembersColumn(), "Members" )
+			self.__selectedSetMembersColumn = _TranslatedColumn( _GafferSceneUI._SetEditor.SetSelectionColumn( scriptNode ), "Selected" )
 			self.__includedSetMembersColumn = _GafferSceneUI._SetEditor.VisibleSetInclusionsColumn( scriptNode )
 			self.__excludedSetMembersColumn = _GafferSceneUI._SetEditor.VisibleSetExclusionsColumn( scriptNode )
 			self.__pathListing = GafferUI.PathListingWidget(
@@ -88,7 +130,7 @@ class SetEditor( GafferSceneUI.SceneEditor ) :
 					filter = Gaffer.CompoundPathFilter( [ self.__searchFilter, self.__emptySetFilter, self.__emptySelectionFilter ] ),
 				),
 				columns = [
-					_GafferSceneUI._SetEditor.SetNameColumn(),
+					self.__setNameColumn,
 					self.__setMembersColumn,
 					self.__selectedSetMembersColumn,
 					self.__includedSetMembersColumn,
@@ -158,7 +200,7 @@ class SetEditor( GafferSceneUI.SceneEditor ) :
 			return IECore.StringVectorData()
 
 		column = self.__pathListing.columnAt( imath.V2f( event.line.p0.x, event.line.p0.y ) )
-		if isinstance( column, _GafferSceneUI._SetEditor.SetNameColumn ) :
+		if isinstance( getattr( column, '_inner', column ), _GafferSceneUI._SetEditor.SetNameColumn ) :
 			GafferUI.Pointer.setCurrent( "sets" )
 		else :
 			GafferUI.Pointer.setCurrent( "paths" )
@@ -204,7 +246,8 @@ class SetEditor( GafferSceneUI.SceneEditor ) :
 			{
 				"command" : Gaffer.WeakMethod( self.__copySetMembers ),
 				"active" : len( selectedSetNames ) > 0,
-				"shortCut" : "Ctrl+Shift+C"
+				"shortCut" : "Ctrl+Shift+C",
+				"label" : _("Copy Set Members"),
 			}
 		)
 
@@ -213,6 +256,7 @@ class SetEditor( GafferSceneUI.SceneEditor ) :
 			{
 				"command" : Gaffer.WeakMethod( self.__selectSetMembers ),
 				"active" : len( selectedSetNames ) > 0,
+				"label" : _("Select Set Members"),
 			}
 		)
 
@@ -271,9 +315,9 @@ Gaffer.Metadata.registerNode(
 		"filter" : {
 
 			"description" :
-			"""
+			_("""
 			Filters the displayed sets by name. Accepts standard wildcards such as `*` and `?`.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.TogglePlugValueWidget",
 			"togglePlugValueWidget:image:on" : "searchOn.png",
@@ -286,7 +330,7 @@ Gaffer.Metadata.registerNode(
 
 		"hideEmptySets" : {
 
-			"description" : "Hides sets with no members.",
+			"description" : _("Hides sets with no members."),
 			"boolPlugValueWidget:labelVisible" : True,
 			"layout:section" : "Filter",
 
@@ -294,7 +338,7 @@ Gaffer.Metadata.registerNode(
 
 		"hideEmptySelection" : {
 
-			"description" : "Hides sets with no selected members or descendants.",
+			"description" : _("Hides sets with no selected members or descendants."),
 			"boolPlugValueWidget:labelVisible" : True,
 			"layout:section" : "Filter",
 
@@ -345,7 +389,7 @@ class _FilterPlugValueWidget( GafferUI.StringPlugValueWidget ) :
 
 	def __getSetNamesFromPaths( self, paths ) :
 
-		dialogue = GafferUI.BackgroundTaskDialogue( "Querying Set Names" )
+		dialogue = GafferUI.BackgroundTaskDialogue( _("Querying Set Names") )
 
 		with self.context() :
 			result = dialogue.waitForBackgroundTask(

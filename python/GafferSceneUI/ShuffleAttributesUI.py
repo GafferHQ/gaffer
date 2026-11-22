@@ -38,13 +38,14 @@ import Gaffer
 import GafferUI
 
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.ShuffleAttributes,
 
 	"description",
-	"""
+	_("""
 	ShuffleAttributes is used to copy or rename arbitrary numbers of attributes at
 	the filtered locations. The deleteSource plugs may be used to remove the original
 	source attribute(s) after the shuffling has been completed. The replaceDestination
@@ -54,19 +55,19 @@ Gaffer.Metadata.registerNode(
 	An additional context variable `${source}` can be used on the destination plugs
 	to insert the name of each source attribute. For example, to prefix all attributes
 	with `user:` set the source to `*` and the destination to `user:${source}`.
-	""",
+	"""),
 
 	plugs = {
 
 		"shuffles" : {
 
 			"description" :
-			"""
+			_("""
 			The attributes to be shuffled - arbitrary numbers of attributes may be shuffled
 			via the source/destination plugs. The deleteSource plug may be used to remove the
 			original attribute(s). The replaceDestination plug may be used to specify whether
 			each shuffle should replace already written destination data with the same name.
-			""",
+			"""),
 
 		},
 

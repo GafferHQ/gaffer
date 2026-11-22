@@ -36,100 +36,101 @@
 
 import Gaffer
 import GafferImage
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.Clamp,
 
 	"description",
-	"""
+	_("""
 	Clamps channel values so that they fit within a specified
 	range. Clamping is performed for each channel individually,
 	and out-of-range colours may be highlighted by setting them
 	to a value different to the clamp threshold itself.
-	""",
+	"""),
 
 	plugs = {
 
 		"min" : {
 
 			"description" :
-			"""
+			_("""
 			The minimum value - values below this will
 			be clamped if minEnabled is on.
-			""",
+			"""),
 
 		},
 
 		"max" : {
 
 			"description" :
-			"""
+			_("""
 			The maximum value - values above this will
 			be clamped if maxEnabled is on.
-			""",
+			"""),
 
 		},
 
 		"minClampTo" : {
 
 			"description" :
-			"""
+			_("""
 			By default, values below the minimum value are
 			clamped to the minimum value itself. If minClampToEnabled
 			is on, they are instead set to this value. This can
 			be useful for highlighting out-of-range values.
-			""",
+			"""),
 
 		},
 
 		"maxClampTo" : {
 
 			"description" :
-			"""
+			_("""
 			By default, values above the maximum value are
 			clamped to the maximum value itself. If maxClampToEnabled
 			is on, they are instead set to this value. This can
 			be useful for highlighting out-of-range values.
-			""",
+			"""),
 
 		},
 
 		"minEnabled" : {
 
 			"description" :
-			"""
+			_("""
 			Turns on clamping for values below the min value.
-			""",
+			"""),
 
 		},
 
 		"maxEnabled" : {
 
 			"description" :
-			"""
+			_("""
 			Turns on clamping for values above the max value.
-			""",
+			"""),
 
 		},
 
 		"minClampToEnabled" : {
 
 			"description" :
-			"""
+			_("""
 			Turns on the effect of minClampTo, allowing out
 			of range values to be highlighted.
-			""",
+			"""),
 
 		},
 
 		"maxClampToEnabled" : {
 
 			"description" :
-			"""
+			_("""
 			Turns on the effect of maxClampTo, allowing out
 			of range values to be highlighted.
-			""",
+			"""),
 
 		},
 

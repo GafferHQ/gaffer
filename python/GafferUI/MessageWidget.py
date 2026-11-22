@@ -44,6 +44,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 from Qt import QtCore
 from Qt import QtGui
@@ -80,7 +81,7 @@ class MessageWidget( GafferUI.Widget ) :
 				upperToolbar = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
 				with upperToolbar :
 
-					GafferUI.Label( "Show" )
+					GafferUI.Label( _("Show") )
 					self.__levelWidget = _MessageLevelWidget()
 					self.__levelWidget.messageLevelChangedSignal().connect( Gaffer.WeakMethod( self.__messageLevelChanged ) )
 
@@ -101,7 +102,7 @@ class MessageWidget( GafferUI.Widget ) :
 					GafferUI.Spacer( imath.V2i( 0 ) )
 
 					self.__toEndButton = GafferUI.Button( image = "scrollToBottom.png", hasFrame = False )
-					self.__toEndButton.setToolTip( "Scroll to bottom and follow new messages [B]" )
+					self.__toEndButton.setToolTip( _("Scroll to bottom and follow new messages [B]") )
 					self.__toEndButton.buttonPressSignal().connect( Gaffer.WeakMethod( self.__table.scrollToLatest ) )
 
 					GafferUI.Spacer( imath.V2i( 3 ), imath.V2i( 3 ) )
@@ -421,11 +422,11 @@ class _MessageTableSearchWidget( GafferUI.Widget ) :
 			# Activated allows <enter> to repeatedly jump to the next search result
 			self.__searchField.activatedSignal().connect( Gaffer.WeakMethod( self.__textActivated ) )
 			self.__searchField._qtWidget().setObjectName( "gafferSearchField" )
-			self.__searchField.setPlaceholderText( "Search" )
+			self.__searchField.setPlaceholderText( _("Search") )
 			self.__searchField._qtWidget().setMaximumWidth( 250 )
 
-		self.__prevButton.setToolTip( "Show previous match [P]" )
-		self.__nextButton.setToolTip( "Show next match [N]" )
+		self.__prevButton.setToolTip( _("Show previous match [P]") )
+		self.__nextButton.setToolTip( _("Show next match [N]") )
 
 		# Though Qt provides clearButtonEnabled(), this seems to be missing its icon on macOS, resulting in a
 		# clickable-but-not-visible clear button. As such we need to make our own. Icons need to be 16x16 exactly.

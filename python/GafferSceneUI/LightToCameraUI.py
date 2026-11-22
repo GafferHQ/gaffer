@@ -36,17 +36,18 @@
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.LightToCamera,
 
 	"description",
-	"""
+	_("""
 	Converts lights into cameras. Spotlights are converted to a perspective
 	camera with the field of view matching the cone angle, and distant lights are
 	converted to an orthographic camera.
-	""",
+	"""),
 
 	plugs = {
 
@@ -62,30 +63,30 @@ Gaffer.Metadata.registerNode(
 		"distantAperture" : {
 
 			"description" :
-			"""
+			_("""
 			The orthographic aperture used when converting distant lights
 			( which are theoretically infinite in extent )
-			""",
+			"""),
 
 		},
 
 		"clippingPlanes" : {
 
 			"description" :
-			"""
+			_("""
 			Clipping planes for the created cameras.  When creating a perspective camera, a near clip
 			<= 0 is invalid, and will be replaced with 0.01.  Also, certain lights only start casting
 			light at some distance - if near clip is less than this, it will be increased.
-			""",
+			"""),
 
 		},
 
 		"filter" : {
 
 			"description" :
-			"""
+			_("""
 			Specifies which lights to convert.
-			""",
+			"""),
 
 		},
 	}

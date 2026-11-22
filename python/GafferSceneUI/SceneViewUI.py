@@ -46,6 +46,7 @@ import IECoreScene
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 import GafferScene
 import GafferSceneUI
 import GafferImage
@@ -161,9 +162,9 @@ Gaffer.Metadata.registerNode(
 		"drawingMode" : {
 
 			"description" :
-			"""
+			_("""
 			Defines how the scene is drawn in the viewport.
-			""",
+			"""),
 			"plugValueWidget:type" : "GafferSceneUI.SceneViewUI._DrawingModePlugValueWidget",
 
 		},
@@ -171,9 +172,9 @@ Gaffer.Metadata.registerNode(
 		"shadingMode" : {
 
 			"description" :
-			"""
+			_("""
 			Defines how the scene is shaded in the viewport.
-			""",
+			"""),
 			"toolbarLayout:divider" : True,
 			"plugValueWidget:type" : "GafferSceneUI.SceneViewUI._ShadingModePlugValueWidget",
 
@@ -188,9 +189,9 @@ Gaffer.Metadata.registerNode(
 		"selectionMask" : {
 
 			"description" :
-			"""
+			_("""
 			Defines what types of objects are selectable in the viewport.
-			""",
+			"""),
 			"plugValueWidget:type" : "GafferSceneUI.SceneViewUI._SelectionMaskPlugValueWidget",
 
 			"toolbarLayout:divider" : True,
@@ -200,9 +201,9 @@ Gaffer.Metadata.registerNode(
 		"camera" : {
 
 			"description" :
-			"""
+			_("""
 			Defines the camera used to view the scene.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferSceneUI.SceneViewUI._CameraPlugValueWidget",
 			"toolbarLayout:divider" : True,
@@ -219,9 +220,9 @@ Gaffer.Metadata.registerNode(
 		"camera.freeCamera" : {
 
 			"description" :
-			"""
+			_("""
 			Chooses the default camera to be used when `camera.lookThroughEnabled` is off.
-			""",
+			"""),
 
 			"layout:visibilityActivator" : "hidden"
 
@@ -230,9 +231,9 @@ Gaffer.Metadata.registerNode(
 		"camera.fieldOfView" : {
 
 			"description" :
-			"""
+			_("""
 			The field of view for the viewport's default perspective camera.
-			""",
+			"""),
 
 			"layout:section" : "Free Camera",
 			"layout:activator" : "cameraIsFreePerspective",
@@ -242,9 +243,9 @@ Gaffer.Metadata.registerNode(
 		"camera.clippingPlanes" : {
 
 			"description" :
-			"""
+			_("""
 			The near and far clipping planes for the viewport's default perspective camera.
-			""",
+			"""),
 
 			"layout:section" : "Free Camera",
 			"layout:activator" : "lookThroughDisabled",
@@ -254,36 +255,36 @@ Gaffer.Metadata.registerNode(
 		"camera.lightLookThroughDefaultDistantAperture" : {
 			"layout:section" : "Light Look Through",
 			"layout:activator" : "lookThroughEnabled",
-			"label" : "Default Distant Aperture",
+			"label" : _("Default Distant Aperture"),
 			"description" :
-			"""
+			_("""
 			The orthographic aperture used when converting distant lights
 			( which are theoretically infinite in extent ).  May be overridden
 			by the visualisation setting on the light.
-			""",
+			"""),
 		},
 
 		"camera.lightLookThroughDefaultClippingPlanes" : {
 			"layout:section" : "Light Look Through",
 			"layout:activator" : "lookThroughEnabled",
-			"label" : "Default Clipping Planes",
+			"label" : _("Default Clipping Planes"),
 			"description" :
-			"""
+			_("""
 			Clipping planes for cameras implied by lights.  When creating a perspective camera, a near clip
 			<= 0 is invalid, and will be replaced with 0.01.  Also, certain lights only start casting
 			light at some distance - if near clip is less than this, it will be increased.  May be overridden
 			by the visualisation setting on the light.
-			""",
+			"""),
 		},
 
 		"camera.lookThroughEnabled" : {
 
 			"description" :
-			"""
+			_("""
 			When enabled, locks the view to look through a specific camera in the scene.
 			By default, the current render camera is used, but this can be changed using the camera.lookThroughCamera
 			setting.
-			""",
+			"""),
 
 			"layout:visibilityActivator" : "hidden"
 
@@ -292,11 +293,11 @@ Gaffer.Metadata.registerNode(
 		"camera.lookThroughCamera" : {
 
 			"description" :
-			"""
+			_("""
 			Specifies the camera to look through when lookThrough.enabled is on. The default value
 			means that the current render camera will be used - the paths to other cameras may be specified
 			to choose another camera."
-			""",
+			"""),
 
 			"layout:visibilityActivator" : "hidden"
 
@@ -378,7 +379,7 @@ class _DrawingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
 
-		menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ), title="Drawing" )
+		menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ), title=_("Drawing") )
 		menuButton = GafferUI.MenuButton( menu=menu, image = "drawingStyles.png", hasFrame=False )
 
 		GafferUI.PlugValueWidget.__init__( self, menuButton, plug, **kw )
@@ -413,7 +414,7 @@ class _DrawingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 				}
 			)
 
-		m.append( "/Lights/OptionsDivider", { "divider" : True } )
+		m.append( "/" + _("Lights") + "/OptionsDivider", { "divider" : True } )
 
 		self.__appendValuePresetMenu(
 			m, self.getPlug()["light"]["frustumScale"],
@@ -504,8 +505,8 @@ class _PlugWidgetDialogue( GafferUI.Dialogue ) :
 		self.__plugWidget = GafferUI.PlugValueWidget.create( plug )
 		self._setWidget( self.__plugWidget )
 
-		self.__cancelButton = self._addButton( "Cancel" )
-		self.__confirmButton = self._addButton( "OK" )
+		self.__cancelButton = self._addButton( _("Cancel") )
+		self.__confirmButton = self._addButton( _("OK") )
 
 	def waitForClose( self, **kw ) :
 
@@ -526,7 +527,7 @@ class _ShadingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 			self.__menuButton = GafferUI.MenuButton(
 				image = "shading.png",
-				menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ), title="Shading" ),
+				menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ), title=_("Shading") ),
 				hasFrame = False,
 			)
 
@@ -548,8 +549,8 @@ class _ShadingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 			if self.__shadingModeToggle is not None :
 				if result :
 					result += "\n\n"
-				result += "## Actions\n\n"
-				result += "- <kbd>Ctrl</kbd> + click to toggle shading to `{}`\n".format( self.__shadingModeToggle if self.getPlug().isSetToDefault() else "Default" )
+				result += _("## Actions") + "\n\n"
+				result += "- <kbd>Ctrl</kbd> + " + _("click to toggle shading to") + " `{}`\n".format( self.__shadingModeToggle if self.getPlug().isSetToDefault() else _("Default") )
 
 			return result
 
@@ -614,7 +615,7 @@ class _ExpansionPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
 
-		menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ), title="Visibility" )
+		menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ), title=_("Visibility") )
 		menuButton = GafferUI.MenuButton( menu=menu, image = "expansion.png", hasFrame=False )
 
 		GafferUI.PlugValueWidget.__init__( self, menuButton, plug, **kw )
@@ -635,8 +636,8 @@ class _ExpansionPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def getToolTip( self ) :
 
-		result = "# Visibility"
-		result += "\n\nDefines what is visible in the viewport."
+		result = _("# Visibility")
+		result += "\n\n" + _("Defines what is visible in the viewport.")
 
 		return result
 
@@ -645,14 +646,14 @@ class _ExpansionPlugValueWidget( GafferUI.PlugValueWidget ) :
 		expandAll = bool( self.getPlug().getValue() )
 
 		m = IECore.MenuDefinition()
-		m.append( "/Expansion", { "divider" : True, "label" : "Expansion" } )
-		m.append( "/Expand Selection", { "command" : self.getPlug().node().expandSelection, "active" : not expandAll, "shortCut" : "Down" } )
-		m.append( "/Expand Selection Fully", { "command" : functools.partial( self.getPlug().node().expandSelection, depth = 999 ), "active" : not expandAll, "shortCut" : "Shift+Down" } )
-		m.append( "/Collapse Selection", { "command" : self.getPlug().node().collapseSelection, "active" : not expandAll, "shortCut" : "Up" } )
+		m.append( "/" + _("Expansion"), { "divider" : True, "label" : _("Expansion") } )
+		m.append( "/" + _("Expand Selection"), { "command" : self.getPlug().node().expandSelection, "active" : not expandAll, "shortCut" : "Down" } )
+		m.append( "/" + _("Expand Selection Fully"), { "command" : functools.partial( self.getPlug().node().expandSelection, depth = 999 ), "active" : not expandAll, "shortCut" : "Shift+Down" } )
+		m.append( "/" + _("Collapse Selection"), { "command" : self.getPlug().node().collapseSelection, "active" : not expandAll, "shortCut" : "Up" } )
 		m.append( "/Expand All Divider", { "divider" : True } )
-		m.append( "/Expand All", { "checkBox" : expandAll, "command" : Gaffer.WeakMethod( self.__toggleMinimumExpansionDepth ) } )
+		m.append( "/" + _("Expand All"), { "checkBox" : expandAll, "command" : Gaffer.WeakMethod( self.__toggleMinimumExpansionDepth ) } )
 
-		m.append( "/PurposesDivider", { "divider" : True, "label" : "Purpose" } )
+		m.append( "/PurposesDivider", { "divider" : True, "label" : _("Purpose") } )
 
 		# \todo Move the `includedPurposes` plug out of `drawingMode` and put it on a new plug that holds (and replaces)
 		# `minimumExpansionDepth`.
@@ -693,7 +694,7 @@ class _ExpansionPlugValueWidget( GafferUI.PlugValueWidget ) :
 			{
 				"checkBox" : not includedPurposesEnabled,
 				"command" : functools.partial( Gaffer.WeakMethod( self.__purposeMenuCommand ), drawingModePlug, IECore.StringVectorData( [] ), False ),
-				"description" : "Shows objects with USD purposes that match the global `option:render:includedPurposes` variable which can be set from a StandardOptions node."
+				"description" : _("Shows objects with USD purposes that match the global `option:render:includedPurposes` variable which can be set from a StandardOptions node.")
 			}
 		)
 
@@ -723,7 +724,7 @@ class _ExpansionPlugValueWidget( GafferUI.PlugValueWidget ) :
 			includedPurposes != previewWithGuidesElements
 		)
 		m.append( "/CustomDivider", { "divider" : True } )
-		m.append( "/Custom", { "subMenu" : subMenu, "icon" : "menuBreadCrumb.png" if showBreadCrumb else None } )
+		m.append( "/" + _("Custom"), { "subMenu" : subMenu, "icon" : "menuBreadCrumb.png" if showBreadCrumb else None } )
 
 		self.menuSignal()( m, self )
 
@@ -766,7 +767,7 @@ class _SelectionMaskPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
 
-		menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ), title="Selection Mask" )
+		menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ), title=_("Selection Mask") )
 		self.__menuButton = GafferUI.MenuButton( menu=menu, image = "selectionMaskOff.png", hasFrame=False )
 
 		GafferUI.PlugValueWidget.__init__( self, self.__menuButton, plug, **kw )
@@ -867,7 +868,7 @@ class _CameraPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __init__( self, plug, **kw ) :
 
 		self.__menuButton = GafferUI.MenuButton(
-			menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ), title="Camera" ),
+			menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ), title=_("Camera") ),
 			hasFrame = False,
 		)
 
@@ -1000,7 +1001,7 @@ class _CameraPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		if self.__settingsWindow is None :
 
-			self.__settingsWindow = GafferUI.Window( title = "Camera Settings" )
+			self.__settingsWindow = GafferUI.Window( title = _("Camera Settings") )
 			with self.__settingsWindow :
 				with GafferUI.ListContainer() :
 					with GafferUI.Frame( borderStyle = GafferUI.Frame.BorderStyle.None_, borderWidth = 4 ) :
@@ -1040,7 +1041,7 @@ class _CameraPlugValueWidget( GafferUI.PlugValueWidget ) :
 		# user a "Show Lights" toggle.
 
 		camerasPathFilter = GafferScene.SceneFilterPathFilter( validFilter["__camerasFilter"] )
-		camerasPathFilter.userData()["UI"] = { "label" : "Show Lights", "invertEnabled" : True }
+		camerasPathFilter.userData()["UI"] = { "label" : _("Show Lights"), "invertEnabled" : True }
 
 		return Gaffer.CompoundPathFilter( [ validPathFilter, camerasPathFilter ] )
 
@@ -1130,7 +1131,7 @@ class _GridPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
 
-		menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ), title="Gadgets" )
+		menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ), title=_("Gadgets") )
 		menuButton = GafferUI.MenuButton( menu=menu, image = "grid.png", hasFrame=False )
 
 		GafferUI.PlugValueWidget.__init__( self, menuButton, plug, **kw )
@@ -1230,9 +1231,9 @@ def __snapshotDescription( view ) :
 
 	sceneGadget = view.viewportGadget().getPrimaryChild()
 	if sceneGadget.getRenderer() == "OpenGL" :
-		return "Viewport snapshots are only available for rendered (non-OpenGL) previews."
+		return _("Viewport snapshots are only available for rendered (non-OpenGL) previews.")
 
-	return "Snapshot viewport and send to catalogue."
+	return _("Snapshot viewport and send to catalogue.")
 
 def __snapshotToCatalogue( catalogue, view ) :
 
@@ -1471,4 +1472,4 @@ class _StateWidget( GafferUI.Widget ) :
 		paused = self.__sceneGadget.getPaused()
 		self.__button.setImage( "viewPause.png" if not paused else "viewPaused.png" )
 		self.__busyWidget.setBusy( self.__sceneGadget.state() == self.__sceneGadget.State.Running )
-		self.__button.setToolTip( "Viewer updates suspended, click to resume" if paused else "Click to suspend viewer updates [esc]" )
+		self.__button.setToolTip( _("Viewer updates suspended, click to resume") if paused else _("Click to suspend viewer updates [esc]") )

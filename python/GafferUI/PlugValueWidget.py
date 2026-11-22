@@ -46,6 +46,8 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI import i18n as _i18n
+from GafferUI.i18n import _
 
 ## Base class for widgets which can display and optionally edit one or
 # more ValuePlugs. The base class automatically tracks changes to plug
@@ -183,21 +185,25 @@ class PlugValueWidget( GafferUI.Widget ) :
 		# Name
 
 		if len( self.getPlugs() ) == 1 :
-			result = "# " + self.getPlug().relativeName( self.getPlug().node() )
+			rawName = self.getPlug().relativeName( self.getPlug().node() )
+			translatedName = ".".join( _i18n.translateLabel( part ) for part in rawName.split( "." ) )
+			result = "# " + translatedName
 		else :
-			result = "# {} plugs".format( len( self.getPlugs() ) )
+			result = "# {} ".format( len( self.getPlugs() ) ) + _("plugs")
 
 		# Input
 
 		if len( self.getPlugs() ) == 1 :
 			input = self.getPlug().getInput()
 			if input is not None :
-				result += "\n\nInput : {}".format( input.relativeName( input.commonAncestor( self.getPlug() ) ) )
+				result += "\n\n" + _("Input") + " : {}".format( input.relativeName( input.commonAncestor( self.getPlug() ) ) )
 
 		# Description
 
 		description = sole( Gaffer.Metadata.value( p, "description" ) for p in self.getPlugs() )
 		if description :
+			if _i18n.translateTooltips() :
+				description = _( description )
 			result += "\n\n" + description
 
 		return result
@@ -463,7 +469,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 			applicationRoot = sole( p.ancestor( Gaffer.ApplicationRoot ) for p in self.getPlugs() )
 			menuDefinition.append(
-				"/Copy Value", {
+				"/" + _("Copy Value") + "", {
 					"command" : Gaffer.WeakMethod( self.__copyValue ),
 					"active" : len( self.getPlugs() ) == 1 and applicationRoot is not None
 				}
@@ -474,7 +480,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 				pasteValue = self._convertValue( applicationRoot.getClipboardContents() )
 
 			menuDefinition.append(
-				"/Paste Value", {
+				"/" + _("Paste Value") + "", {
 					"command" : functools.partial( Gaffer.WeakMethod( self.__setValues ), pasteValue ),
 					"active" : self._editable() and pasteValue is not None
 				}
@@ -483,17 +489,17 @@ class PlugValueWidget( GafferUI.Widget ) :
 			menuDefinition.append( "/CopyPasteDivider", { "divider" : True } )
 
 		if any( p.getInput() is not None for p in self.getPlugs() ) :
-			menuDefinition.append( "/Edit input...", { "command" : Gaffer.WeakMethod( self.__editInputs ) } )
+			menuDefinition.append( "/" + _("Edit input..."), { "command" : Gaffer.WeakMethod( self.__editInputs ) } )
 			menuDefinition.append( "/EditInputDivider", { "divider" : True } )
 			menuDefinition.append(
-				"/Remove input", {
+				"/" + _("Remove input") + "", {
 					"command" : Gaffer.WeakMethod( self.__removeInputs ),
 					"active" : all( p.acceptsInput( None ) and not Gaffer.MetadataAlgo.readOnly( p ) for p in self.getPlugs() ),
 				}
 			)
 		if all( hasattr( p, "defaultValue" ) and p.direction() == Gaffer.Plug.Direction.In for p in self.getPlugs() ) :
 			menuDefinition.append(
-				"/Default", {
+				"/" + _("Default") + "", {
 					"command" : functools.partial( Gaffer.WeakMethod( self.__setValues ), [ p.defaultValue() for p in self.getPlugs() ] ),
 					"active" : self._editable()
 				}
@@ -501,7 +507,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		if all( Gaffer.NodeAlgo.hasUserDefault( p ) and p.direction() == Gaffer.Plug.Direction.In for p in self.getPlugs() ) :
 			menuDefinition.append(
-				"/User Default", {
+				"/" + _("User Default") + "", {
 					"command" : Gaffer.WeakMethod( self.__applyUserDefaults ),
 					"active" : self._editable()
 				}
@@ -510,7 +516,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 		with self.context() :
 			if any( Gaffer.NodeAlgo.presets( p ) for p in self.getPlugs() ) :
 				menuDefinition.append(
-					"/Preset", {
+					"/" + _("Preset") + "", {
 						"subMenu" : Gaffer.WeakMethod( self.__presetsSubMenu ),
 						"active" : self._editable()
 					}
@@ -521,7 +527,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		readOnly = any( Gaffer.MetadataAlgo.getReadOnly( p ) for p in self.getPlugs() )
 		menuDefinition.append(
-			"/Unlock" if readOnly else "/Lock",
+			"/" + _("Unlock") if readOnly else "/" + _("Lock"),
 			{
 				"command" : functools.partial( Gaffer.WeakMethod( self.__applyReadOnly ), not readOnly ),
 				"active" : not any( Gaffer.MetadataAlgo.readOnly( p.parent() ) for p in self.getPlugs() ),

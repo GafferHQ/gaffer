@@ -35,6 +35,7 @@
 ##########################################################################
 import Gaffer
 import GafferImage
+from GafferUI.i18n import _
 
 # Command suitable for use with `NodeMenu.append()`.
 def nodeMenuCreateCommand( menu ) :
@@ -49,10 +50,10 @@ Gaffer.Metadata.registerNode(
 	GafferImage.Erode,
 
 	"description",
-	"""
+	_("""
 	Applies an erode filter to the image. This can be useful for
 	shrinking mask.
-	""",
+	"""),
 
 )
 

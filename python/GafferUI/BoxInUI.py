@@ -35,16 +35,17 @@
 ##########################################################################
 
 import Gaffer
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	Gaffer.BoxIn,
 
 	"description",
-	"""
+	_("""
 	Convenience node for representing input plugs
 	visually in the internal node graph of a Box.
-	""",
+	"""),
 
 	"icon", "boxInNode.png",
 

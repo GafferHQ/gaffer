@@ -37,6 +37,7 @@
 import Gaffer
 import GafferUI
 import GafferImage
+from GafferUI.i18n import _
 
 # Command suitable for use with `NodeMenu.append()`.
 def nodeMenuCreateCommand( menu ) :
@@ -51,30 +52,30 @@ Gaffer.Metadata.registerNode(
 	GafferImage.Blur,
 
 	"description",
-	"""
+	_("""
 	Applies a gaussian blur to the image.
-	""",
+	"""),
 
 	plugs = {
 
 		"radius" : {
 
 			"description" :
-			"""
+			_("""
 			The size of the blur in pixels. This can be varied independently
 			in the x and y directions, and fractional values are supported for
 			fine control.
-			""",
+			"""),
 
 		},
 
 		"boundingMode" : {
 
 			"description" :
-			"""
+			_("""
 			The method used when the filter references pixels outside the
 			input data window.
-			""",
+			"""),
 
 			"preset:Black" : GafferImage.Sampler.BoundingMode.Black,
 			"preset:Clamp" : GafferImage.Sampler.BoundingMode.Clamp,
@@ -86,10 +87,10 @@ Gaffer.Metadata.registerNode(
 		"expandDataWindow" : {
 
 			"description" :
-			"""
+			_("""
 			Expands the data window to include the external pixels
 			which the blur will bleed onto.
-			"""
+			""")
 
 		}
 
