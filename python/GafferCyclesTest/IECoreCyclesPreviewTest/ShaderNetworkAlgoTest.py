@@ -504,75 +504,123 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 
 		for opacity in ( 0.25, 1.0, None ) :
 			for opacityThreshold in ( 0.0, 0.5, None ) :
+				for opacityMode in ( "transparent", "presence", None ) :
 
-				parameters = {}
-				if opacity is not None :
-					parameters["opacity"] = IECore.FloatData( opacity )
-				if opacityThreshold is not None :
-					parameters["opacityThreshold"] = IECore.FloatData( opacityThreshold )
+					parameters = {}
+					if opacity is not None :
+						parameters["opacity"] = IECore.FloatData( opacity )
+					if opacityMode is not None :
+						parameters["opacityMode"] = IECore.StringData( opacityMode )
+					if opacityThreshold is not None :
+						parameters["opacityThreshold"] = IECore.FloatData( opacityThreshold )
 
-				network = IECoreScene.ShaderNetwork(
-					shaders = {
-						"previewSurface" : IECoreScene.Shader(
-							"UsdPreviewSurface", "surface", parameters
+					network = IECoreScene.ShaderNetwork(
+						shaders = {
+							"previewSurface" : IECoreScene.Shader(
+								"UsdPreviewSurface", "surface", parameters
+							)
+						},
+						output = "previewSurface",
+					)
+
+					convertedNetwork = network.copy()
+					IECoreCycles.ShaderNetworkAlgo.convertUSDShaders( convertedNetwork )
+
+					convertedShader = convertedNetwork.getShader( "previewSurface" )
+					expectedOpacity = opacity if opacity is not None else 1.0
+					if opacityThreshold is not None :
+						expectedOpacity = expectedOpacity if expectedOpacity > opacityThreshold else 0
+
+					if opacityMode == "presence"  :
+						self.assertEqual(
+							convertedShader.parameters["alpha"].value,
+							expectedOpacity
 						)
-					},
-					output = "previewSurface",
-				)
+						self.assertNotIn( "transmission_weight", convertedShader.parameters )
+					elif opacityMode == "transparent" or opacityMode == None :
+						expectedOpacity = opacity if opacity is not None else 1.0
+						self.assertEqual(
+							convertedShader.parameters["transmission_weight"].value,
+							1.0 - expectedOpacity
+						)
+						# If there isn't any opacityThreshold, alpha should not be authored.
+						if opacityThreshold == 0.0 or opacityThreshold is None :
+							self.assertNotIn( "alpha", convertedShader.parameters )
 
-				convertedNetwork = network.copy()
-				IECoreCycles.ShaderNetworkAlgo.convertUSDShaders( convertedNetwork )
+					# Repeat, but with an input connection as well as the parameter value
 
-				convertedShader = convertedNetwork.getShader( "previewSurface" )
-				expectedOpacity = opacity if opacity is not None else 1.0
-				if opacityThreshold is not None :
-					expectedOpacity = expectedOpacity if expectedOpacity > opacityThreshold else 0
+					network.addShader( "texture", IECoreScene.Shader( "UsdUVTexture" ) )
+					network.addConnection( ( ( "texture", "a" ), ( "previewSurface", "opacity" ) ) )
 
-				self.assertEqual(
-					convertedShader.parameters["alpha"].value,
-					expectedOpacity
-				)
+					convertedNetwork = network.copy()
+					IECoreCycles.ShaderNetworkAlgo.convertUSDShaders( convertedNetwork )
 
-				# Repeat, but with an input connection as well as the parameter value
+					if opacityThreshold :
 
-				network.addShader( "texture", IECoreScene.Shader( "UsdUVTexture" ) )
-				network.addConnection( ( ( "texture", "a" ), ( "previewSurface", "opacity" ) ) )
+						if opacityMode == "presence" :
+							self.assertEqual( len( convertedNetwork ), 4 )
+						else :
+							self.assertEqual( len( convertedNetwork ), 5 )
+						opacityInput = convertedNetwork.input( ( "previewSurface", "alpha" ) )
+						self.assertEqual( opacityInput, ( "previewSurfaceOpacityMultiply", "value" ) )
+						self.assertEqual( convertedNetwork.getShader( opacityInput.shader ).name, "math" )
+						self.assertEqual(
+							convertedNetwork.input( ( "previewSurfaceOpacityMultiply", "value1" ) ),
+							( "texture", "alpha" )
+						)
 
-				convertedNetwork = network.copy()
-				IECoreCycles.ShaderNetworkAlgo.convertUSDShaders( convertedNetwork )
+						self.assertEqual(
+							convertedNetwork.input( ( "previewSurfaceOpacityMultiply", "value2" ) ),
+							( "previewSurfaceOpacityCompare", "value" )
+						)
 
-				if opacityThreshold :
+						self.assertEqual(
+							convertedNetwork.input( ( "previewSurfaceOpacityCompare", "value1" ) ),
+							( "texture", "alpha" )
+						)
 
-					self.assertEqual( len( convertedNetwork ), 4 )
-					opacityInput = convertedNetwork.input( ( "previewSurface", "alpha" ) )
-					self.assertEqual( opacityInput, ( "previewSurfaceOpacityMultiply", "value" ) )
-					self.assertEqual( convertedNetwork.getShader( opacityInput.shader ).name, "math" )
-					self.assertEqual(
-						convertedNetwork.input( ( "previewSurfaceOpacityMultiply", "value1" ) ),
-						( "texture", "alpha" )
-					)
+						compareShader = convertedNetwork.getShader( "previewSurfaceOpacityCompare" )
+						self.assertEqual( compareShader.parameters["math_type"].value, "greater_than" )
+						self.assertEqual( compareShader.parameters["value2"].value, opacityThreshold )
 
-					self.assertEqual(
-						convertedNetwork.input( ( "previewSurfaceOpacityMultiply", "value2" ) ),
-						( "previewSurfaceOpacityCompare", "value" )
-					)
+						if opacityMode == "transparency" or opacityMode == None :
 
-					self.assertEqual(
-						convertedNetwork.input( ( "previewSurfaceOpacityCompare", "value1" ) ),
-						( "texture", "alpha" )
-					)
+							invertShader = convertedNetwork.getShader( "previewSurfaceOpacityInvert" )
+							self.assertEqual( invertShader.parameters["math_type"].value, "subtract" )
+							self.assertEqual( invertShader.parameters["value1"].value, 1.0 )
+							self.assertEqual( invertShader.parameters["use_clamp"].value, True )
+							self.assertEqual(
+								convertedNetwork.input( ( "previewSurface", "transmission_weight" ) ),
+								( "previewSurfaceOpacityInvert", "value" )
+							)
+							self.assertEqual(
+								convertedNetwork.input( ( "previewSurfaceOpacityInvert", "value2" ) ),
+								( "texture", "alpha" )
+							)
 
-					compareShader = convertedNetwork.getShader( "previewSurfaceOpacityCompare" )
-					self.assertEqual( compareShader.parameters["math_type"].value, "greater_than" )
-					self.assertEqual( compareShader.parameters["value2"].value, opacityThreshold )
+					elif opacityMode == "presence" :
 
-				else :
+						self.assertEqual( len( convertedNetwork ), 2 )
+						self.assertEqual(
+							convertedNetwork.input( ( "previewSurface", "alpha" ) ),
+							( "texture", "alpha" )
+						)
 
-					self.assertEqual( len( convertedNetwork ), 2 )
-					self.assertEqual(
-						convertedNetwork.input( ( "previewSurface", "alpha" ) ),
-						( "texture", "alpha" )
-					)
+					elif opacityMode == "transparency" or opacityMode == None :
+
+						self.assertEqual( len( convertedNetwork ), 3 )
+						invertShader = convertedNetwork.getShader( "previewSurfaceOpacityInvert" )
+						self.assertEqual( invertShader.parameters["math_type"].value, "subtract" )
+						self.assertEqual( invertShader.parameters["value1"].value, 1.0 )
+						self.assertEqual( invertShader.parameters["use_clamp"].value, True )
+						self.assertEqual(
+							convertedNetwork.input( ( "previewSurface", "transmission_weight" ) ),
+							( "previewSurfaceOpacityInvert", "value" )
+						)
+						self.assertEqual(
+							convertedNetwork.input( ( "previewSurfaceOpacityInvert", "value2" ) ),
+							( "texture", "alpha" )
+						)
 
 	def testConvertUSDSpecular( self ) :
 
