@@ -244,6 +244,34 @@ class RendererTest( GafferTest.TestCase ) :
 
 		renderer.render()
 
+	def testInvalidPrimitiveVariables( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"OpenGL",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
+		)
+
+		mesh = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ), imath.V2i( 4, 4 ) )
+		mesh["bad1"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, IECore.FloatVectorData( [ 0.0 ] * 10 ) )
+		mesh["bad2"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Uniform, IECore.FloatVectorData( [ 0.0 ] * 3 ) )
+		self.assertFalse( mesh.arePrimitiveVariablesValid() )
+
+		with IECore.CapturingMessageHandler() as handler :
+			o = renderer.object( "/plane", mesh, renderer.attributes( IECore.CompoundObject() ) )
+
+		self.assertEqual( len( handler.messages ), 1 )
+		self.assertEqual( handler.messages[0].level, IECore.Msg.Level.Warning )
+		self.assertEqual( handler.messages[0].message, "Ignoring invalid primitive variables on object \"/plane\" : bad1, bad2" )
+
+		# The rest of the mesh should still be drawn.
+		self.assertEqual( renderer.command( "gl:queryBound", {} ), mesh.bound() )
+
+		# The input mesh should not be modified.
+		self.assertIn( "bad1", mesh )
+		self.assertIn( "bad2", mesh )
+
+		del o
+
 	def __colorAtUV( self, image, uv ) :
 
 		pixel = image.getpixel( int( uv.x * (image.spec().width - 1) ), int( uv.y * (image.spec().height - 1) ) )

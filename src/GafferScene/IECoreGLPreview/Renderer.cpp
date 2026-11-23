@@ -61,6 +61,8 @@
 #include "IECoreGL/ToGLCameraConverter.h"
 #include "IECoreGL/IECoreGL.h"
 
+#include "IECoreScene/Primitive.h"
+
 #include "IECore/CompoundParameter.h"
 #include "IECore/MessageHandler.h"
 #include "IECore/PathMatcherData.h"
@@ -76,6 +78,7 @@
 #include "tbb/concurrent_queue.h"
 
 #include "fmt/format.h"
+#include "fmt/ranges.h"
 
 #include <functional>
 #include <unordered_map>
@@ -492,6 +495,35 @@ namespace
 using Edit = std::function<void ()>;
 using EditQueue = tbb::concurrent_queue<Edit>;
 
+IECore::ConstObjectPtr removeInvalidPrimitiveVariables( const std::string &name, const IECore::Object *object )
+{
+	const auto primitive = IECore::runTimeCast<const IECoreScene::Primitive>( object );
+	if( !primitive || primitive->arePrimitiveVariablesValid() )
+	{
+		return object;
+	}
+
+	IECoreScene::PrimitivePtr result = primitive->copy();
+	std::vector<std::string> invalidNames;
+	for( auto it = result->variables.begin(); it != result->variables.end(); )
+	{
+		if( result->isPrimitiveVariableValid( it->second ) )
+		{
+			++it;
+			continue;
+		}
+		invalidNames.push_back( it->first );
+		it = result->variables.erase( it );
+	}
+
+	IECore::msg(
+		IECore::Msg::Warning, "IECoreGL::Renderer",
+		fmt::format( "Ignoring invalid primitive variables on object \"{}\" : {}", name, fmt::join( invalidNames, ", " ) )
+	);
+
+	return result;
+}
+
 class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 {
 
@@ -515,7 +547,7 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 				{
 					try
 					{
-						IECore::ConstRunTimeTypedPtr glObject = IECoreGL::CachedConverter::defaultCachedConverter()->convert( object );
+						IECore::ConstRunTimeTypedPtr glObject = IECoreGL::CachedConverter::defaultCachedConverter()->convert( removeInvalidPrimitiveVariables( name, object ).get() );
 						m_renderable = IECore::runTimeCast<const IECoreGL::Renderable>( glObject.get() );
 					}
 					catch( ... )
