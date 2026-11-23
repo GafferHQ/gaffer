@@ -109,8 +109,8 @@ Gaffer.Metadata.registerNode(
 			"fileSystemPath:extensions" : "ocio",
 
 			"preset:$OCIO" : "",
-			"preset:ACES 2.0 - CG Config" : "${GAFFER_ROOT}/openColorIO/cg-config-v3.0.0_aces-v2.0_ocio-v2.4.ocio",
-			"preset:ACES 2.0 - Studio Config" : "${GAFFER_ROOT}/openColorIO/studio-config-v3.0.0_aces-v2.0_ocio-v2.4.ocio",
+			"preset:ACES 2.0 - CG Config" : "ocio://cg-config-v4.0.0_aces-v2.0_ocio-v2.5",
+			"preset:ACES 2.0 - Studio Config" : "ocio://studio-config-v4.0.0_aces-v2.0_ocio-v2.5",
 			"preset:ACES 1.3 - CG Config" : "ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1",
 			"preset:ACES 1.3 - Studio Config" : "ocio://studio-config-v1.0.0_aces-v1.3_ocio-v2.1",
 

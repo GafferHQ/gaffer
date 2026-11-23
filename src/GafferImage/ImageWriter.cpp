@@ -1655,6 +1655,7 @@ void ImageWriter::createFileFormatOptionsPlugs()
 	ValuePlug *iffOptionsPlug = new ValuePlug( "iff" );
 	addChild( iffOptionsPlug );
 	iffOptionsPlug->addChild( new IntPlug( g_modePlugName, Plug::In, Tile ) );
+	iffOptionsPlug->addChild( new StringPlug( g_dataTypePlugName, Plug::In, "uint8" ) );
 
 	ValuePlug *jpgOptionsPlug = new ValuePlug( "jpeg" );
 	addChild( jpgOptionsPlug );
