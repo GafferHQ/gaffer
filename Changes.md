@@ -7,6 +7,7 @@ Improvements
 - MeshSplit : Added `ignoreMissing` plug.
 - Cycles : Added render-time translation of `UsdPreviewSurface` normal maps, these require a FaceVarying `uv` primitive variable to render correctly.
 - Parent, Duplicate, Instancer, Group, MergeScenes : Improved performance when handling large numbers of sets.
+- RampPlug : Added ability to load `.gfr` files saved from Gaffer 1.8.
 
 Fixes
 -----
@@ -23,6 +24,7 @@ API
 ---
 
 - SceneAlgo : Added `mergeSetNames()` function.
+- RampPlug : Added `addPoint( xDefaultValue, yDefaultValue )` overload and `XType` and `YType` type aliases.
 
 1.7.7.0 (relative to 1.7.6.0)
 =======
