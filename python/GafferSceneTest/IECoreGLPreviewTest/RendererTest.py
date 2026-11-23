@@ -244,6 +244,25 @@ class RendererTest( GafferTest.TestCase ) :
 
 		renderer.render()
 
+	def testConversionFailureWarning( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"OpenGL",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
+		)
+
+		# A mesh without "P" can't be converted for drawing.
+		mesh = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) )
+		del mesh["P"]
+
+		with IECore.CapturingMessageHandler() as handler :
+			renderer.object( "/plane", mesh, renderer.attributes( IECore.CompoundObject() ) )
+
+		self.assertEqual( len( handler.messages ), 1 )
+		self.assertEqual( handler.messages[0].level, IECore.Msg.Level.Warning )
+		self.assertIn( "Failed to convert object \"/plane\"", handler.messages[0].message )
+		self.assertIn( "Must specify primitive variable \"P\"", handler.messages[0].message )
+
 	def __colorAtUV( self, image, uv ) :
 
 		pixel = image.getpixel( int( uv.x * (image.spec().width - 1) ), int( uv.y * (image.spec().height - 1) ) )
