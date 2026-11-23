@@ -518,9 +518,10 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 						IECore::ConstRunTimeTypedPtr glObject = IECoreGL::CachedConverter::defaultCachedConverter()->convert( object );
 						m_renderable = IECore::runTimeCast<const IECoreGL::Renderable>( glObject.get() );
 					}
-					catch( ... )
+					catch( const std::exception &e )
 					{
 						// Leave m_renderable as null
+						IECore::msg( IECore::Msg::Warning, "IECoreGL::Renderer", fmt::format( "Failed to convert object \"{}\" : {}", name, e.what() ) );
 					}
 				}
 			}
