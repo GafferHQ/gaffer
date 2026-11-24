@@ -31,6 +31,7 @@ Improvements
 - RampPlug :
   - Points are now stored in a child `points` container, instead of being alongside the `interpolation` plug.
   - Serialisations use the `addPoint()` API, and reference points by index rather than name.
+- Node, Box, ShaderTweaks, AttributeTweaks, OptionTweaks : Added ramp items to plug creation menus.
 
 Fixes
 -----
