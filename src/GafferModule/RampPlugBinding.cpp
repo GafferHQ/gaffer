@@ -142,6 +142,13 @@ unsigned addPoint( T &plug )
 }
 
 template<typename T>
+unsigned addPoint2( T &plug, typename T::XType xDefaultValue, const typename T::YType &yDefaultValue )
+{
+	IECorePython::ScopedGILRelease r;
+	return plug.addPoint( xDefaultValue, yDefaultValue );
+}
+
+template<typename T>
 void removePoint( T &plug, unsigned pointIndex )
 {
 	IECorePython::ScopedGILRelease r;
@@ -173,6 +180,7 @@ void bind()
 		.def( "getValue", &getValue<T> )
 		.def( "numPoints", &T::numPoints )
 		.def( "addPoint", &addPoint<T> )
+		.def( "addPoint", &addPoint2<T> )
 		.def( "removePoint", &removePoint<T> )
 		.def( "clearPoints", &clearPoints<T> )
 		.def( "pointPlug",  &pointPlug<T> )

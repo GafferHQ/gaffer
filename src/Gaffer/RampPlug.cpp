@@ -239,15 +239,21 @@ unsigned RampPlug<T>::numPoints() const
 template<typename T>
 unsigned RampPlug<T>::addPoint()
 {
+	return addPoint( XType( 0 ), YType( 0 ) );
+}
+
+template<typename T>
+unsigned RampPlug<T>::addPoint( XType xDefaultValue, const YType &yDefaultValue )
+{
 	const unsigned n = numPoints();
 	ValuePlugPtr p = new ValuePlug( "p0", direction() );
 	p->setFlags( Plug::Dynamic, true );
 
-	typename XPlugType::Ptr x = new XPlugType( "x", direction(), typename T::XType( 0 ) );
+	typename XPlugType::Ptr x = new XPlugType( "x", direction(), xDefaultValue );
 	x->setFlags( Plug::Dynamic, true );
 	p->addChild( x );
 
-	typename YPlugType::Ptr y = new YPlugType( "y", direction(), typename T::YType( 0 ) );
+	typename YPlugType::Ptr y = new YPlugType( "y", direction(), yDefaultValue );
 	y->setFlags( Plug::Dynamic, true );
 	p->addChild( y );
 

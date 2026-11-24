@@ -62,6 +62,8 @@ class GAFFER_API RampPlug : public ValuePlug
 	public :
 
 		using ValueType = T;
+		using XType = typename T::XType;
+		using YType = typename T::YType;
 		using XPlugType = typename PlugType<typename T::XType>::Type;
 		using YPlugType = typename PlugType<typename T::YType>::Type;
 
@@ -99,6 +101,7 @@ class GAFFER_API RampPlug : public ValuePlug
 		unsigned numPoints() const;
 		/// \undoable
 		unsigned addPoint();
+		unsigned addPoint( XType xDefaultValue, const YType &yDefaultValue );
 		/// \undoable
 		void removePoint( unsigned pointIndex );
 		/// \undoable
