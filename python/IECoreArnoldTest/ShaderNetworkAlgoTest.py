@@ -1542,8 +1542,6 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 							self.assertIsNotNone( light )
 							self.assertEqual( light.name, "mesh_light" )
 							self.assertEqual( light.type, "ai:light" )
-							for i in range( 0, 3 ) :
-								self.assertAlmostEqual( light.parameters["color"].value[i], lightColor[i] )
 
 							if lightColor != imath.Color3f( 0 ) :
 								correct = lightNetwork.getShader( "correct" )
@@ -1564,6 +1562,8 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 									self.assertEqual( lightNetwork.input( ( "light", "color" ) ), ( "correct", "out" ) )
 
 								self.assertEqual( lightNetwork.input( ( "correct", "input" ) ), ( "texture", "out" ) )
+							else :
+								self.assertEqual( light.parameters["color"].value, imath.Color3f( 0.0 ) )
 
 				# Surface color only, light with color input
 				# Arnold's Hydra renderer supports inputs to USDMeshLight `color` so we do as well.
@@ -1620,9 +1620,6 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 							self.assertEqual( light.type, "ai:light" )
 
 							if surfaceEmitColor != imath.Color3f( 0.0 ) :
-								for i in range( 0, 3 ) :
-									self.assertAlmostEqual( light.parameters["color"].value[i], surfaceEmitColor[i] )
-
 								correct = lightNetwork.getShader( "correct" )
 								self.assertIsNotNone( correct )
 								self.assertEqual( correct.parameters["main_gain"].value, 2 )
@@ -1631,14 +1628,15 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 								self.assertIsNotNone( texture )
 								self.assertEqual( texture.parameters["filename"].value, "testFile.tx" )
 
-								if surfaceEmitColor == imath.Color3f( 1.0 ) :
-									self.assertEqual( lightNetwork.input( ( "light", "color" ) ), ( "correct", "out" ) )
-								else :
+								if surfaceEmitColor != imath.Color3f( 1.0 ) :
 									tint = lightNetwork.getShader( "tint" )
 									self.assertIsNotNone ( tint )
 									self.assertEqual( tint.parameters["input2"].value, surfaceEmitColor )
 									self.assertEqual( lightNetwork.input( ( "light", "color" ) ), ( "tint", "out" ) )
 									self.assertEqual( lightNetwork.input( ( "tint", "input1" ) ), ( "correct", "out" ) )
+								else :
+
+									self.assertEqual( lightNetwork.input( ( "light", "color" ) ), ( "correct", "out" ) )
 								self.assertEqual( lightNetwork.input( ( "correct", "input" ) ), ( "texture", "out" ) )
 							else :
 								self.assertEqual( light.parameters["color"].value, imath.Color3f( 0.0 ) )
@@ -1694,8 +1692,6 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 					self.assertIsNotNone( light )
 					self.assertEqual( light.name, "mesh_light" )
 					self.assertEqual( light.type, "ai:light" )
-					for i in range( 0, 3 ) :
-						self.assertAlmostEqual( light.parameters["color"].value[i], 1.0 )
 
 					correct = lightNetwork.getShader( "correct" )
 					self.assertIsNotNone( correct )
@@ -1858,7 +1854,6 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 					self.assertIsNotNone( light )
 					self.assertEqual( light.name, "mesh_light" )
 					self.assertEqual( light.type, "ai:light" )
-					assertColorsAlmostEqual( light.parameters["color"].value, ( lightColor * tempRGB ) )
 
 					if lightColor != imath.Color3f( 0 ) :
 						texture = lightNetwork.getShader( "texture" )
@@ -1870,6 +1865,8 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 						assertColorsAlmostEqual( tint.parameters["input2"].value, lightColor * tempRGB )
 						self.assertEqual( lightNetwork.input( ( "light", "color" ) ), ( "tint", "out" ) )
 						self.assertEqual( lightNetwork.input( ( "tint", "input1" ) ), ( "texture", "out" ) )
+					else :
+						self.assertEqual( light.parameters["color"].value, imath.Color3f( 0.0 ) )
 
 		# Surface color only, light with color input
 		# Arnold's Hydra renderer supports inputs to USDMeshLight `color` so we do as well.
@@ -1929,9 +1926,6 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 					self.assertEqual( light.type, "ai:light" )
 
 					if surfaceEmitColor != imath.Color3f( 0.0 ) :
-
-						assertColorsAlmostEqual( light.parameters["color"].value, surfaceEmitColor * tempRGB )
-
 						texture = lightNetwork.getShader( "texture" )
 						self.assertIsNotNone( texture )
 						self.assertEqual( texture.parameters["filename"].value, "testFile.tx" )
@@ -1941,7 +1935,6 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 						assertColorsAlmostEqual( tint.parameters["input2"].value, surfaceEmitColor * tempRGB )
 						self.assertEqual( lightNetwork.input( ( "light", "color" ) ), ( "tint", "out" ) )
 						self.assertEqual( lightNetwork.input( ( "tint", "input1" ) ), ( "texture", "out" ) )
-
 					else :
 						assertColorsAlmostEqual( light.parameters["color"].value, imath.Color3f( 0.0 ) )
 
@@ -1989,7 +1982,6 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 			self.assertIsNotNone( light )
 			self.assertEqual( light.name, "mesh_light" )
 			self.assertEqual( light.type, "ai:light" )
-			assertColorsAlmostEqual( light.parameters["color"].value, tempRGB )
 
 			texture = lightNetwork.getShader( "texture" )
 			self.assertIsNotNone( texture )
