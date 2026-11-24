@@ -98,11 +98,11 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 		# connected by the NameLabel class.
 		self.__label.dragBeginSignal().connectFront( Gaffer.WeakMethod( self.__dragBegin ) )
 		self.__label.dragEndSignal().connectFront( Gaffer.WeakMethod( self.__dragEnd ) )
+		self.__label.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__labelDoubleClicked ) )
 
 		self._addPopupMenu( self.__label )
 
 		self.__updatePlugMetadataChangedConnections()
-		self.__updateDoubleClickConnection()
 
 	def label( self ) :
 
@@ -121,9 +121,7 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 				self.__editableLabel.setGraphComponent( None )
 
 		self.__updateIcon()
-
 		self.__updatePlugMetadataChangedConnections()
-		self.__updateDoubleClickConnection()
 
 	def setHighlighted( self, highlighted ) :
 
@@ -236,11 +234,15 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		GafferUI.Pointer.setCurrent( None )
 
-	def __updateDoubleClickConnection( self ) :
+	def __labelDoubleClicked( self, label, event ) :
 
-		self.__labelDoubleClickConnection = None
+		assert( label is self.__label )
+
 		if len( self.getPlugs() ) != 1 :
-			return
+			return False
+
+		if Gaffer.MetadataAlgo.readOnly( self.getPlug() ) :
+			return False
 
 		# First try the official metadata.
 		renameable = Gaffer.Metadata.value( self.getPlug(), "renameable" )
@@ -249,18 +251,7 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 			renameable = Gaffer.Metadata.value( self.getPlug(), "labelPlugValueWidget:renameable" )
 
 		if renameable != True :
-			return
-
-		self.__labelDoubleClickConnection = self.__label.buttonDoubleClickSignal().connect(
-			Gaffer.WeakMethod( self.__labelDoubleClicked ), scoped = True
-		)
-
-	def __labelDoubleClicked( self, label, event ) :
-
-		assert( label is self.__label )
-
-		if Gaffer.MetadataAlgo.readOnly( self.getPlug() ) :
-			return
+			return False
 
 		if self.__editableLabel is None :
 			self.__editableLabel = GafferUI.NameWidget( self.getPlug() )
@@ -274,6 +265,8 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__editableLabel.setVisible( True )
 		self.__editableLabel.setSelection( 0, len( self.__editableLabel.getText() ) )
 		self.__editableLabel.grabFocus()
+
+		return True
 
 	def __labelEditingFinished( self, nameWidget ) :
 
