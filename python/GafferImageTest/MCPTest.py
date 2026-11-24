@@ -35,7 +35,6 @@
 ##########################################################################
 
 import base64
-import unittest
 
 import Gaffer
 import GafferTest
@@ -138,6 +137,3 @@ class MCPTest( GafferImageTest.ImageTestCase ) :
 		imageReader["fileName"].setValue( file )
 
 		return imageReader
-
-if __name__ == "__main__":
-	unittest.main()

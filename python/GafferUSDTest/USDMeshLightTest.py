@@ -34,8 +34,6 @@
 #
 ##########################################################################
 
-import unittest
-
 import IECore
 
 import Gaffer
@@ -81,7 +79,3 @@ class USDMeshLightTest( GafferSceneTest.SceneTestCase ) :
 
 		# One for the node. None for plugs, since they are not dynamic.
 		self.assertEqual( serialisation.count( "addChild" ), 1 )
-
-
-if __name__ == "__main__" :
-	unittest.main()
