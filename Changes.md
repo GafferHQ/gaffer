@@ -53,7 +53,6 @@ API
 - GafferUI : Qt is now accessed directly via PySide6 rather than via Qt.py. Qt.py is still provided, but will be removed in a future release.
 - GraphComponent : Improved exception message when `removeChild()` is called with a GraphComponent that is not a child.
 - Metadata : `compatibility:childAlias` metadata can now refer to descendants, to account for children moving to a container within the original parent.
-- RampPlug : Added `addPoint( xDefaultValue, yDefaultValue )` overload and `XType` and `YType` type aliases.
 
 Breaking Changes
 ----------------
@@ -133,6 +132,7 @@ Improvements
 - MeshSplit : Added `ignoreMissing` plug.
 - Cycles : Added render-time translation of `UsdPreviewSurface` normal maps, these require a FaceVarying `uv` primitive variable to render correctly.
 - Parent, Duplicate, Instancer, Group, MergeScenes : Improved performance when handling large numbers of sets.
+- RampPlug : Added ability to load `.gfr` files saved from Gaffer 1.8.
 
 Fixes
 -----
@@ -144,11 +144,15 @@ Fixes
 - GoboVisualiser : Fixed bug where disabling the 3d viewer's "Use GL Lines" option could cause crashes or incorrect drawing when the `gl:light:drawingMode` attribute is set to wireframe.
 - Light : Fixed duplicate set names if `defaultLights` or `__lights` was entered via the `sets` plug.
 - PaintTool : Fixed overlapping rendering when using raytraced viewport.
+- DataStore : Fixed potential hang calling `setEntry()` or `removeEntry()` from Python.
+- Plug : Fixed potential hang calling `removeOutputs()` from Python.
+- Display : Fixed potential hang calling `setDriver()` from Python.
 
 API
 ---
 
 - SceneAlgo : Added `mergeSetNames()` function.
+- RampPlug : Added `addPoint( xDefaultValue, yDefaultValue )` overload and `XType` and `YType` type aliases.
 
 1.7.7.0 (relative to 1.7.6.0)
 =======

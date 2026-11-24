@@ -748,3 +748,29 @@ class RampPlugTest( GafferTest.TestCase ) :
 			script["Node"]["user"]["colorRamp"].getValue(),
 			IECore.RampfColor3f( ( ( 0.25, imath.Color3f( 0, 1, 0 ) ), ( 0.75, imath.Color3f( 1, 0, 0 ) ) ), IECore.RampInterpolation.Linear )
 		)
+
+	def testLoadFromVersion1_8( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["fileName"].setValue( pathlib.Path( __file__ ).parent / "scripts" / "rampPlug-1.8.0.0.gfr" )
+		script.load()
+
+		self.assertEqual(
+			script["Node"]["user"]["floatRamp"].defaultValue(),
+			IECore.Rampff( ( ( 0, 0 ), ( 1, 1 ), ), IECore.RampInterpolation.Linear )
+		)
+
+		self.assertEqual(
+			script["Node"]["user"]["floatRamp"].getValue(),
+			IECore.Rampff( ( ( 0, 1 ), ( 0.5, 0.5 ), ( 1, 0 ), ), IECore.RampInterpolation.Linear )
+		)
+
+		self.assertEqual(
+			script["Node"]["user"]["colorRamp"].defaultValue(),
+			IECore.RampfColor3f( ( ( 0, imath.Color3f( 1, 0, 0 ) ), ( 0.5, imath.Color3f( 1 ) ), ( 1, imath.Color3f( 0, 1, 0 ) ) ), IECore.RampInterpolation.CatmullRom )
+		)
+
+		self.assertEqual(
+			script["Node"]["user"]["colorRamp"].getValue(),
+			IECore.RampfColor3f( ( ( 0.25, imath.Color3f( 0, 1, 0 ) ), ( 0.75, imath.Color3f( 1, 0, 0 ) ) ), IECore.RampInterpolation.Linear )
+		)
