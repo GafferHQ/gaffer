@@ -113,7 +113,7 @@ class RampTest( GafferImageTest.ImageTestCase ) :
 		)
 
 		self.assertEqual(
-			c.affects( c["ramp"]["p1"]["x"] ),
+			c.affects( c["ramp"]["points"][0]["x"] ),
 			[ c["out"]["channelData"] ],
 		)
 
@@ -139,9 +139,7 @@ class RampTest( GafferImageTest.ImageTestCase ) :
 
 		ramp["startPosition"].setValue( imath.V2f( 0, 64 ) )
 		ramp["endPosition"].setValue( imath.V2f( 128, 64 ) )
-		ramp["ramp"].addChild( Gaffer.ValuePlug( "p2" ) )
-		ramp["ramp"]["p2"].addChild( Gaffer.FloatPlug( "x", defaultValue = 0.5308765172958374 ) )
-		ramp["ramp"]["p2"].addChild( Gaffer.Color4fPlug( "y", defaultValue = imath.Color4f( 0.530900002, 0, 0, 0.50999999 ) ) )
+		ramp["ramp"].addPoint( 0.5308765172958374, imath.Color4f( 0.530900002, 0, 0, 0.50999999 ) )
 
 		reader = GafferImage.ImageReader()
 		reader["fileName"].setValue( self.imagesPath() / "GafferRamp.exr" )

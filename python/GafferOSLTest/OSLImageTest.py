@@ -932,8 +932,8 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 		floatRamp.loadShader( "Pattern/FloatRamp" )
 		floatRamp["parameters"]["x"].setInput( g["out"]["globalV"] )
 		floatRamp['parameters']['ramp'].setValue( IECore.Rampff( ( ( 1/8, 0 ), ( 3/8, 0 ), ( 5/8, 1 ), ( 7/8, 1 )), IECore.RampInterpolation.Constant ) )
-		floatRamp["parameters"]["ramp"]["p1"]["y"].setInput( invertU["out"]["out"] )
-		floatRamp["parameters"]["ramp"]["p2"]["y"].setInput( g["out"]["globalU"] )
+		floatRamp["parameters"]["ramp"]["points"][1]["y"].setInput( invertU["out"]["out"] )
+		floatRamp["parameters"]["ramp"]["points"][2]["y"].setInput( g["out"]["globalU"] )
 
 		oslImage = GafferOSL.OSLImage()
 		oslImage["channels"].addChild( Gaffer.NameValuePlug( "", Gaffer.Color3fPlug( "value" ), True, "channel" ) )
@@ -970,10 +970,10 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 
 		# Make connections to outermost control points ( this will require duplicating connections to the
 		# duplicated end points )
-		floatRamp["parameters"]["ramp"]["p0"]["y"].setInput( invertU["out"]["out"] )
-		floatRamp["parameters"]["ramp"]["p1"]["y"].setInput( None )
-		floatRamp["parameters"]["ramp"]["p2"]["y"].setInput( None )
-		floatRamp["parameters"]["ramp"]["p3"]["y"].setInput( g["out"]["globalU"] )
+		floatRamp["parameters"]["ramp"]["points"][0]["y"].setInput( invertU["out"]["out"] )
+		floatRamp["parameters"]["ramp"]["points"][1]["y"].setInput( None )
+		floatRamp["parameters"]["ramp"]["points"][2]["y"].setInput( None )
+		floatRamp["parameters"]["ramp"]["points"][3]["y"].setInput( g["out"]["globalU"] )
 
 		floatRamp["parameters"]["ramp"]["interpolation"].setValue( IECore.RampInterpolation.Constant )
 
@@ -1007,8 +1007,8 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 		floatToColor["parameters"]["g"].setValue( 0.55 )
 		floatToColor["parameters"]["b"].setInput( g["out"]["globalU"] )
 
-		colorRamp["parameters"]["ramp"]["p1"]["y"].setInput( floatToColor["out"]["c"] )
-		colorRamp["parameters"]["ramp"]["p3"]["y"]["g"].setInput( g["out"]["globalU"] )
+		colorRamp["parameters"]["ramp"]["points"][1]["y"].setInput( floatToColor["out"]["c"] )
+		colorRamp["parameters"]["ramp"]["points"][3]["y"]["g"].setInput( g["out"]["globalU"] )
 
 		oslImage["channels"]["channel"]["value"].setInput( colorRamp["out"]["c"] )
 
@@ -1017,10 +1017,10 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( testEval("B"), [400, 400, 345, 505, 253, 697, 308, 742, 518, 632, 642, 608, 684, 666, 700, 700] )
 
 		# Modify x value ordering to make sure that control point sorting is working
-		colorRamp["parameters"]["ramp"]["p0"]["x"].setValue( 7/8 )
-		colorRamp["parameters"]["ramp"]["p1"]["x"].setValue( 5/8 )
-		colorRamp["parameters"]["ramp"]["p2"]["x"].setValue( 3/8 )
-		colorRamp["parameters"]["ramp"]["p3"]["x"].setValue( 1/8 )
+		colorRamp["parameters"]["ramp"]["points"][0]["x"].setValue( 7/8 )
+		colorRamp["parameters"]["ramp"]["points"][1]["x"].setValue( 5/8 )
+		colorRamp["parameters"]["ramp"]["points"][2]["x"].setValue( 3/8 )
+		colorRamp["parameters"]["ramp"]["points"][3]["x"].setValue( 1/8 )
 
 		self.assertEqual( testEval("R"), [ 1000, 1000, 929, 946, 795, 830, 750, 637, 797, 363, 614, 170, 214, 54, 0, 0 ])
 		self.assertEqual( testEval("G"), [ 250, 750, 239, 597, 230, 320, 300, 265, 457, 446, 652, 652, 882, 882, 1000, 1000 ] )

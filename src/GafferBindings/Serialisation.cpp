@@ -76,6 +76,32 @@ using namespace boost::python;
 namespace
 {
 
+const InternedString g_points( "points" );
+
+bool isRampPointsPlug( const GraphComponent *parent )
+{
+	if( parent->getName() != g_points )
+	{
+		return false;
+	}
+
+	const GraphComponent *potentialRampPlug = parent->parent();
+	if( !potentialRampPlug )
+	{
+		return false;
+	}
+
+	switch( (Gaffer::TypeId)potentialRampPlug->typeId() )
+	{
+		case RampffPlugTypeId :
+		case RampfColor3fPlugTypeId :
+		case RampfColor4fPlugTypeId :
+			return true;
+		default :
+			return false;
+	}
+}
+
 // Where a parent has dynamically changing numbers of children,
 // and no meaning is attached to their names, we want to
 // access the children by index rather than name. This is faster
@@ -87,7 +113,8 @@ bool keyedByIndex( const GraphComponent *parent )
 {
 	return
 		runTimeCast<const Spreadsheet::RowsPlug>( parent ) ||
-		runTimeCast<const ArrayPlug>( parent )
+		runTimeCast<const ArrayPlug>( parent ) ||
+		isRampPointsPlug( parent )
 	;
 }
 

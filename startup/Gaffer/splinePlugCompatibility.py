@@ -43,17 +43,6 @@ Gaffer.SplineDefinitionff = IECore.Rampff
 Gaffer.SplineDefinitionfColor3f = IECore.RampfColor3f
 Gaffer.SplineDefinitionfColor4f = IECore.RampfColor4f
 
-
-# There are two main places that may need this compatibility config for Ramp*Plug.
-# The first is the same as most of our compatibility configs: old Gaffer scripts
-# that were saved out with Spline*Plug.
-# The second is more obscure: python/Gaffer/ExtensionAlgo.py uses a __nodeTemplate
-# that adds a constructor to remove the dynamic flag from children of a Ramp*Plug.
-# Any custom nodes that were exported using ExtensionAlgo from Gaffer 1.6 or earlier
-# will have the "Spline*Plug" names baked, and will depend on this config. The long
-# term plan is to fix it so those Dynamic flags would never be set ... we probably
-# shouldn't remove this compatibility until after we sort that out.
-
 Gaffer.SplineffPlug = Gaffer.RampffPlug
 Gaffer.SplinefColor3fPlug = Gaffer.RampfColor3fPlug
 Gaffer.SplinefColor4fPlug = Gaffer.RampfColor4fPlug

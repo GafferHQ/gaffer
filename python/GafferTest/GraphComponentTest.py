@@ -89,24 +89,24 @@ class GraphComponentTest( GafferTest.TestCase ) :
 
 	def testParenting( self ) :
 
-		parent1 = Gaffer.GraphComponent()
+		parent1 = Gaffer.GraphComponent( "parent1" )
 		self.assertIsNone( parent1.parent() )
 		self.assertEqual( len( parent1.children() ), 0 )
-		child1 = Gaffer.GraphComponent()
+		child1 = Gaffer.GraphComponent( "child1" )
 		self.assertIsNone( child1.parent() )
 		self.assertEqual( len( child1.children() ), 0 )
 
 		parent1.addChild( child1 )
 		self.assertIsNone( parent1.parent() )
-		self.assertTrue( parent1.getChild( "GraphComponent" ).isSame( child1 ) )
-		self.assertTrue( parent1["GraphComponent"].isSame( child1 ) )
+		self.assertTrue( parent1.getChild( "child1" ).isSame( child1 ) )
+		self.assertTrue( parent1["child1"].isSame( child1 ) )
 		self.assertTrue( child1.parent().isSame( parent1 ) )
 
 		parent1.removeChild( child1 )
 		self.assertEqual( parent1.children(), () )
 		self.assertEqual( child1.parent(), None )
 
-		self.assertRaises( RuntimeError, parent1.removeChild, child1 )
+		self.assertRaisesRegex( RuntimeError, '"child1" is not a child of "parent1"', parent1.removeChild, child1 )
 
 	def testParentingSignals( self ) :
 
@@ -1256,3 +1256,18 @@ class GraphComponentTest( GafferTest.TestCase ) :
 		self.assertNotIn( "gc1", g["c2"] )
 		self.assertIsNone( g["c2"].getChild( "gc1alias" ) )
 		self.assertIsNone( g["c2"].getChild( "gc1" ) )
+
+	def testChildAliasToDescendant( self ) :
+
+		node = Gaffer.Node()
+		node["namespace"] = Gaffer.Plug()
+		node["namespace"]["moved"] = Gaffer.IntPlug()
+
+		Gaffer.Metadata.registerValue( node, "compatibility:childAlias:original", "namespace.moved" )
+
+		self.assertTrue( node["original"].isSame( node["namespace"]["moved"] ) )
+		self.assertTrue( node.getChild( "original" ).isSame( node["namespace"]["moved"] ) )
+		self.assertTrue( "original" in node )
+
+		del node["original"]
+		self.assertNotIn( "moved", node["namespace"] )

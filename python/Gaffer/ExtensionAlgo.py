@@ -175,9 +175,8 @@ class {name}( Gaffer.DependencyNode ) :
 
 		for plug in Gaffer.Plug.Range( self ) :
 			plug.setFlags( Gaffer.Plug.Flags.Dynamic, False )
-			if not isinstance( plug, ( Gaffer.RampffPlug, Gaffer.RampfColor3fPlug, Gaffer.RampfColor4fPlug ) ) :
-				for plug in Gaffer.Plug.RecursiveRange( plug ) :
-					plug.setFlags( Gaffer.Plug.Flags.Dynamic, False )
+			for plug in Gaffer.Plug.RecursiveRange( plug ) :
+				plug.setFlags( Gaffer.Plug.Flags.Dynamic, False )
 
 IECore.registerRunTimeTyped( {name}, "{moduleName}::{name}" )
 """

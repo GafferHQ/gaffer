@@ -160,7 +160,7 @@ GraphComponentPtr getChild( GraphComponent &g, const IECore::InternedString &n )
 	}
 	else if( const auto childAlias = Gaffer::Metadata::value<IECore::StringData>( &g, fmt::format( "compatibility:childAlias:{}", n.string() ) ) )
 	{
-		return g.getChild( childAlias->readable() );
+		return g.descendant( childAlias->readable() );
 	}
 
 	return nullptr;
@@ -231,7 +231,7 @@ void delItem( GraphComponent &g, const IECore::InternedString &n )
 		IECorePython::ScopedGILRelease gilRelease;
 		if( GraphComponentPtr c = getChild( g, n ) )
 		{
-			g.removeChild( c );
+			c->parent()->removeChild( c );
 			return;
 		}
 	}
