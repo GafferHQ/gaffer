@@ -104,6 +104,7 @@ Build
 - LibTIFF : Updated to version 4.7.2.
 - LLVM : Updated to version 20.1.8.
 - MarkupSafe : Updated to version 3.0.4.
+- MaterialX : Updated to version 1.39.5.
 - Minizip : Updated to version 4.2.2.
 - OpenColorIO : Updated to version 2.5.2.
 - OpenEXR : Updated to version 3.4.16.
@@ -119,6 +120,7 @@ Build
   - Updated to version 6.8.5.
   - Raised minimum required version to Qt 6.
 - TBB : Updated to version 2022.3.0.
+- USD : Updated to version 26.11.1.
 - YAML-CPP : Updated to version 0.9.0.
 - ZLib : Updated to version 1.3.1.
 - Windows : Updated Windows SDK to version 10.0.22621.0.
