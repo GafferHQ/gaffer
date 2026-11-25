@@ -765,6 +765,50 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 
 			self.assertNormalAt( sg, gadgetLineCenter, sphereIntersection )
 
+	def testPointInstancerSelection( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["plane"] = GafferScene.Plane()
+
+		script["sphere"] = GafferScene.Sphere()
+		script["sphere"]["radius"].setValue( 0.2 )
+
+		script["planeFilter"] = GafferScene.PathFilter()
+		script["planeFilter"]["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		script["instancer"] = GafferScene.PointInstancer()
+		script["instancer"]["in"].setInput( script["plane"]["out"] )
+		script["instancer"]["prototypes"].setInput( script["sphere"]["out"] )
+		script["instancer"]["filter"].setInput( script["planeFilter"]["out"] )
+		script["instancer"]["prototypesList"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		sg = GafferSceneUI.SceneGadget()
+		sg.setRenderer( self.renderer )
+		sg.setMinimumExpansionDepth( 1 )
+		sg.setScene( script["instancer"]["out"] )
+
+		with GafferUI.Window() as w :
+			gw = GafferUI.GadgetWidget( sg )
+
+		w.setVisible( True )
+		self.waitForIdle( 1000 )
+
+		sg.waitForCompletion()
+		gw.getViewportGadget().frame( imath.Box3f( imath.V3f( -1 ), imath.V3f( 1 ) ) )
+		self.waitForRender( sg )
+
+		# The plane itself isn't rendered, so there's nothing in the middle.
+		self.assertObjectAt( sg, imath.V2f( 0.5 ), None )
+
+		# But we can select the instancer by clicking on any instance.
+		viewportGadget = gw.getViewportGadget()
+		for corner in [ imath.V3f( -0.5, -0.5, 0 ), imath.V3f( 0.5, -0.5, 0 ), imath.V3f( 0.5, 0.5, 0 ), imath.V3f( -0.5, 0.5, 0 ) ] :
+			rasterPosition = viewportGadget.gadgetToRasterSpace( corner, sg )
+			self.assertObjectAt( sg, rasterPosition / imath.V2f( viewportGadget.getViewport() ), IECore.InternedStringVectorData( [ "plane" ] ) )
+
+		self.assertObjectsAt( sg, imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ), [ "/plane" ] )
+
 	def setUp( self ) :
 
 		GafferUITest.TestCase.setUp( self )
