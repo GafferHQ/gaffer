@@ -259,6 +259,103 @@ class RendererTest( GafferTest.TestCase ) :
 
 		renderer.render()
 
+	def testPointInstancer( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "OpenGL" )
+		renderer.output( "test", IECoreScene.Output( str( self.temporaryDirectory() / "testPointInstancer.exr" ), "exr", "rgba", {} ) )
+
+		fragmentSource = """
+		uniform vec3 color;
+
+		void main()
+		{
+			gl_FragColor = vec4( color, 1 );
+		}
+		"""
+
+		def prototype( primitive, color ) :
+
+			return renderer.Prototype(
+				[ primitive ], [],
+				renderer.attributes(
+					IECore.CompoundObject( {
+						"gl:surface" : IECoreScene.ShaderNetwork(
+							{
+								"output" : IECoreScene.Shader( "color", "surface", { "gl:fragmentSource" : fragmentSource, "color" : color } )
+							},
+							output = "output"
+						)
+					} )
+				)
+			)
+
+		plane = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -0.5 ), imath.V2f( 0.5 ) ) )
+		prototypes = [
+			prototype( plane, imath.Color3f( 1, 0, 0 ) ),
+			prototype( plane, imath.Color3f( 0, 1, 0 ) ),
+			# Not a mesh, to check other primitive types can be instanced.
+			prototype( IECoreScene.SpherePrimitive( 0.5 ), imath.Color3f( 0, 0, 1 ) ),
+		]
+
+		pointInstancer = IECoreScene.PointInstancer( 4 )
+		pointInstancer.setPosition(
+			IECore.V3fVectorData( [ imath.V3f( -1, 0, 0 ), imath.V3f( 0, 0, 0 ), imath.V3f( 1, 0, 0 ), imath.V3f( 0, 0.5, 0 ) ] )
+		)
+		pointInstancer.setPrototypeIndex( IECore.IntVectorData( [ 1, 0, 2, 1 ] ) )
+		pointInstancer.setID( IECore.Int64VectorData( [ 0, 1, 2, 3 ] ) )
+		pointInstancer.setInvisibleIDs( IECore.Int64VectorData( [ 3 ] ) )
+		# Scale the central instance down, so we can check transforms are applied.
+		pointInstancer["scale"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.V3fVectorData( [ imath.V3f( 1 ), imath.V3f( 0.5 ), imath.V3f( 1 ), imath.V3f( 1 ) ] )
+		)
+
+		object = renderer.pointInstancer(
+			"/instancer", [ pointInstancer ], [], prototypes,
+			renderer.attributes( IECore.CompoundObject() )
+		)
+		object.transform( imath.M44f().translate( imath.V3f( 0, 0, -5 ) ) )
+
+		renderer.render()
+
+		del object
+
+		image = OpenImageIO.ImageBuf( str( self.temporaryDirectory() / "testPointInstancer.exr" ) )
+		self.assertEqual( self.__colorAtUV( image, imath.V2f( 0, 0.5 ) ), imath.Color4f( 0, 1, 0, 1 ) )
+		self.assertEqual( self.__colorAtUV( image, imath.V2f( 0.5, 0.5 ) ), imath.Color4f( 1, 0, 0, 1 ) )
+		self.assertEqual( self.__colorAtUV( image, imath.V2f( 1, 0.5 ) ), imath.Color4f( 0, 0, 1, 1 ) )
+		# Outside the scaled-down central instance.
+		self.assertEqual( self.__colorAtUV( image, imath.V2f( 0.5, 0.3 ) ), imath.Color4f( 0 ) )
+		self.assertEqual( self.__colorAtUV( image, imath.V2f( 0.5, 0.7 ) ), imath.Color4f( 0 ) )
+		# Invisible instance.
+		self.assertEqual( self.__colorAtUV( image, imath.V2f( 0.5, 0.25 ) ), imath.Color4f( 0 ) )
+
+	def testPointInstancerBound( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"OpenGL",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
+		)
+
+		cube = IECoreScene.MeshPrimitive.createBox( imath.Box3f( imath.V3f( -1 ), imath.V3f( 1 ) ) )
+		pointInstancer = IECoreScene.PointInstancer( 2 )
+		pointInstancer.setPosition( IECore.V3fVectorData( [ imath.V3f( -10, 0, 0 ), imath.V3f( 10, 0, 0 ) ] ) )
+		pointInstancer.setPrototypeIndex( IECore.IntVectorData( [ 0, 0 ] ) )
+
+		object = renderer.pointInstancer(
+			"/instancer", [ pointInstancer ], [],
+			[ renderer.Prototype( [ cube ], [], renderer.attributes( IECore.CompoundObject() ) ) ],
+			renderer.attributes( IECore.CompoundObject() )
+		)
+		object.transform( imath.M44f().translate( imath.V3f( 0, 1, 0 ) ) )
+
+		self.assertEqual(
+			renderer.command( "gl:queryBound", {} ),
+			imath.Box3f( imath.V3f( -11, 0, -1 ), imath.V3f( 11, 2, 1 ) )
+		)
+
+		del object
+
 	def __colorAtUV( self, image, uv ) :
 
 		pixel = image.getpixel( int( uv.x * (image.spec().width - 1) ), int( uv.y * (image.spec().height - 1) ) )

@@ -9,6 +9,7 @@ Improvements
 - Parent, Duplicate, Instancer, Group, MergeScenes : Improved performance when handling large numbers of sets.
 - RampPlug : Added ability to load `.gfr` files saved from Gaffer 1.8.
 - Arnold : Enabled automatic instancing when `ai:polymesh:subdiv_iterations` is zero, even when the other subdivision attributes imply view-dependence.
+- Viewer : PointInstancers are now drawn expanded when using the OpenGL renderer.
 
 Fixes
 -----
