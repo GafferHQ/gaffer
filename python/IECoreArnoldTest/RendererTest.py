@@ -1395,6 +1395,13 @@ class RendererTest( GafferTest.TestCase ) :
 				"ai:polymesh:subdiv_adaptive_space" : IECore.StringData( "object" ),
 			} )
 		)
+		zeroIterationsAttributes = r.attributes(
+			IECore.CompoundObject( {
+				"ai:polymesh:subdiv_iterations" : IECore.IntData( 0 ),
+				"ai:polymesh:subdiv_adaptive_error" : IECore.FloatData( 0.1 ),
+				"ai:polymesh:subdiv_adaptive_space" : IECore.StringData( "raster" ),
+			} )
+		)
 		subdivideLinear = r.attributes(
 			IECore.CompoundObject( {
 				"ai:polymesh:subdivide_polygons" : IECore.BoolData( True )
@@ -1446,6 +1453,13 @@ class RendererTest( GafferTest.TestCase ) :
 		r.object( "subdivAdaptiveObjectSpaceAttributes1", subdivPlane.copy(), adaptiveObjectSpaceAttributes )
 		r.object( "subdivAdaptiveObjectSpaceAttributes2", subdivPlane.copy(), adaptiveObjectSpaceAttributes )
 
+		# We should be able to instance subdivs when iterations is zero, even if the other settings imply
+		# view dependence. This is important, because setting iterations to zero is a common optimisation
+		# that users reach for.
+
+		r.object( "zeroIterationsAttributes1", subdivPlane.copy(), zeroIterationsAttributes )
+		r.object( "zeroIterationsAttributes2", subdivPlane.copy(), zeroIterationsAttributes )
+
 		# With subdivide_polygons on, poly meshes need the same behaviour as subdivs, breaking instancing
 		# when adaptive is on
 		r.object( "polySubdivideLinearAttributes1", polyPlane.copy(), subdivideLinear )
@@ -1470,8 +1484,8 @@ class RendererTest( GafferTest.TestCase ) :
 			numInstances = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "ginstance" ] )
 			numPolyMeshes = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "polymesh" ] )
 
-			self.assertEqual( numPolyMeshes, 11 )
-			self.assertEqual( numInstances, 13 )
+			self.assertEqual( numPolyMeshes, 12 )
+			self.assertEqual( numInstances, 15 )
 
 			self.__assertInstanced(
 				universe,
@@ -1499,6 +1513,12 @@ class RendererTest( GafferTest.TestCase ) :
 				universe,
 				"subdivAdaptiveAttributes1",
 				"subdivAdaptiveAttributes2"
+			)
+
+			self.__assertInstanced(
+				universe,
+				"zeroIterationsAttributes1",
+				"zeroIterationsAttributes2",
 			)
 
 			self.__assertInstanced(

@@ -1491,7 +1491,11 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				{
 					// We shouldn't instance poly meshes with view dependent subdivision, because the subdivision
 					// for the master mesh might be totally inappropriate for the position of the ginstances in frame.
-					return m_polyMesh.subdivAdaptiveError == 0.0f || m_polyMesh.subdivAdaptiveSpace == g_objectArnoldString;
+					return
+						m_polyMesh.subdivAdaptiveError == 0.0f ||
+						m_polyMesh.subdivAdaptiveSpace == g_objectArnoldString ||
+						m_polyMesh.subdivIterations == 0
+					;
 				}
 			}
 			else if( IECore::runTimeCast<const IECoreScene::CurvesPrimitive>( object ) )
