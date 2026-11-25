@@ -47,14 +47,10 @@
 #include "GafferUI/ImageGadget.h"
 #include "GafferUI/StandardStyle.h"
 
-#include "Gaffer/Animation.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/MetadataAlgo.h"
-#include "Gaffer/NameValuePlug.h"
-#include "Gaffer/OptionalValuePlug.h"
 #include "Gaffer/PathFilter.h"
 #include "Gaffer/ScriptNode.h"
-#include "Gaffer/TweakPlug.h"
 #include "Gaffer/UndoScope.h"
 
 #include "IECoreGL/Camera.h"
@@ -143,45 +139,6 @@ const ModifiableEvent::Modifiers g_quadLightConstrainAspectRatioKey = Modifiable
 
 const InternedString g_coneAngleParameter = "coneAngleParameter";
 const InternedString g_penumbraAngleParameter = "penumbraAngleParameter";
-
-// Return the plug that holds the value we need to edit, and make sure it's enabled.
-
-/// \todo This currently does nothing to enable a row if is disabled. Is that worth doing?
-
-Plug *activeValuePlug( Plug *sourcePlug )
-{
-	if( auto nameValuePlug = runTimeCast<NameValuePlug>( sourcePlug ) )
-	{
-		nameValuePlug->enabledPlug()->setValue( true );
-		return nameValuePlug->valuePlug();
-	}
-	if( auto tweakPlug = runTimeCast<TweakPlug>( sourcePlug ) )
-	{
-		tweakPlug->enabledPlug()->setValue( true );
-		return tweakPlug->valuePlug();
-	}
-	if( auto optionalValuePlug = runTimeCast<OptionalValuePlug>( sourcePlug ) )
-	{
-		optionalValuePlug->enabledPlug()->setValue( true );
-		return optionalValuePlug->valuePlug();
-	}
-	return sourcePlug;
-}
-
-/// \todo We should be using `Inspector::edit()` to edit values, but
-/// that doesn't currently support animation.
-void setValueOrAddKey( FloatPlug *plug, float time, float value )
-{
-	if( Animation::isAnimated( plug ) )
-	{
-		Animation::CurvePlug *curve = Animation::acquire( plug );
-		curve->insertKey( time, value );
-	}
-	else
-	{
-		plug->setValue( value );
-	}
-}
 
 const char *constantFragSource()
 {
@@ -1016,17 +973,10 @@ class LightToolHandle : public Handle
 					continue;
 				}
 
-				ValuePlugPtr parameterPlug = it->second->acquireEdit();
-				auto floatPlug = runTimeCast<FloatPlug>( activeValuePlug( parameterPlug.get() ) );
-				if( !floatPlug )
-				{
-					throw Exception( fmt::format( "\"{}\" parameter must use `FloatPlug`", metaParameter.string() ) );
-				}
-
 				const float originalValue = it->second->typedValue<float>( 0.f );
 				const float nonZeroValue = originalValue == 0 ? 1.f : originalValue;
-				setValueOrAddKey( floatPlug, m_view->context()->getTime(), nonZeroValue * mult );
-
+				ConstFloatDataPtr newValue = new FloatData( nonZeroValue * mult );
+				it->second->edit( newValue.get() );
 			}
 		}
 
@@ -1042,19 +992,9 @@ class LightToolHandle : public Handle
 					continue;
 				}
 
-				ValuePlugPtr parameterPlug = it->second->acquireEdit();
-				auto floatPlug = runTimeCast<FloatPlug>( activeValuePlug( parameterPlug.get() ) );
-				if( !floatPlug )
-				{
-					throw Exception( fmt::format( "\"{}\" parameter must use `FloatPlug`", metaParameter.string() ) );
-				}
-
 				const float originalValue = it->second->typedValue<float>( 0.f );
-				setValueOrAddKey(
-					floatPlug,
-					m_view->context()->getTime(),
-					std::clamp( originalValue + incr, minValue, maxValue )
-				);
+				ConstFloatDataPtr newValue = new FloatData( std::clamp( originalValue + incr, minValue, maxValue ) );
+				it->second->edit( newValue.get() );
 			}
 		}
 
@@ -1665,22 +1605,8 @@ class SpotLightHandle : public LightToolHandle
 
 				auto it = m_handleType == HandleType::Cone ? coneIt : penumbraIt;
 
-				ValuePlugPtr plug = it->second->acquireEdit();
-				auto floatPlug = runTimeCast<FloatPlug>( activeValuePlug( plug.get() ) );
-				if( !floatPlug )
-				{
-					throw Exception(
-						fmt::format(
-							"Invalid type for \"{}\"",
-							m_handleType == HandleType::Cone ? g_coneAngleParameter.string() : g_penumbraAngleParameter.string()
-						)
-					);
-				}
-
 				// Clamp each individual cone angle as well
-				setValueOrAddKey(
-					floatPlug,
-					view()->context()->getTime(),
+				ConstFloatDataPtr newValue = new FloatData(
 					clampPlugAngle(
 						it->second->typedValue<float>( 0.f ) + angleDelta,
 						coneIt->second->typedValue<float>( 0.f ),
@@ -1688,6 +1614,7 @@ class SpotLightHandle : public LightToolHandle
 					)
 				);
 
+				it->second->edit( newValue.get() );
 			}
 
 			return true;

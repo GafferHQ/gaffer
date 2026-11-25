@@ -46,7 +46,9 @@ Fixes
   - Fixed refusal to edit optional parameters on lights, such as the renderer-specific parameters on USD lights.
   - Fixed bug that misattributed shader parameter edits to ShaderTweaks nodes when the `shader` plug didn't match the inspected attribute.
   - Fixed pasting of values onto animated cells. A keyframe is now created as needed.
-- LightTool : Fixed messaging for parameters which were not editable, for example because they originated in a SceneReader.
+- LightTool :
+  - Fixed messaging for parameters which were not editable, for example because they originated in a SceneReader.
+  - Fixed editing of animated parameters viewed through a TimeWarp. Keyframes are now made on the correct (warped) frame.
 
 API
 ---
