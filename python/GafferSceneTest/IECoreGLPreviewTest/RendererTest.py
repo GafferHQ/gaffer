@@ -53,7 +53,22 @@ class RendererTest( GafferTest.TestCase ) :
 
 		GafferTest.TestCase.setUp( self )
 
-		IECoreGL.init( False )
+	def tearDown( self ) :
+
+		# IECoreGL expects all GL contexts to share resources, so that
+		# `CachedConverter::defaultCachedConverter()` can be used everywhere.
+		# That idea falls down when using the OpenGL renderer with GafferUI,
+		# because the former calls `IECoreGL.init( False )` to create a new
+		# context and the latter calls `IECoreGL.init( True )` to share with Qt.
+		# That can lead to creating resources in one context and attempting to
+		# destroy them in another.
+		#
+		# For now, we work around this problem by clearing all shared resources
+		# created by the renderer here, while we're still in the right context.
+		IECoreGL.ShaderLoader.defaultShaderLoader().clear()
+		IECoreGL.CachedConverter.defaultCachedConverter().clearUnused()
+
+		GafferTest.TestCase.tearDown( self )
 
 	def testFactory( self ) :
 
