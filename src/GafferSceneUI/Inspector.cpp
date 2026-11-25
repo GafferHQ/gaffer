@@ -173,7 +173,7 @@ std::string nonEditableReason( const ValuePlug *plug )
 	return "";
 }
 
-void setPlugValue( ValuePlug *plug, const IECore::Object *value, bool dryRun )
+void setPlugValue( ValuePlug *plug, const IECore::Object *value, float time, bool dryRun )
 {
 	ValuePlug *valuePlug;
 	BoolPlug *enabledPlug = nullptr;
@@ -235,7 +235,7 @@ void setPlugValue( ValuePlug *plug, const IECore::Object *value, bool dryRun )
 	{
 		modePlug->setValue( TweakPlug::Mode::Create );
 	}
-	PlugAlgo::setValueFromData( valuePlug, data );
+	PlugAlgo::setValueOrInsertKeyFromData( valuePlug, time, data );
 }
 
 } // namespace
@@ -618,7 +618,7 @@ void Inspector::edit( const IECore::Object *value, Gaffer::EditScope *editScope,
 		if( plug )
 		{
 			plug = static_cast<ValuePlug *>( spreadsheetAwareSource( plug.get() ) );
-			setPlugValue( plug.get(), value, /* dryRun = */ true );
+			setPlugValue( plug.get(), value, history->context->getTime(), /* dryRun = */ true );
 		}
 		else
 		{
@@ -652,7 +652,7 @@ void Inspector::edit( const IECore::Object *value, Gaffer::EditScope *editScope,
 		acquireEdit( history, /* createIfNecessary = */ true, /* dryRun = */ false )
 	;
 	plug = static_cast<ValuePlug *>( spreadsheetAwareSource( plug.get() ) );
-	setPlugValue( plug.get(), value, /* dryRun = */ false );
+	setPlugValue( plug.get(), value, history->context->getTime(), /* dryRun = */ false );
 }
 
 void Inspector::disableEdit( const GafferScene::SceneAlgo::History *history, bool dryRun ) const

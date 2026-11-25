@@ -952,7 +952,6 @@ def __matrixValue( objectMatrix, row, column ) :
 
 	return value
 
-## \todo Support pasting `atTime` once `Inspection::edit()` has support for it.
 def __pasteFunctionsOrNonPasteableReason( pathListing, objectMatrix ) :
 
 	if objectMatrix is None :
