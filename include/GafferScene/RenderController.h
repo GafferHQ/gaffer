@@ -126,6 +126,7 @@ class GAFFERSCENE_API RenderController : public Gaffer::Signals::Trackable
 			IncludedPurposesGlobalComponent = 128,
 			IDGlobalComponent = 256,
 			CapsuleAffectingGlobalComponents = TransformBlurGlobalComponent | DeformationBlurGlobalComponent | IncludedPurposesGlobalComponent,
+			PointInstancerAffectingGlobalComponents = DeformationBlurGlobalComponent | IncludedPurposesGlobalComponent,
 			AllGlobalComponents = GlobalsGlobalComponent | SetsGlobalComponent | RenderSetsGlobalComponent | CameraOptionsGlobalComponent | TransformBlurGlobalComponent | DeformationBlurGlobalComponent | IncludedPurposesGlobalComponent | IDGlobalComponent
 		};
 

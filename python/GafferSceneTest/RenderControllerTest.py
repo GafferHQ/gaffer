@@ -2295,3 +2295,95 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		controller.update()
 
 		self.assertTrue( renderer.capturedObject( "/instancer" ).isSame( capture ) )
+
+	@GafferTest.TestRunner.CategorisedTestMethod( { "pointInstancer" } )
+	def testPointInstancerPurposeEdit( self ) :
+
+		pointInstancer = self.ExamplePointInstancer()
+
+		cubeFilter = GafferScene.PathFilter()
+		cubeFilter["paths"].setValue( IECore.StringVectorData( [ "/instancer/prototypes/cube" ] ) )
+
+		cubeAttributes = GafferScene.CustomAttributes()
+		cubeAttributes["in"].setInput( pointInstancer["out"] )
+		cubeAttributes["filter"].setInput( cubeFilter["out"] )
+		cubeAttributes["attributes"].addChild( Gaffer.NameValuePlug( "usd:purpose", "proxy" ) )
+
+		standardOptions = GafferScene.StandardOptions()
+		standardOptions["in"].setInput( cubeAttributes["out"] )
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
+		controller = GafferScene.RenderController( standardOptions["out"], Gaffer.Context(), renderer )
+		controller.setMinimumExpansionDepth( 3 )
+
+		# The cube prototype's `proxy` purpose isn't included by default,
+		# so it should be omitted.
+
+		self.assertTrue( controller.updateRequired() )
+		controller.update()
+		self.assertEqual( renderer.capturedObject( "/instancer" ).capturedSamples()[0].numPoints, 1 )
+
+		# Including `proxy` should bring it back.
+
+		standardOptions["options"]["render:includedPurposes"]["enabled"].setValue( True )
+		standardOptions["options"]["render:includedPurposes"]["value"].setValue( IECore.StringVectorData( [ "default", "proxy" ] ) )
+		self.assertTrue( controller.updateRequired() )
+		controller.update()
+		self.assertEqual( renderer.capturedObject( "/instancer" ).capturedSamples()[0].numPoints, 2 )
+
+		# Excluding it again should remove it.
+
+		standardOptions["options"]["render:includedPurposes"]["value"].setValue( IECore.StringVectorData( [ "default", "render" ] ) )
+		self.assertTrue( controller.updateRequired() )
+		controller.update()
+		self.assertEqual( renderer.capturedObject( "/instancer" ).capturedSamples()[0].numPoints, 1 )
+
+		# Setting only the `guide` purpose should remove the instancer entirely.
+
+		standardOptions["options"]["render:includedPurposes"]["value"].setValue( IECore.StringVectorData( [ "guide" ] ) )
+		self.assertTrue( controller.updateRequired() )
+		controller.update()
+		self.assertIsNone( renderer.capturedObject( "/instancer" ) )
+
+	@GafferTest.TestRunner.CategorisedTestMethod( { "pointInstancer" } )
+	def testPointInstancerDeformationBlurEdit( self ) :
+
+		frame = GafferTest.FrameNode()
+
+		pointInstancer = self.ExamplePointInstancer()
+		pointInstancer["sphereRadius"].setInput( frame["output"] )
+
+		standardOptions = GafferScene.StandardOptions()
+		standardOptions["in"].setInput( pointInstancer["out"] )
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
+		controller = GafferScene.RenderController( standardOptions["out"], Gaffer.Context(), renderer )
+		controller.setMinimumExpansionDepth( 3 )
+
+		self.assertTrue( controller.updateRequired() )
+		controller.update()
+
+		prototype = renderer.capturedObject( "/instancer" ).capturedPointInstancerPrototypes()[0]
+		self.assertEqual( [ s.radius() for s in prototype.samples ], [ 1 ] )
+		self.assertEqual( prototype.times, [ 1 ] )
+
+		# Turning on deformation blur should give us multiple prototype samples.
+
+		standardOptions["options"]["render:deformationBlur"]["enabled"].setValue( True )
+		standardOptions["options"]["render:deformationBlur"]["value"].setValue( True )
+		self.assertTrue( controller.updateRequired() )
+		controller.update()
+
+		prototype = renderer.capturedObject( "/instancer" ).capturedPointInstancerPrototypes()[0]
+		self.assertEqual( [ s.radius() for s in prototype.samples ], [ 0.75, 1.25 ] )
+		self.assertEqual( prototype.times, [ 0.75, 1.25 ] )
+
+		# Turning it off again should return to a single sample.
+
+		standardOptions["options"]["render:deformationBlur"]["value"].setValue( False )
+		self.assertTrue( controller.updateRequired() )
+		controller.update()
+
+		prototype = renderer.capturedObject( "/instancer" ).capturedPointInstancerPrototypes()[0]
+		self.assertEqual( [ s.radius() for s in prototype.samples ], [ 1 ] )
+		self.assertEqual( prototype.times, [ 1 ] )
