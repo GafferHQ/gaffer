@@ -134,6 +134,7 @@ Improvements
 - Cycles : Added render-time translation of `UsdPreviewSurface` normal maps, these require a FaceVarying `uv` primitive variable to render correctly.
 - Parent, Duplicate, Instancer, Group, MergeScenes : Improved performance when handling large numbers of sets.
 - RampPlug : Added ability to load `.gfr` files saved from Gaffer 1.8.
+- Arnold : Enabled automatic instancing when `ai:polymesh:subdiv_iterations` is zero, even when the other subdivision attributes imply view-dependence.
 
 Fixes
 -----
@@ -148,6 +149,7 @@ Fixes
 - DataStore : Fixed potential hang calling `setEntry()` or `removeEntry()` from Python.
 - Plug : Fixed potential hang calling `removeOutputs()` from Python.
 - Display : Fixed potential hang calling `setDriver()` from Python.
+- Viewer, InteractiveRender : Fixed bug preventing updates to PointInstancers when the `render:includedPurposes` or `render:deformationBlur` options were changed.
 
 API
 ---

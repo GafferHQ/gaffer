@@ -586,6 +586,12 @@ class RenderController::SceneGraph
 				m_objectHash = Private::RendererAlgo::ObjectHash();
 			}
 
+			if( m_objectHash.isPointInstancer && ( changedGlobals & PointInstancerAffectingGlobalComponents ) )
+			{
+				m_dirtyComponents |= ObjectComponent;
+				m_objectHash.value = IECore::MurmurHash();
+			}
+
 			const bool hadPointInstancer = m_objectHash.isPointInstancer;
 			if( ( m_dirtyComponents & ObjectComponent ) && updateObject( controller->m_scene.get(), type, controller->m_renderer.get(), controller->m_renderOptions, controller->m_lightLinks.get() ) )
 			{
