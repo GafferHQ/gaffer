@@ -41,7 +41,8 @@
 #include "GafferScene/ScenePlug.h"
 
 #include "Gaffer/ComputeNode.h"
-#include "Gaffer/TypedObjectPlug.h"
+
+#include "Gaffer/Private/IECorePreview/Messages.h"
 
 namespace Gaffer
 {
@@ -89,9 +90,6 @@ class GAFFERSCENE_API InteractiveRender : public Gaffer::ComputeNode
 		Gaffer::StringPlug *resolvedRendererPlug();
 		const Gaffer::StringPlug *resolvedRendererPlug() const;
 
-		Gaffer::ObjectPlug *messagesPlug();
-		const Gaffer::ObjectPlug *messagesPlug() const;
-
 		/// Specifies a context in which the InteractiveRender should operate.
 		/// The default is null, meaning that the context of the ancestor
 		/// ScriptNode will be used, or failing that, a default context.
@@ -103,6 +101,14 @@ class GAFFERSCENE_API InteractiveRender : public Gaffer::ComputeNode
 		/// pausing the renderer temporarily if necessary.
 		IECore::DataPtr command( const IECore::InternedString name, const IECore::CompoundDataMap &parameters = IECore::CompoundDataMap() );
 
+		/// Returns the messages output by the current render, or by
+		/// the last render if none is active.
+		IECorePreview::Messages messages() const;
+
+		using InteractiveRenderSignal = Gaffer::Signals::Signal<void ( InteractiveRender * ), Gaffer::Signals::CatchingCombiner<void>>;
+		/// Emitted when `messages()` changes.
+		InteractiveRenderSignal &messagesChangedSignal();
+
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 		std::shared_ptr<const RenderManifest> renderManifest() const;
@@ -112,10 +118,6 @@ class GAFFERSCENE_API InteractiveRender : public Gaffer::ComputeNode
 		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
 
-		Gaffer::ValuePlug::CachePolicy computeCachePolicy( const Gaffer::ValuePlug *output ) const override;
-
-		bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const override;
-
 		IECoreScenePreview::Renderer *renderer() { return m_renderer.get(); }
 
 	private :
@@ -123,13 +125,10 @@ class GAFFERSCENE_API InteractiveRender : public Gaffer::ComputeNode
 		ScenePlug *adaptedInPlug();
 		const ScenePlug *adaptedInPlug() const;
 
-		Gaffer::IntPlug *messageUpdateCountPlug();
-		const Gaffer::IntPlug *messageUpdateCountPlug() const;
-
 		void messagesChanged();
 		static void messagesChangedUI();
 
-		void plugSet( const Gaffer::Plug *plug );
+		void plugDirtied( const Gaffer::Plug *plug );
 
 		void update();
 		Gaffer::ConstContextPtr effectiveContext();
@@ -142,6 +141,7 @@ class GAFFERSCENE_API InteractiveRender : public Gaffer::ComputeNode
 
 		IECoreScenePreview::RendererPtr m_renderer;
 		std::unique_ptr<RenderController> m_controller;
+		InteractiveRenderSignal m_messagesChangedSignal;
 		State m_state;
 
 		std::shared_ptr<const RenderManifest> m_lastRenderManifest;

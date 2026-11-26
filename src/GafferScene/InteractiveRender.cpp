@@ -48,7 +48,7 @@
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
 
-#include "Gaffer/Private/IECorePreview/MessagesData.h"
+#include "Gaffer/Private/IECorePreview/Messages.h"
 
 #include "IECoreScene/VisibleRenderable.h"
 
@@ -71,13 +71,13 @@ using namespace GafferScene;
 namespace
 {
 
-using PlugSet = set<PlugPtr>;
-using PlugSetPtr = std::unique_ptr<PlugSet>;
+using HandlerSet = set<MessageHandlerPtr>;
+using HandlerSetPtr = std::unique_ptr<HandlerSet>;
 
 struct PendingUpdates
 {
 	tbb::spin_mutex mutex;
-	PlugSetPtr plugs;
+	HandlerSetPtr handlers;
 };
 
 PendingUpdates &pendingUpdates()
@@ -97,15 +97,15 @@ unordered_set<string> &activeRenderIds()
 	return g_activeRenderIds;
 }
 
-} // anon namespace
+} // namespace
 
 // A thread-safe message handler for render messaging
 class InteractiveRender::RenderMessageHandler : public MessageHandler
 {
 	public :
 
-		RenderMessageHandler()
-			:	m_messages( new MessagesData )
+		RenderMessageHandler( InteractiveRender *node )
+			:	m_node( node )
 		{
 		}
 
@@ -116,29 +116,23 @@ class InteractiveRender::RenderMessageHandler : public MessageHandler
 
 			{
 				tbb::mutex::scoped_lock lock( m_mutex );
-				m_messages->writable().add( IECorePreview::Message( level, context, message ) );
+				m_messages.add( IECorePreview::Message( level, context, message ) );
 			}
 
 			messagesChangedSignal();
 		}
 
-		IECore::DataPtr messages()
+		IECorePreview::Messages messages()
 		{
 			tbb::mutex::scoped_lock lock( m_mutex );
-			return m_messages->copy();
-		}
-
-		void messagesHash( IECore::MurmurHash &h )
-		{
-			tbb::mutex::scoped_lock lock( m_mutex );
-			m_messages->hash( h );
+			return m_messages;
 		}
 
 		void clear()
 		{
 			{
 				tbb::mutex::scoped_lock lock( m_mutex );
-				m_messages->writable().clear();
+				m_messages.clear();
 			}
 
 			messagesChangedSignal();
@@ -146,12 +140,22 @@ class InteractiveRender::RenderMessageHandler : public MessageHandler
 
 		Signals::Signal<void ()> messagesChangedSignal;
 
+		InteractiveRender *node() const
+		{
+			return m_node;
+		}
+
+		void nodeDestroyed()
+		{
+			m_node = nullptr;
+		}
+
 	private :
 
 		tbb::mutex m_mutex;
-		MessagesDataPtr m_messages;
+		IECorePreview::Messages m_messages;
+		InteractiveRender *m_node;
 };
-
 
 static InternedString g_rendererContextName( "scene:renderer" );
 
@@ -162,7 +166,7 @@ GAFFER_NODE_DEFINE_TYPE( InteractiveRender );
 InteractiveRender::InteractiveRender( const std::string &name )
 	:	ComputeNode( name ),
 		m_state( Stopped ),
-		m_messageHandler( new RenderMessageHandler() )
+		m_messageHandler( new RenderMessageHandler( this ) )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ScenePlug( "in" ) );
@@ -171,11 +175,7 @@ InteractiveRender::InteractiveRender( const std::string &name )
 	addChild( new BoolPlug( "useVisibleSet" ) );
 	addChild( new ScenePlug( "out", Plug::Out, Plug::Default & ~Plug::Serialisable ) );
 	addChild( new StringPlug( "resolvedRenderer", Plug::Out, "", Plug::Default & ~Plug::Serialisable ) );
-	addChild( new ObjectPlug( "messages", Plug::Out, new MessagesData(), Plug::Default & ~Plug::Serialisable ) );
 	addChild( new ScenePlug( "__adaptedIn", Plug::In, Plug::Default & ~Plug::Serialisable ) );
-
-	// Incremented when new messages are received, triggering a dirty signal for the output plug.
-	addChild( new IntPlug( "__messageUpdateCount", Plug::In, 0, 0, std::numeric_limits<int>::max(), Plug::Default & ~Plug::Serialisable ) );
 
 	SceneProcessorPtr adaptors = SceneAlgo::createRenderAdaptors();
 	setChild( "__adaptors", adaptors );
@@ -194,16 +194,14 @@ InteractiveRender::InteractiveRender( const std::string &name )
 
 	outPlug()->setInput( optionTweaks->outPlug() );
 
-	// We can't use plugDirtiedSignal as we need to update messagesUpdateCountPlug
-	// due to message output during render startup. We implement acceptsInput
-	// to reject any computed connections to renderer/state.
-	plugSetSignal().connect( boost::bind( &InteractiveRender::plugSet, this, ::_1 ) );
+	plugDirtiedSignal().connect( boost::bind( &InteractiveRender::plugDirtied, this, ::_1 ) );
 
 	m_messageHandler->messagesChangedSignal.connect( boost::bind( &InteractiveRender::messagesChanged, this ) );
 }
 
 InteractiveRender::~InteractiveRender()
 {
+	m_messageHandler->nodeDestroyed();
 	stop();
 }
 
@@ -267,34 +265,14 @@ const Gaffer::StringPlug *InteractiveRender::resolvedRendererPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 5 );
 }
 
-ObjectPlug *InteractiveRender::messagesPlug()
-{
-	return getChild<ObjectPlug>( g_firstPlugIndex + 6 );
-}
-
-const ObjectPlug *InteractiveRender::messagesPlug() const
-{
-	return getChild<ObjectPlug>( g_firstPlugIndex + 6 );
-}
-
 ScenePlug *InteractiveRender::adaptedInPlug()
 {
-	return getChild<ScenePlug>( g_firstPlugIndex + 7 );
+	return getChild<ScenePlug>( g_firstPlugIndex + 6 );
 }
 
 const ScenePlug *InteractiveRender::adaptedInPlug() const
 {
-	return getChild<ScenePlug>( g_firstPlugIndex + 7 );
-}
-
-Gaffer::IntPlug *InteractiveRender::messageUpdateCountPlug()
-{
-	return getChild<IntPlug>( g_firstPlugIndex + 8 );
-}
-
-const Gaffer::IntPlug *InteractiveRender::messageUpdateCountPlug() const
-{
-	return getChild<IntPlug>( g_firstPlugIndex + 8 );
+	return getChild<ScenePlug>( g_firstPlugIndex + 6 );
 }
 
 Gaffer::Context *InteractiveRender::getContext()
@@ -335,7 +313,7 @@ IECore::DataPtr InteractiveRender::command( const IECore::InternedString name, c
 	return result;
 }
 
-void InteractiveRender::plugSet( const Gaffer::Plug *plug )
+void InteractiveRender::plugDirtied( const Gaffer::Plug *plug )
 {
 	if( plug == rendererPlug() || plug == statePlug() || plug == useVisibleSetPlug() )
 	{
@@ -502,26 +480,25 @@ void InteractiveRender::scriptMetadataChanged( IECore::InternedString key )
 	}
 }
 
-// Called on a background thread when data is received on the driver.
-// We need to update `messagesPlug()`, but all graph edits must
-// be performed on the UI thread, so we can't do it directly.
+// Called on whichever thread handled the message. `messagesChangedSignal()`
+// must be emitted on the UI thread, so we can't do it directly.
 void InteractiveRender::messagesChanged()
 {
 	bool scheduleUpdate = false;
 	{
 		// To minimise overhead we perform updates in batches by storing
-		// a set of plugs which are pending update. If we're the creator
+		// a set of handlers which are pending update. If we're the creator
 		// of a new batch then we are responsible for scheduling a call
 		// to `messagesChangedUI()` to process the batch. Otherwise we just
 		// add to the current batch.
 		PendingUpdates &pending = pendingUpdates();
 		tbb::spin_mutex::scoped_lock lock( pending.mutex );
-		if( !pending.plugs.get() )
+		if( !pending.handlers.get() )
 		{
 			scheduleUpdate = true;
-			pending.plugs.reset( new PlugSet );
+			pending.handlers.reset( new HandlerSet );
 		}
-		pending.plugs->insert( messageUpdateCountPlug() );
+		pending.handlers->insert( m_messageHandler );
 	}
 	if( scheduleUpdate )
 	{
@@ -532,44 +509,45 @@ void InteractiveRender::messagesChanged()
 // Called on the UI thread after being scheduled by `messagesChanged()`.
 void InteractiveRender::messagesChangedUI()
 {
-	// Get the batch of plugs to trigger updates for. We want to hold the mutex
+	// Get the batch of nodes to signal updates for. We want to hold the mutex
 	// for the shortest duration possible, because it causes contention between
 	// the background rendering thread and the UI thread, and can significantly
 	// affect performance.  We do this by "stealing" the current batch, so the
 	// background thread will create a new batch and we are safe to iterate our
 	// batch without holding the lock.
-	PlugSetPtr batch;
+	HandlerSetPtr batch;
 	{
 		PendingUpdates &pending = pendingUpdates();
 		tbb::spin_mutex::scoped_lock lock( pending.mutex );
-		batch.reset( pending.plugs.release() );
+		batch.reset( pending.handlers.release() );
 	}
 
-	// Now update the messages plugs for the render nodes that have received new messages.
+	// Now signal the render nodes that have received new messages.
+	for( const auto &handler : *batch )
 	{
-		DirtyPropagationScope dirtyPropagationScope;
-		for( set<PlugPtr>::const_iterator it = batch->begin(), eIt = batch->end(); it != eIt; ++it )
+		// Because `messagesChangedUI()` is deferred to the UI thread,
+		// it's possible that the node has actually been deleted by
+		// the time we're called, so we must check.
+		if( InteractiveRender *node = static_cast<RenderMessageHandler *>( handler.get() )->node() )
 		{
-			PlugPtr plug = *it;
-			// Because `messagesChangedUI()` is deferred to the UI thread,
-			// it's possible that the node has actually been deleted by
-			// the time we're called, so we must check.
-			if( InteractiveRender *node = runTimeCast<InteractiveRender>( plug->node() ) )
-			{
-				node->messageUpdateCountPlug()->setValue( node->messageUpdateCountPlug()->getValue() + 1 );
-			}
+			node->m_messagesChangedSignal( node );
 		}
 	}
+}
+
+IECorePreview::Messages InteractiveRender::messages() const
+{
+	return m_messageHandler->messages();
+}
+
+InteractiveRender::InteractiveRenderSignal &InteractiveRender::messagesChangedSignal()
+{
+	return m_messagesChangedSignal;
 }
 
 void InteractiveRender::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ComputeNode::affects( input, outputs );
-
-	if( input == messageUpdateCountPlug() )
-	{
-		outputs.push_back( messagesPlug() );
-	}
 
 	if( input == rendererPlug() || input == inPlug()->globalsPlug() )
 	{
@@ -591,11 +569,7 @@ void InteractiveRender::hash( const Gaffer::ValuePlug *output, const Gaffer::Con
 {
 	ComputeNode::hash( output, context, h );
 
-	if( output == messagesPlug() )
-	{
-		m_messageHandler->messagesHash( h );
-	}
-	else if( output == resolvedRendererPlug() )
+	if( output == resolvedRendererPlug() )
 	{
 		const std::string renderer = rendererPlug()->getValue();
 		if( renderer.empty() )
@@ -611,12 +585,7 @@ void InteractiveRender::hash( const Gaffer::ValuePlug *output, const Gaffer::Con
 
 void InteractiveRender::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const
 {
-	if( output == messagesPlug() )
-	{
-		static_cast<ObjectPlug *>( output )->setValue( m_messageHandler->messages() );
-		return;
-	}
-	else if( output == resolvedRendererPlug() )
+	if( output == resolvedRendererPlug() )
 	{
 		std::string renderer = rendererPlug()->getValue();
 		if( renderer.empty() )
@@ -631,30 +600,4 @@ void InteractiveRender::compute( Gaffer::ValuePlug *output, const Gaffer::Contex
 	}
 
 	ComputeNode::compute( output, context );
-}
-
-Gaffer::ValuePlug::CachePolicy InteractiveRender::computeCachePolicy( const Gaffer::ValuePlug *output ) const
-{
-	if( output == messagesPlug() )
-	{
-		// just copying data out of our intermediate is actually quicker than if we cache the result.
-		return ValuePlug::CachePolicy::Uncached;
-	}
-
-	return ComputeNode::computeCachePolicy( output );
-}
-
-bool InteractiveRender::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const
-{
-	if( plug == rendererPlug() || plug == statePlug() )
-	{
-		// We can't accept computed plugs as we may need to dirty our messages plug as
-		// result. It is forbidden to modify the node graph during dirty propagation.
-		if( inputPlug && inputPlug->source()->direction() != Gaffer::Plug::In )
-		{
-			return false;
-		}
-	}
-
-	return Gaffer::ComputeNode::acceptsInput( plug, inputPlug );
 }
