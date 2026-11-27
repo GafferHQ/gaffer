@@ -32,6 +32,9 @@ Improvements
   - Points are now stored in a child `points` container, instead of being alongside the `interpolation` plug.
   - Serialisations use the `addPoint()` API, and reference points by index rather than name.
 - Node, Box, ShaderTweaks, AttributeTweaks, OptionTweaks : Added ramp items to plug creation menus.
+- InteractiveRender :
+  - Render message updates no longer cancel background tasks.
+  - The `renderer` and `state` plugs now accept input connections from computed plugs.
 
 Fixes
 -----
@@ -54,6 +57,7 @@ API
 - GafferUI : Qt is now accessed directly via PySide6 rather than via Qt.py. Qt.py is still provided, but will be removed in a future release.
 - GraphComponent : Improved exception message when `removeChild()` is called with a GraphComponent that is not a child.
 - Metadata : `compatibility:childAlias` metadata can now refer to descendants, to account for children moving to a container within the original parent.
+- InteractiveRender : Added `messages()` and `messagesChangedSignal()` methods.
 
 Breaking Changes
 ----------------
@@ -87,6 +91,7 @@ Breaking Changes
 - MeshSegments : Changed behaviour when setting `connectivity` to "". Previously, this used vertex topology, now it passes through the input unchanged. This aligns better with other geometry processing nodes.
 - EditScopeAlgo : Removed `acquireSetEdits()` function.
 - RampPlug : Moved point plugs to a `points` child container. Old `.gfr` files are converted automatically on load.
+- InteractiveRender : Removed the `messages` plug. Use the `messages()` method and `messagesChangedSignal()` instead.
 
 Build
 -----

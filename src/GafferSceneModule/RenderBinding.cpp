@@ -203,6 +203,22 @@ void outputObjectsWrapper( const ScenePlug &scene, const GafferScene::Private::R
 	GafferScene::Private::RendererAlgo::outputObjects( &scene, renderOptions, renderSets, &lightLinks, &renderer, root, renderManifest );
 }
 
+struct InteractiveRenderSlotCaller
+{
+	void operator()( boost::python::object slot, const InteractiveRender *r )
+	{
+		try
+		{
+			InteractiveRenderPtr render = const_cast<InteractiveRender * >( r );
+			slot( render );
+		}
+		catch( const boost::python::error_already_set & )
+		{
+			ExceptionAlgo::translatePythonException();
+		}
+	}
+};
+
 struct RenderSlotCaller
 {
 	bool operator()( boost::python::object slot, const Render *r )
@@ -244,6 +260,8 @@ void GafferSceneModule::bindRender()
 			.def( "setContext", &interactiveRenderSetContext )
 			.def( "command", &interactiveRenderCommandWrapper, ( arg( "name" ), arg( "parameters" ) = dict() ) )
 			.def( "renderManifest", &interactiveRenderRenderManifestWrapper )
+			.def( "messages", &InteractiveRender::messages )
+			.def( "messagesChangedSignal", &InteractiveRender::messagesChangedSignal, return_internal_reference<1>() )
 		;
 
 		enum_<InteractiveRender::State>( "State" )
@@ -251,6 +269,8 @@ void GafferSceneModule::bindRender()
 			.value( "Running", InteractiveRender::Running )
 			.value( "Paused", InteractiveRender::Paused )
 		;
+
+		SignalClass<InteractiveRender::InteractiveRenderSignal, DefaultSignalCaller<InteractiveRender::InteractiveRenderSignal>, InteractiveRenderSlotCaller>( "InteractiveRenderSignal" );
 	}
 
 	{

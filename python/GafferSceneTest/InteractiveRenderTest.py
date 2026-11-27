@@ -2806,27 +2806,42 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["renderer"]["state"].setValue( s["renderer"].State.Stopped )
 
-	def testAcceptsInput( self ) :
+	def testStateInput( self ) :
 
-		r = GafferScene.InteractiveRender()
+		s = Gaffer.ScriptNode()
+		s["s"] = GafferScene.Sphere()
 
-		p = Gaffer.StringPlug()
-		r["renderer"].setInput( p )
-		r["renderer"].setInput( None )
+		s["o"] = GafferScene.Outputs()
+		s["o"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "computedStateInput",
+				}
+			)
+		)
+		s["o"]["in"].setInput( s["s"]["out"] )
 
-		s = GafferTest.StringInOutNode()
-		with self.assertRaisesRegex( Exception, 'Plug "%s.renderer" rejects input "StringInOutNode.out".' % r.getName() ) :
-			r["renderer"].setInput( s["out"] )
+		s["options"] = self._createOptions()
+		s["options"]["in"].setInput( s["o"]["out"] )
 
-		r = self._createInteractiveRender()
+		s["r"] = self._createInteractiveRender()
+		s["r"]["in"].setInput( s["options"]["out"] )
 
-		p = Gaffer.IntPlug()
-		r["state"].setInput( p )
-		r["state"].setInput( None )
+		s["add"] = GafferTest.AddNode()
+		s["r"]["state"].setInput( s["add"]["sum"] )
 
-		a = GafferTest.AddNode()
-		with self.assertRaisesRegex( Exception, 'Plug "%s.state" rejects input "AddNode.sum".' % r.getName() ) :
-			r["state"].setInput( a["sum"] )
+		s["add"]["op1"].setValue( s["r"].State.Running )
+
+		self.assertEventually(
+			lambda : self.assertIsInstance( IECoreImage.ImageDisplayDriver.storedImage( "computedStateInput" ), IECoreImage.ImagePrimitive )
+		)
+
+		s["add"]["op1"].setValue( s["r"].State.Stopped )
 
 	def testEditCropWindow( self ) :
 
@@ -3819,6 +3834,34 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		)
 
 		script["render"]["state"].setValue( script["render"].State.Stopped )
+
+	def testMessages( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["sphere"] = GafferScene.Sphere()
+
+		s["r"] = self._createInteractiveRender()
+		s["r"]["renderer"].setValue( "" )
+		s["r"]["in"].setInput( s["sphere"]["out"] )
+
+		self.assertEqual( len( s["r"].messages() ), 0 )
+
+		messageChanges = []
+		c = s["r"].messagesChangedSignal().connect(
+			lambda node : messageChanges.append( node.messages() ), scoped = True
+		)
+
+		s["r"]["state"].setValue( s["r"].State.Running )
+		self.ignoreMessage( IECore.Msg.Level.Error, "InteractiveRender", "`render:defaultRenderer` option not set" )
+
+		messages = s["r"].messages()
+		self.assertEqual( len( messages ), 1 )
+		self.assertEqual( messages[0].level, IECore.Msg.Level.Error )
+		self.assertEqual( messages[0].context, "InteractiveRender" )
+		self.assertEqual( messages[0].message, "`render:defaultRenderer` option not set" )
+
+		self.assertEventually( lambda : self.assertTrue( len( messageChanges ) ) )
+		self.assertEqual( messageChanges[-1], messages )
 
 	def tearDown( self ) :
 
