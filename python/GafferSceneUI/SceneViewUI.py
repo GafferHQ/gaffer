@@ -409,7 +409,7 @@ class _DrawingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 		m.append( "/ComponentsDivider", { "divider" : True } )
 
 		lightDrawingModePlug = self.getPlug()["light"]["drawingMode"]
-		for mode in ( "wireframe", "color", "texture" ) :
+		for mode in ( "wireframe", "color", "texture", "none" ) :
 			m.append(
 				"/Lights/" + IECore.CamelCase.toSpaced( mode ),
 				{
