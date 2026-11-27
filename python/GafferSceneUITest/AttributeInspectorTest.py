@@ -61,7 +61,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		editScopePlug = Gaffer.Plug()
 		editScopePlug.setInput( editScope["enabled"] if editScope is not None else None )
 		inspector = GafferSceneUI.Private.AttributeInspector( scene, editScopePlug, attribute )
-		with Gaffer.Context() as context :
+		with Gaffer.Context( Gaffer.Context.current() ) as context :
 			context["scene:path"] = IECore.InternedStringVectorData( path.split( "/" )[1:] )
 			return inspector.inspect()
 
@@ -1497,3 +1497,68 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 
 		inspection = self.__inspect( script["attributes2"]["out"], "/cube", "scene:visible", None )
 		self.assertEqual( inspection.source(), script["attributes1"]["out"] )
+
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
+	def testEditAnimatedAttribute( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["plane"] = GafferScene.Plane()
+		script["attributes"] = GafferScene.CustomAttributes()
+		script["attributes"]["in"].setInput( script["plane"]["out"] )
+		script["attributes"]["attributes"].addChild( Gaffer.NameValuePlug( "int", 1 ) )
+		script["attributes"]["attributes"].addChild( Gaffer.NameValuePlug( "float", 1.0 ) )
+		script["attributes"]["attributes"].addChild( Gaffer.NameValuePlug( "bool", True ) )
+
+		context = Gaffer.Context()
+
+		for attribute in script["attributes"]["attributes"] :
+
+			curve = Gaffer.Animation.acquire( attribute["value"] )
+			curve.addKey( Gaffer.Animation.Key( time = context.getTime(), value = 0 ) )
+
+			with context :
+				inspection = self.__inspect( script["attributes"]["out"], "/plane", attribute["name"].getValue(), None )
+
+			self.assertEqual( inspection.value().value, attribute["value"].getValue() )
+			newValue = type( inspection.value() )( 1 )
+			self.assertTrue( inspection.canEdit( newValue ) )
+			inspection.edit( newValue )
+
+			self.assertEqual( attribute["value"].getValue(), 1 )
+			self.assertTrue( Gaffer.Animation.acquire( attribute["value"] ).isSame( curve ) )
+			self.assertEqual( curve.getKey( context.getTime() ).getValue(), 1 )
+
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
+	def testEditAnimationThroughTimeWarp( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["plane"] = GafferScene.Plane()
+
+		script["attributes"] = GafferScene.CustomAttributes()
+		script["attributes"]["in"].setInput( script["plane"]["out"] )
+		script["attributes"]["attributes"].addChild( Gaffer.NameValuePlug( "test", 1.0 ) )
+
+		curve = Gaffer.Animation.acquire( script["attributes"]["attributes"][0]["value"] )
+		curve.insertKey( 0, 0 )
+		curve.insertKey( 10, 10 )
+
+		context = Gaffer.Context()
+
+		script["timeWarp"] = Gaffer.TimeWarp()
+		script["timeWarp"].setup( script["attributes"]["out"] )
+		script["timeWarp"]["in"].setInput( script["attributes"]["out"] )
+		script["timeWarp"]["offset"].setValue( 5 * context.getFramesPerSecond() )
+
+		context.setTime( 0 )
+		with context :
+			inspection = self.__inspect( script["timeWarp"]["out"], "/plane", "test", None )
+
+		# Viewing through a time warp, so we see the value from `time == 5`.
+		self.assertEqual( inspection.value().value, 5 )
+		# Meaning that when we edit, we should make a keyframe at `time == 5`.
+		inspection.edit( IECore.FloatData( 7 ) )
+		newKey = curve.getKey( 5 )
+		self.assertIsNotNone( newKey )
+		self.assertEqual( newKey.getValue(), 7 )
