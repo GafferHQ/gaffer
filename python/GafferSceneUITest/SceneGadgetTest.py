@@ -54,8 +54,6 @@ import GafferUITest
 import GafferScene
 import GafferSceneUI
 
-import Qt
-
 class SceneGadgetTest( GafferUITest.TestCase ) :
 
 	renderer = "OpenGL"
@@ -102,17 +100,27 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		# Omitting only selected object while using selected=True leaves empty bound
 		self.assertEqual( sg.bound( True, IECore.PathMatcher( ["/group/plane"]) ), imath.Box3f() )
 
-	def assertObjectAt( self, gadget, ndcPosition, path ) :
+	def assertObjectAt( self, gadgetWidget, ndcPosition, path ) :
 
-		viewportGadget = gadget.ancestor( GafferUI.ViewportGadget )
+		# SceneGadget selection queries rely on being run in the GL
+		# context for their host GLWidget, so we must make that
+		# current here. In the UI itself, GadgetWidget takes care
+		# of this for us before emitting any event-handling signals
+		# that could lead to selection calls.
+		self.assertTrue( gadgetWidget._makeCurrent() )
+		viewportGadget = gadgetWidget.getViewportGadget()
+		gadget = viewportGadget.getPrimaryChild()
 
 		rasterPosition = ndcPosition * imath.V2f( viewportGadget.getViewport() )
 		gadgetLine = viewportGadget.rasterToGadgetSpace( rasterPosition, gadget )
 
 		self.assertEqual( gadget.objectAt( gadgetLine ), path )
 
-	def assertNormalAt( self, gadget, gadgetLine, normal ) :
+	def assertNormalAt( self, gadgetWidget, gadgetLine, normal ) :
 
+		# See comment in `assertObjectAt()`.
+		self.assertTrue( gadgetWidget._makeCurrent() )
+		gadget = gadgetWidget.getViewportGadget().getPrimaryChild()
 		n = gadget.normalAt( gadgetLine )
 
 		if normal is None :
@@ -121,9 +129,12 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 			self.assertIsNotNone( n )
 			self.assertLess( math.acos( n.dot( normal ) ), math.radians( 5.0 ) )
 
-	def assertObjectsAt( self, gadget, ndcBox, paths ) :
+	def assertObjectsAt( self, gadgetWidget, ndcBox, paths ) :
 
-		viewportGadget = gadget.ancestor( GafferUI.ViewportGadget )
+		# See comment in `assertObjectAt()`.
+		self.assertTrue( gadgetWidget._makeCurrent() )
+		viewportGadget = gadgetWidget.getViewportGadget()
+		gadget = viewportGadget.getPrimaryChild()
 
 		rasterMin = ndcBox.min() * imath.V2f( viewportGadget.getViewport() )
 		rasterMax = ndcBox.max() * imath.V2f( viewportGadget.getViewport() )
@@ -149,7 +160,6 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 			while time.time() < timeout :
 				self.waitForIdle( 10 )
 
-	@unittest.skipIf( GafferTest.inCI() and Qt.__binding__ == "PySide6", "GL issues on CI with Qt 6" )
 	def testObjectVisibility( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -174,19 +184,19 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		gw.getViewportGadget().frame( sg.bound() )
 		self.waitForRender( sg )
 
-		self.assertObjectAt( sg, imath.V2f( 0.5 ), IECore.InternedStringVectorData( [ "group", "sphere" ] ) )
+		self.assertObjectAt( gw, imath.V2f( 0.5 ), IECore.InternedStringVectorData( [ "group", "sphere" ] ) )
 
 		s["a"]["attributes"]["scene:visible"]["enabled"].setValue( True )
 		s["a"]["attributes"]["scene:visible"]["value"].setValue( False )
 
 		self.waitForRender( sg )
-		self.assertObjectAt( sg, imath.V2f( 0.5 ), None )
+		self.assertObjectAt( gw, imath.V2f( 0.5 ), None )
 
 		s["a"]["attributes"]["scene:visible"]["enabled"].setValue( True )
 		s["a"]["attributes"]["scene:visible"]["value"].setValue( True )
 
 		self.waitForRender( sg )
-		self.assertObjectAt( sg, imath.V2f( 0.5 ), IECore.InternedStringVectorData( [ "group", "sphere" ] ) )
+		self.assertObjectAt( gw, imath.V2f( 0.5 ), IECore.InternedStringVectorData( [ "group", "sphere" ] ) )
 
 	@unittest.skipIf( GafferTest.inCI(), "Unknown problem running in cloud" )
 	def testExpansion( self ) :
@@ -212,37 +222,37 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		gw.getViewportGadget().frame( sg.bound() )
 		self.waitForRender( sg )
 
-		self.assertObjectAt( sg, imath.V2f( 0.5 ), None )
-		self.assertObjectsAt( sg, imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ), [ "/group" ] )
+		self.assertObjectAt( gw, imath.V2f( 0.5 ), None )
+		self.assertObjectsAt( gw, imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ), [ "/group" ] )
 
 		v = GafferScene.VisibleSet()
 		v.expansions = IECore.PathMatcher( [ "/group" ] )
 		sg.setVisibleSet( v )
 		self.waitForRender( sg )
 
-		self.assertObjectAt( sg, imath.V2f( 0.5 ), IECore.InternedStringVectorData( [ "group", "sphere" ] ) )
-		self.assertObjectsAt( sg, imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ), [ "/group/sphere" ] )
+		self.assertObjectAt( gw, imath.V2f( 0.5 ), IECore.InternedStringVectorData( [ "group", "sphere" ] ) )
+		self.assertObjectsAt( gw, imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ), [ "/group/sphere" ] )
 
 		v.expansions = IECore.PathMatcher( [] )
 		v.inclusions = IECore.PathMatcher( [ "/group" ] )
 		sg.setVisibleSet( v )
 		self.waitForRender( sg )
 
-		self.assertObjectAt( sg, imath.V2f( 0.5 ), IECore.InternedStringVectorData( [ "group", "sphere" ] ) )
-		self.assertObjectsAt( sg, imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ), [ "/group/sphere" ] )
+		self.assertObjectAt( gw, imath.V2f( 0.5 ), IECore.InternedStringVectorData( [ "group", "sphere" ] ) )
+		self.assertObjectsAt( gw, imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ), [ "/group/sphere" ] )
 
 		v.exclusions = IECore.PathMatcher( [ "/group" ] )
 		sg.setVisibleSet( v )
 		self.waitForRender( sg )
 
-		self.assertObjectAt( sg, imath.V2f( 0.5 ), None )
-		self.assertObjectsAt( sg, imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ), [ "/group" ] )
+		self.assertObjectAt( gw, imath.V2f( 0.5 ), None )
+		self.assertObjectsAt( gw, imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ), [ "/group" ] )
 
 		sg.setVisibleSet( GafferScene.VisibleSet() )
 		self.waitForRender( sg )
 
-		self.assertObjectAt( sg, imath.V2f( 0.5 ), None )
-		self.assertObjectsAt( sg, imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ), [ "/group" ] )
+		self.assertObjectAt( gw, imath.V2f( 0.5 ), None )
+		self.assertObjectsAt( gw, imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ), [ "/group" ] )
 
 	def testExpressions( self ) :
 
@@ -290,7 +300,6 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 			s["p"]["dimensions"]["x"].setValue( i )
 			self.waitForIdle( 10 )
 
-	@unittest.skipIf( GafferTest.inCI() and Qt.__binding__ == "PySide6", "GL issues on CI with Qt 6" )
 	def testExceptionsDuringCompute( self ) :
 
 		# Make this scene
@@ -361,7 +370,7 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 
 			self.assertTrue( sg.bound().isEmpty() )
 			gw.getViewportGadget().frame( imath.Box3f( imath.V3f( -1 ), imath.V3f( 1 ) ) )
-			self.assertObjectAt( sg, imath.V2f( 0.5 ), None )
+			self.assertObjectAt( gw, imath.V2f( 0.5 ), None )
 
 			# And that redraws don't cause more fruitless attempts
 			# to compute the scene.
@@ -370,7 +379,7 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 			self.waitForIdle( 1000 )
 
 			self.assertEqual( len( mh.messages ), 1 )
-			self.assertObjectAt( sg, imath.V2f( 0.5 ), None )
+			self.assertObjectAt( gw, imath.V2f( 0.5 ), None )
 			self.assertTrue( sg.bound().isEmpty() )
 
 			# Fix the problem with the scene, and check that we can see something now
@@ -380,7 +389,7 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 
 			self.assertEqual( len( mh.messages ), 1 )
 			self.assertFalse( sg.bound().isEmpty() )
-			self.assertObjectAt( sg, imath.V2f( 0.5 ), IECore.InternedStringVectorData( [ "bigSphere" ] ) )
+			self.assertObjectAt( gw, imath.V2f( 0.5 ), IECore.InternedStringVectorData( [ "bigSphere" ] ) )
 
 		finally :
 
@@ -418,42 +427,41 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		self.waitForRender( sg )
 
 		self.assertObjectsAt(
-			sg,
+			gw,
 			imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ),
 			[ "/instances/sphere/{}".format( i ) for i in range( 0, 4 ) ]
 		)
 
 		self.assertObjectsAt(
-			sg,
+			gw,
 			imath.Box2f( imath.V2f( 0 ), imath.V2f( 0.5 ) ),
 			[ "/instances/sphere/2" ]
 		)
 
 		self.assertObjectsAt(
-			sg,
+			gw,
 			imath.Box2f( imath.V2f( 0.5, 0 ), imath.V2f( 1, 0.5 ) ),
 			[ "/instances/sphere/3" ]
 		)
 
 		self.assertObjectsAt(
-			sg,
+			gw,
 			imath.Box2f( imath.V2f( 0, 0.5 ), imath.V2f( 0.5, 1 ) ),
 			[ "/instances/sphere/0" ]
 		)
 
 		self.assertObjectsAt(
-			sg,
+			gw,
 			imath.Box2f( imath.V2f( 0.5 ), imath.V2f( 1 ) ),
 			[ "/instances/sphere/1" ]
 		)
 
 		self.assertObjectsAt(
-			sg,
+			gw,
 			imath.Box2f( imath.V2f( 10 ), imath.V2f( 20 ) ),
 			[]
 		)
 
-	@unittest.skipIf( GafferTest.inCI() and Qt.__binding__ == "PySide6", "GL issues on CI with Qt 6" )
 	@unittest.skipIf( os.name == "nt", "`objectAt()` fails for `GafferArnoldUITest` on Windows" )
 	@unittest.skipIf( sys.platform == "darwin", "Depth buffer issues on macOS" )
 	def testObjectAtLine( self ) :
@@ -498,6 +506,9 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		self.waitForRender( sg )
 
 		# We assume in this case, that gadget space is world space
+
+		# See comment in `assertObjectAt()`
+		self.assertTrue( gw._makeCurrent() )
 
 		leftCubeDir = IECore.LineSegment3f( imath.V3f( 0, 0, 2 ), imath.V3f( -2, 0, -2 ) )
 		pathA = sg.objectAt( leftCubeDir )
@@ -583,7 +594,6 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		sg.setSelectionMask( None )
 		self.assertEqual( sg.getSelectionMask(), None )
 
-	@unittest.skipIf( GafferTest.inCI() and Qt.__binding__ == "PySide6", "GL issues on CI with Qt 6" )
 	@unittest.skipIf( os.name == "nt", "`objectAt()` fails for `GafferArnoldUITest` on Windows" )
 	def testSelectionMask( self ) :
 
@@ -613,13 +623,13 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		self.waitForRender( sg )
 
 		self.assertObjectAt(
-			sg,
+			gw,
 			imath.V2f( 0.6 ),
 			IECore.InternedStringVectorData( [ "group", "plane" ] )
 		)
 
 		self.assertObjectsAt(
-			sg,
+			gw,
 			imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ),
 			[ "/group/plane", "/group/camera" ]
 		)
@@ -627,13 +637,13 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		sg.setSelectionMask( IECore.StringVectorData( [ "MeshPrimitive" ] ) )
 
 		self.assertObjectAt(
-			sg,
+			gw,
 			imath.V2f( 0.6 ),
 			IECore.InternedStringVectorData( [ "group", "plane" ] )
 		)
 
 		self.assertObjectsAt(
-			sg,
+			gw,
 			imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ),
 			[ "/group/plane" ]
 		)
@@ -641,13 +651,13 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		sg.setSelectionMask( IECore.StringVectorData( [ "Camera" ] ) )
 
 		self.assertObjectAt(
-			sg,
+			gw,
 			imath.V2f( 0.6 ),
 			None
 		)
 
 		self.assertObjectsAt(
-			sg,
+			gw,
 			imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ),
 			[ "/group/camera" ]
 		)
@@ -711,7 +721,6 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 
 		return origin + direction * t
 
-	@unittest.skipIf( GafferTest.inCI() and Qt.__binding__ == "PySide6", "GL issues on CI with Qt 6" )
 	@unittest.skipIf( os.name == "nt", "`objectAt()` fails for `GafferArnoldUITest` on Windows" )
 	@unittest.skipIf( sys.platform == "darwin", "Depth buffer issues on macOS" )
 	def testNormalAt( self ) :
@@ -763,7 +772,7 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 				1.0
 			)
 
-			self.assertNormalAt( sg, gadgetLineCenter, sphereIntersection )
+			self.assertNormalAt( gw, gadgetLineCenter, sphereIntersection )
 
 	def testPointInstancerSelection( self ) :
 
@@ -799,15 +808,15 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		self.waitForRender( sg )
 
 		# The plane itself isn't rendered, so there's nothing in the middle.
-		self.assertObjectAt( sg, imath.V2f( 0.5 ), None )
+		self.assertObjectAt( gw, imath.V2f( 0.5 ), None )
 
 		# But we can select the instancer by clicking on any instance.
 		viewportGadget = gw.getViewportGadget()
 		for corner in [ imath.V3f( -0.5, -0.5, 0 ), imath.V3f( 0.5, -0.5, 0 ), imath.V3f( 0.5, 0.5, 0 ), imath.V3f( -0.5, 0.5, 0 ) ] :
 			rasterPosition = viewportGadget.gadgetToRasterSpace( corner, sg )
-			self.assertObjectAt( sg, rasterPosition / imath.V2f( viewportGadget.getViewport() ), IECore.InternedStringVectorData( [ "plane" ] ) )
+			self.assertObjectAt( gw, rasterPosition / imath.V2f( viewportGadget.getViewport() ), IECore.InternedStringVectorData( [ "plane" ] ) )
 
-		self.assertObjectsAt( sg, imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ), [ "/plane" ] )
+		self.assertObjectsAt( gw, imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ), [ "/plane" ] )
 
 	def setUp( self ) :
 
