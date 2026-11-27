@@ -56,6 +56,7 @@
 #include "IECoreGL/Primitive.h"
 #include "IECoreGL/Renderable.h"
 #include "IECoreGL/Selector.h"
+#include "IECoreGL/ShaderLoader.h"
 #include "IECoreGL/ShaderStateComponent.h"
 #include "IECoreGL/State.h"
 #include "IECoreGL/ToGLCameraConverter.h"
@@ -72,12 +73,15 @@
 #include "Imath/ImathMatrixAlgo.h"
 
 #include "boost/algorithm/string/predicate.hpp"
+#include "boost/container/flat_map.hpp"
 
 #include "tbb/concurrent_queue.h"
+#include "tbb/concurrent_unordered_map.h"
 
 #include "fmt/format.h"
 
 #include <functional>
+#include <mutex>
 #include <unordered_map>
 #include <vector>
 
@@ -526,6 +530,17 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 			}
 		}
 
+		/// Constructs with a pre-built renderable, using `sourceObjectType` as
+		/// the type for `gl:querySelection` masking.
+		OpenGLObject( const std::string &name, const IECoreGL::ConstRenderablePtr &renderable, IECore::TypeId sourceObjectType, const ConstOpenGLAttributesPtr &attributes, EditQueue &editQueue )
+			:	m_objectType( sourceObjectType ),
+				m_attributes( attributes ),
+				m_renderable( renderable ),
+				m_editQueue( editQueue )
+		{
+			IECore::StringAlgo::tokenize( name, '/', m_name );
+		}
+
 		void transform( const IECoreScenePreview::Renderer::TransformSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times ) override
 		{
 			m_editQueue.push( [this, transform=samples.front()]() {
@@ -723,6 +738,425 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 };
 
 IE_CORE_FORWARDDECLARE( OpenGLObject )
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// PointInstancer
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+// Vertex shader that places each vertex of a prototype using a per-instance
+// transform. Outputs match those of `IECoreGL::Shader::defaultVertexSource()`,
+// so that it can be paired with any fragment and geometry shader that would
+// work with the default.
+const std::string g_instancingVertexSource = R"(
+
+#version 120
+
+#if __VERSION__ <= 120
+#define in attribute
+#define out varying
+#endif
+
+// Guarantees identical depths between our shaded, constant and ID
+// variants, so that `GL_LEQUAL` depth testing works for overlays.
+invariant gl_Position;
+
+uniform vec3 Cs = vec3( 1, 1, 1 );
+uniform bool vertexCsActive = false;
+uniform bool vertexNActive = false;
+
+in vec3 vertexP;
+in vec3 vertexN;
+in vec2 vertexuv;
+in vec3 vertexCs;
+
+// Per-instance transform components.
+in vec3 instanceP;
+in vec4 instanceOrientation; // Imath layout - real part is in `x` and imaginary part is in `yzw`.
+in vec3 instanceScale;
+uniform bool instancePActive = false;
+uniform bool instanceOrientationActive = false;
+uniform bool instanceScaleActive = false;
+
+out vec3 geometryI;
+out vec3 geometryP;
+out vec3 geometryN;
+out vec2 geometryuv;
+out vec3 geometryCs;
+out float geometryIsCurveEndPoint;
+
+out vec3 fragmentI;
+out vec3 fragmentP;
+out vec3 fragmentN;
+out vec2 fragmentuv;
+out vec3 fragmentCs;
+
+vec3 rotate( vec4 q, vec3 v )
+{
+	vec3 u = q.yzw;
+	return v + 2.0 * cross( u, cross( u, v ) + q.x * v );
+}
+
+void main()
+{
+	vec3 translation = instancePActive ? instanceP : vec3( 0.0 );
+	vec3 scale = instanceScaleActive ? instanceScale : vec3( 1.0 );
+	vec4 orientation = instanceOrientationActive ? instanceOrientation : vec4( 1.0, 0.0, 0.0, 0.0 );
+
+	vec3 p = rotate( orientation, vertexP * scale ) + translation;
+	vec4 pCam = gl_ModelViewMatrix * vec4( p, 1 );
+	gl_Position = gl_ProjectionMatrix * pCam;
+	geometryP = pCam.xyz;
+
+	if( vertexNActive )
+	{
+		// Transform by the inverse transpose of the scale, using cofactors rather
+		// than reciprocals so that zero scales are handled gracefully. This differs
+		// from the true inverse transpose by a scale factor, which is removed by
+		// normalisation, but we must account for the sign of the determinant.
+		vec3 n = vertexN * vec3( scale.y * scale.z, scale.x * scale.z, scale.x * scale.y );
+		n = rotate( orientation, n ) * ( scale.x * scale.y * scale.z < 0.0 ? -1.0 : 1.0 );
+		geometryN = normalize( gl_NormalMatrix * n );
+	}
+	else
+	{
+		geometryN = vec3( 0.0, 0.0, 1.0 );
+	}
+
+	if( gl_ProjectionMatrix[2][3] != 0.0 )
+	{
+		geometryI = normalize( -pCam.xyz );
+	}
+	else
+	{
+		geometryI = vec3( 0, 0, -1 );
+	}
+
+	geometryuv = vertexuv;
+	geometryCs = mix( Cs, vertexCs, float( vertexCsActive ) );
+	geometryIsCurveEndPoint = 0.0;
+
+	fragmentI = geometryI;
+	fragmentP = geometryP;
+	fragmentN = geometryN;
+	fragmentuv = geometryuv;
+	fragmentCs = geometryCs;
+}
+
+)";
+
+// Instances a single prototype using a single instanced draw call provided by
+// `prototype->renderInstances()`. This is the same approach as taken by
+// `IECoreGL::PointsPrimitive` to draw quads/disks/spheres.
+class InstancedPrimitive : public IECoreGL::Primitive
+{
+
+	public :
+
+		IE_CORE_DECLAREMEMBERPTR( InstancedPrimitive )
+
+		InstancedPrimitive( const IECoreGL::ConstPrimitivePtr &prototype, size_t numInstances, const Box3f &bound, const ConstV3fVectorDataPtr &position, const ConstQuatfVectorDataPtr &orientation, const ConstV3fVectorDataPtr &scale )
+			:	m_prototype( prototype ), m_numInstances( numInstances ), m_instanceP( position ), m_instanceOrientation( orientation ), m_instanceScale( scale ), m_bound( bound )
+		{
+		}
+
+		// Implementation of `IECoreGL::Primitive` API.
+
+		void addPrimitiveVariable( const std::string &name, const PrimitiveVariable &primVar ) override
+		{
+			// No need to implement, as won't be called.
+		}
+
+		Box3f bound() const override
+		{
+			return m_bound;
+		}
+
+		// Called by the Primitive base class to acquire a shader setup for rendering this primitive
+		// with the specified state. This is our chance to switch in our special instancing vertex
+		// shader.
+		const IECoreGL::Shader::Setup *shaderSetup( const IECoreGL::Shader *shader, IECoreGL::State *state ) const override
+		{
+			IECoreGL::ShaderStateComponent *shaderStateComponent = state->get<IECoreGL::ShaderStateComponent>();
+
+			// `shader` may be the state's shader or one of `Primitive::render()`'s
+			// constant/ID variants. We bake the state's parameters into the setup,
+			// so must key on the state's hash as well as the shader.
+			IECoreGL::Shader::SetupPtr &setup = m_shaderSetups[{ shader, shaderStateComponent->hash() }];
+			if( setup )
+			{
+				return setup.get();
+			}
+
+			IECoreGL::ConstShaderPtr instancingShader = shaderStateComponent->shaderLoader()->create(
+				g_instancingVertexSource, shader->geometrySource(), shader->fragmentSource()
+			);
+
+			setup = new IECoreGL::Shader::Setup( instancingShader );
+			shaderStateComponent->addParametersToShaderSetup( setup.get() );
+			m_prototype->addPrimitiveVariablesToShaderSetup( setup.get() );
+			addInstanceAttribute( setup.get(), "instanceP", m_instanceP.get() );
+			addInstanceAttribute( setup.get(), "instanceOrientation", m_instanceOrientation.get() );
+			addInstanceAttribute( setup.get(), "instanceScale", m_instanceScale.get() );
+
+			return setup.get();
+		}
+
+		/// Called by the Primitive base class to render this primitive in one
+		// of various styles - solid, wireframe etc. Implemented to call the
+		// prototypes `renderInstances()` method, allowing our shader to instance
+		// onto the points.
+		void render( const IECoreGL::State *state, IECore::TypeId style ) const override
+		{
+			if( !m_numInstances )
+			{
+				return;
+			}
+
+			// Since we're bypassing the prototype's own `render( state, style )`, we're
+			// on the hook for applying any GL point/line widths it would have set.
+			if( runTimeCast<const IECoreGL::CurvesPrimitive>( m_prototype.get() ) )
+			{
+				if( style == IECoreGL::Primitive::DrawSolid::staticTypeId() || style == IECoreGL::Primitive::DrawWireframe::staticTypeId() )
+				{
+					glLineWidth( state->get<IECoreGL::CurvesPrimitive::GLLineWidth>()->value() );
+				}
+			}
+			else if( style == IECoreGL::Primitive::DrawSolid::staticTypeId() )
+			{
+				glPointSize( state->get<IECoreGL::PointsPrimitive::GLPointWidth>()->value() );
+			}
+
+			if( style != IECoreGL::Primitive::DrawSolid::staticTypeId() )
+			{
+				// Allow overlays like wireframe to win out over the underlying
+				// solid drawing. The base class uses `glPolygonOffset()` for
+				// this, but that doesn't work for points and lines.
+				/// \todo Maybe the base class should be doing this for us?
+				glDepthFunc( GL_LEQUAL );
+			}
+
+			m_prototype->renderInstances( m_numInstances );
+		}
+
+		void renderInstances( size_t numInstances ) const override
+		{
+			// Unused. We're the instancer - nobody is instancing us.
+		}
+
+	private :
+
+		static void addInstanceAttribute( IECoreGL::Shader::Setup *setup, const std::string &name, const IECore::Data *data )
+		{
+			if( data )
+			{
+				setup->addVertexAttribute( name, data, /* divisor = */ 1 );
+				setup->addUniformParameter( name + "Active", new BoolData( true ) );
+			}
+		}
+
+		IECoreGL::ConstPrimitivePtr m_prototype;
+		size_t m_numInstances;
+		IECore::ConstV3fVectorDataPtr m_instanceP;
+		IECore::ConstQuatfVectorDataPtr m_instanceOrientation;
+		IECore::ConstV3fVectorDataPtr m_instanceScale;
+		Box3f m_bound;
+		// Only accessed on the render thread.
+		using ShaderSetupKey = std::pair<IECoreGL::ConstShaderPtr, IECore::MurmurHash>;
+		mutable boost::container::flat_map<ShaderSetupKey, IECoreGL::Shader::SetupPtr> m_shaderSetups;
+
+};
+
+// Converts a PointInstancer into the per-prototype data required
+// to construct InstancedPrimitives. We implement this as a ToGLConverter
+// to allow us to cache conversions via the standard `IECoreGL::CachedConverter`.
+class PointInstancerConverter : public IECoreGL::ToGLConverter
+{
+
+	public :
+
+		using InputType = IECoreScene::PointInstancer;
+
+		PointInstancerConverter( const ConstPointInstancerPtr &toConvert )
+			:	ToGLConverter( "Converts PointInstancers to InstancedPrimitive source data.", IECoreScene::PointInstancer::staticTypeId() )
+		{
+			srcParameter()->setValue( boost::const_pointer_cast<IECoreScene::PointInstancer>( toConvert ) );
+		}
+
+		static const InternedString numInstancesName;
+		static const InternedString positionName;
+		static const InternedString orientationName;
+		static const InternedString scaleName;
+		static const InternedString boundName;
+
+	protected :
+
+		IECore::RunTimeTypedPtr doConversion( IECore::ConstObjectPtr source, IECore::ConstCompoundObjectPtr operands ) const override
+		{
+			// Check the instancer is complete, and early out if not.
+
+			ObjectVectorPtr result = new ObjectVector;
+
+			auto instancer = runTimeCast<const PointInstancer>( source.get() );
+			if( !instancer )
+			{
+				return result;
+			}
+
+			const auto prototypeIndices = instancer->getPrototypeIndex();
+			if( !prototypeIndices )
+			{
+				return result;
+			}
+
+			// Prepare per-prototype data as required by InstancedPrimitive.
+
+			auto position = instancer->getPosition();
+			auto scale = instancer->getScale();
+			auto orientation = instancer->getOrientation();
+
+			struct PrototypeData
+			{
+				size_t numInstances = 0;
+				vector<V3f> position;
+				vector<V3f> scale;
+				vector<Quatf> orientation;
+				Box3f bound;
+			};
+
+			vector<PrototypeData> prototypeData;
+
+			IECoreScene::PointInstancer::VisibilityQuery visibilityQuery( *instancer );
+			for( size_t pointIndex = 0; pointIndex < prototypeIndices.size(); ++pointIndex )
+			{
+				const int prototypeIndex = prototypeIndices[pointIndex];
+				if( prototypeIndex < 0 || !visibilityQuery.visible( pointIndex ) )
+				{
+					continue;
+				}
+
+				prototypeData.resize( std::max( (size_t)prototypeIndex + 1, prototypeData.size() ) );
+				prototypeData[prototypeIndex].numInstances++;
+				if( position )
+				{
+					prototypeData[prototypeIndex].position.push_back( position[pointIndex] );
+					prototypeData[prototypeIndex].bound.extendBy( position[pointIndex] );
+				}
+				if( scale )
+				{
+					prototypeData[prototypeIndex].scale.push_back( scale[pointIndex] );
+				}
+				if( orientation )
+				{
+					prototypeData[prototypeIndex].orientation.push_back( orientation[pointIndex].normalized() );
+				}
+			}
+
+			// Fill result, packaging as CompoundData.
+
+			for( auto &data : prototypeData )
+			{
+				CompoundDataPtr compoundData = new CompoundData;
+				compoundData->writable()[numInstancesName] = new IntData( data.numInstances );
+				compoundData->writable()[boundName] = new Box3fData( data.bound );
+				if( data.position.size() )
+				{
+					compoundData->writable()[positionName] = new V3fVectorData( std::move( data.position ) );
+				}
+				if( data.scale.size() )
+				{
+					compoundData->writable()[scaleName] = new V3fVectorData( std::move( data.scale ) );
+				}
+				if( data.orientation.size() )
+				{
+					compoundData->writable()[orientationName] = new QuatfVectorData( std::move( data.orientation ) );
+				}
+
+				result->members().push_back( compoundData );
+			}
+
+			return result;
+		}
+
+	private :
+
+		static ConverterDescription<PointInstancerConverter> g_description;
+
+};
+
+const InternedString PointInstancerConverter::numInstancesName = "numInstances";
+const InternedString PointInstancerConverter::positionName = "position";
+const InternedString PointInstancerConverter::orientationName = "orientation";
+const InternedString PointInstancerConverter::scaleName = "scale";
+const InternedString PointInstancerConverter::boundName = "bound";
+ToGLConverter::ConverterDescription<PointInstancerConverter> PointInstancerConverter::g_description;
+
+IECoreGL::RenderablePtr convertPointInstancer( const IECoreScene::PointInstancer *instancer, const std::vector<IECoreScenePreview::Renderer::Prototype> &prototypes )
+{
+	// Get the per-prototype data via CachedConverter, since this is the most
+	// expensive part of the conversion.
+
+	ConstObjectVectorPtr prototypeData = IECore::runTimeCast<const ObjectVector>(
+		IECoreGL::CachedConverter::defaultCachedConverter()->convert( instancer )
+	);
+
+	if( !prototypeData )
+	{
+		return nullptr;
+	}
+
+	// Build a group, with an InstancedPrimitive child per prototype.
+
+	IECoreGL::GroupPtr group = new IECoreGL::Group;
+	for( size_t prototypeIndex = 0; prototypeIndex < prototypes.size(); ++prototypeIndex )
+	{
+		if( prototypeIndex >= prototypeData->members().size() )
+		{
+			continue;
+		}
+
+		const auto data = static_cast<const CompoundData *>( prototypeData->members()[prototypeIndex].get() );
+		const int numInstances = data->member<IntData>( PointInstancerConverter::numInstancesName )->readable();
+		if( !numInstances || prototypes[prototypeIndex].samples.empty() )
+		{
+			continue;
+		}
+
+		IECoreGL::ConstPrimitivePtr primitive;
+		try
+		{
+			primitive = runTimeCast<const IECoreGL::Primitive>(
+				IECoreGL::CachedConverter::defaultCachedConverter()->convert( prototypes[prototypeIndex].samples.front().get() )
+			);
+		}
+		catch( ... )
+		{
+			// Leave primitive as null
+		}
+
+		if( !primitive )
+		{
+			continue;
+		}
+
+		IECoreGL::GroupPtr prototypeGroup = new IECoreGL::Group;
+		prototypeGroup->addChild( new InstancedPrimitive(
+			primitive, numInstances,
+			data->member<Box3fData>( PointInstancerConverter::boundName )->readable(),
+			data->member<V3fVectorData>( PointInstancerConverter::positionName ),
+			data->member<QuatfVectorData>( PointInstancerConverter::orientationName ),
+			data->member<V3fVectorData>( PointInstancerConverter::scaleName )
+		) );
+		prototypeGroup->setState( const_cast<IECoreGL::State *>( static_cast<const OpenGLAttributes *>( prototypes[prototypeIndex].attributes.get() )->state() ) );
+		group->addChild( prototypeGroup );
+	}
+
+	return group;
+}
 
 } // namespace
 
@@ -997,7 +1431,22 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 
 		ObjectInterfacePtr pointInstancer( const std::string &name, const PointInstancerSamples &samples, const SampleTimes &times, const std::vector<Prototype> &prototypes, const AttributesInterface *attributes ) override
 		{
-			return object( name, staticSamplesCast<IECore::ConstObjectPtr>( samples ), times, attributes );
+			if( !m_renderObjects )
+			{
+				return nullptr;
+			}
+
+			IECore::MessageHandler::Scope s( m_messageHandler.get() );
+
+			IECoreGL::RenderablePtr renderable = convertPointInstancer( samples.front().get(), prototypes );
+			if( !renderable )
+			{
+				return nullptr;
+			}
+
+			OpenGLObjectPtr result = new OpenGLObject( name, renderable, PointInstancer::staticTypeId(), static_cast<const OpenGLAttributes *>( attributes ), m_editQueue );
+			m_editQueue.push( [this, result]() { m_objects.push_back( result ); } );
+			return result;
 		}
 
 		void render() override

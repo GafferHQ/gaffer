@@ -1011,6 +1011,7 @@ void SceneGadget::updateCamera( GafferUI::ViewportGadget::CameraFlags changes )
 	{
 		m_camera.reset();
 		m_camera = m_renderer->camera( g_cameraName->readable(), viewport->getCamera().get() );
+		m_renderer->option( "camera", g_cameraName.get() );
 		changes |= ViewportGadget::CameraFlags::Transform;
 	}
 
