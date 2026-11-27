@@ -805,15 +805,7 @@ void main()
 {
 	vec3 translation = instancePActive ? instanceP : vec3( 0.0 );
 	vec3 scale = instanceScaleActive ? instanceScale : vec3( 1.0 );
-	vec4 orientation = vec4( 1.0, 0.0, 0.0, 0.0 );
-	if( instanceOrientationActive )
-	{
-		float orientationLength = length( instanceOrientation );
-		if( orientationLength > 0.0 )
-		{
-			orientation = instanceOrientation / orientationLength;
-		}
-	}
+	vec4 orientation = instanceOrientationActive ? instanceOrientation : vec4( 1.0, 0.0, 0.0, 0.0 );
 
 	vec3 p = rotate( orientation, vertexP * scale ) + translation;
 	vec4 pCam = gl_ModelViewMatrix * vec4( p, 1 );
@@ -1060,7 +1052,7 @@ class PointInstancerConverter : public IECoreGL::ToGLConverter
 				}
 				if( orientation )
 				{
-					prototypeData[prototypeIndex].orientation.push_back( orientation[pointIndex] );
+					prototypeData[prototypeIndex].orientation.push_back( orientation[pointIndex].normalized() );
 				}
 			}
 
