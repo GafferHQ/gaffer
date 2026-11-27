@@ -88,6 +88,18 @@ Breaking Changes
 - EditScopeAlgo : Removed `acquireSetEdits()` function.
 - RampPlug : Moved point plugs to a `points` child container. Old `.gfr` files are converted automatically on load.
 
+API
+---
+
+- GafferUITest.TestCase :
+  - Added `uiThreadCallHandler` member. This should be used by any tests which need to handle calls to the UI thread.
+  - Added `waitForPlugValueWidgetUpdate()` method.
+
+Breaking Changes
+----------------
+
+- PlugValueWidgetTest : Removed `waitForUpdate()` method. Use `GafferUITest.TestCase.waitForPlugValueWidgetUpdate()` instead.
+
 Build
 -----
 

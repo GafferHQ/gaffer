@@ -250,8 +250,8 @@ class ColorChooserTest( GafferUITest.TestCase ) :
 		rgbaWidget = GafferUI.ColorPlugValueWidget( script["node"]["rgbaPlug"] )
 		rgbaWidget.setColorChooserVisible( True )
 
-		GafferUITest.PlugValueWidgetTest.waitForUpdate( rgbWidget._ColorPlugValueWidget__colorChooser )
-		GafferUITest.PlugValueWidgetTest.waitForUpdate( rgbaWidget._ColorPlugValueWidget__colorChooser )
+		self.waitForPlugValueWidgetUpdate( rgbWidget._ColorPlugValueWidget__colorChooser )
+		self.waitForPlugValueWidgetUpdate( rgbaWidget._ColorPlugValueWidget__colorChooser )
 
 		# Default state
 		for c in "rgbhsvtmi" :
@@ -285,8 +285,8 @@ class ColorChooserTest( GafferUITest.TestCase ) :
 		rgbaWidget = GafferUI.ColorPlugValueWidget( script["node"]["rgbaPlug"] )
 		rgbaWidget.setColorChooserVisible( True )
 
-		GafferUITest.PlugValueWidgetTest.waitForUpdate( rgbWidget._ColorPlugValueWidget__colorChooser )
-		GafferUITest.PlugValueWidgetTest.waitForUpdate( rgbaWidget._ColorPlugValueWidget__colorChooser )
+		self.waitForPlugValueWidgetUpdate( rgbWidget._ColorPlugValueWidget__colorChooser )
+		self.waitForPlugValueWidgetUpdate( rgbaWidget._ColorPlugValueWidget__colorChooser )
 
 		for c in "rgbhsv" :
 			self.assertTrue( self.__sliderFromWidget( rgbWidget, c ).getVisible() )
