@@ -349,9 +349,11 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 		object.transform( imath.M44f().translate( imath.V3f( 0, 1, 0 ) ) )
 
+		# Bound doesn't currently consider the prototype - it is just the bound
+		# of the points.
 		self.assertEqual(
 			renderer.command( "gl:queryBound", {} ),
-			imath.Box3f( imath.V3f( -11, 0, -1 ), imath.V3f( 11, 2, 1 ) )
+			imath.Box3f( imath.V3f( -10, 1, 0 ), imath.V3f( 10, 1, 0 ) )
 		)
 
 		del object

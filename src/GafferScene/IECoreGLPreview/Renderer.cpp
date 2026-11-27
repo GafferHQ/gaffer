@@ -742,7 +742,7 @@ IE_CORE_FORWARDDECLARE( OpenGLObject )
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
-// PointInstancerCache
+// PointInstancer
 //////////////////////////////////////////////////////////////////////////
 
 namespace
@@ -857,10 +857,9 @@ void main()
 
 )";
 
-// Instances a single prototype from a `PointInstancer`, using a single
-// instanced draw call provided by `prototype->renderInstances()`. This is the
-// same approach as taken by `IECoreGL::PointsPrimitive` to draw
-// quads/disks/spheres.
+// Instances a single prototype using a single instanced draw call provided by
+// `prototype->renderInstances()`. This is the same approach as taken by
+// `IECoreGL::PointsPrimitive` to draw quads/disks/spheres.
 class InstancedPrimitive : public IECoreGL::Primitive
 {
 
@@ -868,43 +867,9 @@ class InstancedPrimitive : public IECoreGL::Primitive
 
 		IE_CORE_DECLAREMEMBERPTR( InstancedPrimitive )
 
-		InstancedPrimitive( const IECoreGL::ConstPrimitivePtr &prototype, const IECoreScene::PointInstancer *pointInstancer, const std::vector<size_t> &pointIndices )
-			:	m_prototype( prototype ), m_numInstances( pointIndices.size() )
+		InstancedPrimitive( const IECoreGL::ConstPrimitivePtr &prototype, size_t numInstances, const Box3f &bound, const ConstV3fVectorDataPtr &position, const ConstQuatfVectorDataPtr &orientation, const ConstV3fVectorDataPtr &scale )
+			:	m_prototype( prototype ), m_numInstances( numInstances ), m_instanceP( position ), m_instanceOrientation( orientation ), m_instanceScale( scale ), m_bound( bound )
 		{
-			// Build arrays containing only the specific points our prototype is applied to.
-			/// \todo For an instancer with a single prototype and non-indexed arrays, we
-			/// could just reference the input data directly.
-
-			const auto position = pointInstancer->getPosition();
-			const auto orientation = pointInstancer->getOrientation();
-			const auto scale = pointInstancer->getScale();
-
-			V3fVectorDataPtr p = position ? new V3fVectorData : nullptr;
-			QuatfVectorDataPtr o = orientation ? new QuatfVectorData : nullptr;
-			V3fVectorDataPtr s = scale ? new V3fVectorData : nullptr;
-
-			const IECoreScene::PointInstancer::TransformQuery transformQuery( *pointInstancer );
-			const Box3f prototypeBound = m_prototype->bound();
-			for( auto pointIndex : pointIndices )
-			{
-				if( p )
-				{
-					p->writable().push_back( position[pointIndex] );
-				}
-				if( o )
-				{
-					o->writable().push_back( orientation[pointIndex] );
-				}
-				if( s )
-				{
-					s->writable().push_back( scale[pointIndex] );
-				}
-				m_bound.extendBy( Imath::transform( prototypeBound, transformQuery.transform( pointIndex ) ) );
-			}
-
-			m_instanceP = p;
-			m_instanceOrientation = o;
-			m_instanceScale = s;
 		}
 
 		// Implementation of `IECoreGL::Primitive` API.
@@ -955,6 +920,11 @@ class InstancedPrimitive : public IECoreGL::Primitive
 		// onto the points.
 		void render( const IECoreGL::State *state, IECore::TypeId style ) const override
 		{
+			if( !m_numInstances )
+			{
+				return;
+			}
+
 			// Since we're bypassing the prototype's own `render( state, style )`, we're
 			// on the hook for applying any GL point/line widths it would have set.
 			if( runTimeCast<const IECoreGL::CurvesPrimitive>( m_prototype.get() ) )
@@ -1009,146 +979,192 @@ class InstancedPrimitive : public IECoreGL::Primitive
 
 };
 
-class PointInstancerCache
+// Converts a PointInstancer into the per-prototype data required
+// to construct InstancedPrimitives. We implement this as a ToGLConverter
+// to allow us to cache conversions via the standard `IECoreGL::CachedConverter`.
+class PointInstancerConverter : public IECoreGL::ToGLConverter
 {
 
 	public :
 
-		// Can be called concurrently with other calls to `get()`.
-		IECoreGL::RenderablePtr get( const IECoreScene::PointInstancer *instancer, const std::vector<IECoreScenePreview::Renderer::Prototype> &prototypes )
-		{
-			// Get a unique hash for the prototype geometry and instancer. We
-			// don't need to consider the prototype attributes, because we don't
-			// include those in the cache entry.
+		using InputType = IECoreScene::PointInstancer;
 
-			IECore::MurmurHash h = instancer->Object::hash();
-			for( const auto &prototype : prototypes )
+		PointInstancerConverter( const ConstPointInstancerPtr &toConvert )
+			:	ToGLConverter( "Converts PointInstancers to InstancedPrimitive source data.", IECoreScene::PointInstancer::staticTypeId() )
+		{
+			srcParameter()->setValue( boost::const_pointer_cast<IECoreScene::PointInstancer>( toConvert ) );
+		}
+
+		static const InternedString numInstancesName;
+		static const InternedString positionName;
+		static const InternedString orientationName;
+		static const InternedString scaleName;
+		static const InternedString boundName;
+
+	protected :
+
+		IECore::RunTimeTypedPtr doConversion( IECore::ConstObjectPtr source, IECore::ConstCompoundObjectPtr operands ) const override
+		{
+			// Check the instancer is complete, and early out if not.
+
+			ObjectVectorPtr result = new ObjectVector;
+
+			auto instancer = runTimeCast<const PointInstancer>( source.get() );
+			if( !instancer )
 			{
-				if( prototype.samples.size() )
-				{
-					prototype.samples[0]->hash( h );
-				}
+				return result;
 			}
 
-			// Look up cache entry, and ensure it is populated.
-
-			CacheEntry &cacheEntry = m_cache[h];
-			std::call_once(
-
-				cacheEntry.onceFlag,
-
-				[&] {
-
-					// Start with all null primitives.
-
-					cacheEntry.instancedPrototypes.resize( prototypes.size() );
-
-					// Build lists of which points each prototype should be
-					// instanced onto.
-
-					const auto prototypeIndices = instancer->getPrototypeIndex();
-					if( !prototypeIndices )
-					{
-						return;
-					}
-
-					IECoreScene::PointInstancer::VisibilityQuery visibilityQuery( *instancer );
-					std::vector<std::vector<size_t>> prototypePoints( prototypes.size() );
-
-					for( size_t pointIndex = 0; pointIndex < prototypeIndices.size(); ++pointIndex )
-					{
-						const int p = prototypeIndices[pointIndex];
-						if( p >= 0 && p < (int)prototypes.size() && visibilityQuery.visible( pointIndex ) )
-						{
-							prototypePoints[p].push_back( pointIndex );
-						}
-					}
-
-					// Make an InstancedPrimitive for each prototype.
-
-					for( size_t prototypeIndex = 0; prototypeIndex < prototypes.size(); ++prototypeIndex )
-					{
-						if( prototypePoints[prototypeIndex].empty() || prototypes[prototypeIndex].samples.empty() )
-						{
-							continue;
-						}
-
-						IECoreGL::ConstPrimitivePtr primitive;
-						try
-						{
-							primitive = runTimeCast<const IECoreGL::Primitive>(
-								IECoreGL::CachedConverter::defaultCachedConverter()->convert( prototypes[prototypeIndex].samples.front().get() )
-							);
-						}
-						catch( ... )
-						{
-							// Leave primitive as null
-						}
-
-						if( !primitive )
-						{
-							continue;
-						}
-
-						cacheEntry.instancedPrototypes[prototypeIndex] = new InstancedPrimitive( primitive, instancer, prototypePoints[prototypeIndex] );
-					}
-				}
-
-			);
-
-			// Build a unique Group which reunites the cached InstancedPrototypes with
-			// the attributes for each prototype they represent.
-
-			IECoreGL::GroupPtr result = new IECoreGL::Group;
-			for( size_t prototypeIndex = 0; prototypeIndex < prototypes.size(); ++prototypeIndex )
+			const auto prototypeIndices = instancer->getPrototypeIndex();
+			if( !prototypeIndices )
 			{
-				if( !cacheEntry.instancedPrototypes[prototypeIndex] )
+				return result;
+			}
+
+			// Prepare per-prototype data as required by InstancedPrimitive.
+
+			auto position = instancer->getPosition();
+			auto scale = instancer->getScale();
+			auto orientation = instancer->getOrientation();
+
+			struct PrototypeData
+			{
+				size_t numInstances = 0;
+				vector<V3f> position;
+				vector<V3f> scale;
+				vector<Quatf> orientation;
+				Box3f bound;
+			};
+
+			vector<PrototypeData> prototypeData;
+
+			IECoreScene::PointInstancer::VisibilityQuery visibilityQuery( *instancer );
+			for( size_t pointIndex = 0; pointIndex < prototypeIndices.size(); ++pointIndex )
+			{
+				const int prototypeIndex = prototypeIndices[pointIndex];
+				if( prototypeIndex < 0 || !visibilityQuery.visible( pointIndex ) )
 				{
 					continue;
 				}
-				IECoreGL::GroupPtr prototypeGroup = new IECoreGL::Group;
-				prototypeGroup->setState( const_cast<IECoreGL::State *>( static_cast<const OpenGLAttributes *>( prototypes[prototypeIndex].attributes.get() )->state() ) );
-				prototypeGroup->addChild( cacheEntry.instancedPrototypes[prototypeIndex] );
-				result->addChild( prototypeGroup );
+
+				prototypeData.resize( std::max( (size_t)prototypeIndex + 1, prototypeData.size() ) );
+				prototypeData[prototypeIndex].numInstances++;
+				if( position )
+				{
+					prototypeData[prototypeIndex].position.push_back( position[pointIndex] );
+					prototypeData[prototypeIndex].bound.extendBy( position[pointIndex] );
+				}
+				if( scale )
+				{
+					prototypeData[prototypeIndex].scale.push_back( scale[pointIndex] );
+				}
+				if( orientation )
+				{
+					prototypeData[prototypeIndex].orientation.push_back( orientation[pointIndex] );
+				}
+			}
+
+			// Fill result, packaging as CompoundData.
+
+			for( auto &data : prototypeData )
+			{
+				CompoundDataPtr compoundData = new CompoundData;
+				compoundData->writable()[numInstancesName] = new IntData( data.numInstances );
+				compoundData->writable()[boundName] = new Box3fData( data.bound );
+				if( data.position.size() )
+				{
+					compoundData->writable()[positionName] = new V3fVectorData( std::move( data.position ) );
+				}
+				if( data.scale.size() )
+				{
+					compoundData->writable()[scaleName] = new V3fVectorData( std::move( data.scale ) );
+				}
+				if( data.orientation.size() )
+				{
+					compoundData->writable()[orientationName] = new QuatfVectorData( std::move( data.orientation ) );
+				}
+
+				result->members().push_back( compoundData );
 			}
 
 			return result;
 		}
 
-		// Must not be called concurrently with anything.
-		void clearUnused()
-		{
-			for( auto it = m_cache.begin(); it != m_cache.end(); )
-			{
-				const bool ours = std::all_of(
-					it->second.instancedPrototypes.begin(), it->second.instancedPrototypes.end(),
-					[] ( const InstancedPrimitive::Ptr &p ) {
-						return !p || p->refCount() <= 1;
-					}
-				);
-				if( ours )
-				{
-					// No references from outside cache.
-					it = m_cache.unsafe_erase( it );
-				}
-				else
-				{
-					++it;
-				}
-			}
-		}
-
 	private :
 
-		struct CacheEntry
-		{
-			std::once_flag onceFlag;
-			std::vector<InstancedPrimitive::Ptr> instancedPrototypes;
-		};
-		using Cache = tbb::concurrent_unordered_map<IECore::MurmurHash, CacheEntry>;
-		Cache m_cache;
+		static ConverterDescription<PointInstancerConverter> g_description;
 
 };
+
+const InternedString PointInstancerConverter::numInstancesName = "numInstances";
+const InternedString PointInstancerConverter::positionName = "position";
+const InternedString PointInstancerConverter::orientationName = "orientation";
+const InternedString PointInstancerConverter::scaleName = "scale";
+const InternedString PointInstancerConverter::boundName = "bound";
+ToGLConverter::ConverterDescription<PointInstancerConverter> PointInstancerConverter::g_description;
+
+IECoreGL::RenderablePtr convertPointInstancer( const IECoreScene::PointInstancer *instancer, const std::vector<IECoreScenePreview::Renderer::Prototype> &prototypes )
+{
+	// Get the per-prototype data via CachedConverter, since this is the most
+	// expensive part of the conversion.
+
+	ConstObjectVectorPtr prototypeData = IECore::runTimeCast<const ObjectVector>(
+		IECoreGL::CachedConverter::defaultCachedConverter()->convert( instancer )
+	);
+
+	if( !prototypeData )
+	{
+		return nullptr;
+	}
+
+	// Build a group, with an InstancedPrimitive child per prototype.
+
+	IECoreGL::GroupPtr group = new IECoreGL::Group;
+	for( size_t prototypeIndex = 0; prototypeIndex < prototypes.size(); ++prototypeIndex )
+	{
+		if( prototypeIndex >= prototypeData->members().size() )
+		{
+			continue;
+		}
+
+		const auto data = static_cast<const CompoundData *>( prototypeData->members()[prototypeIndex].get() );
+		const int numInstances = data->member<IntData>( PointInstancerConverter::numInstancesName )->readable();
+		if( !numInstances || prototypes[prototypeIndex].samples.empty() )
+		{
+			continue;
+		}
+
+		IECoreGL::ConstPrimitivePtr primitive;
+		try
+		{
+			primitive = runTimeCast<const IECoreGL::Primitive>(
+				IECoreGL::CachedConverter::defaultCachedConverter()->convert( prototypes[prototypeIndex].samples.front().get() )
+			);
+		}
+		catch( ... )
+		{
+			// Leave primitive as null
+		}
+
+		if( !primitive )
+		{
+			continue;
+		}
+
+		IECoreGL::GroupPtr prototypeGroup = new IECoreGL::Group;
+		prototypeGroup->addChild( new InstancedPrimitive(
+			primitive, numInstances,
+			data->member<Box3fData>( PointInstancerConverter::boundName )->readable(),
+			data->member<V3fVectorData>( PointInstancerConverter::positionName ),
+			data->member<QuatfVectorData>( PointInstancerConverter::orientationName ),
+			data->member<V3fVectorData>( PointInstancerConverter::scaleName )
+		) );
+		prototypeGroup->setState( const_cast<IECoreGL::State *>( static_cast<const OpenGLAttributes *>( prototypes[prototypeIndex].attributes.get() )->state() ) );
+		group->addChild( prototypeGroup );
+	}
+
+	return group;
+}
 
 } // namespace
 
@@ -1275,8 +1291,7 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 
 		OpenGLRenderer( RenderType renderType, const std::string &fileName, const IECore::MessageHandlerPtr &messageHandler )
 			:	m_renderType( renderType ), m_baseStateOptions( new CompoundObject ),
-				m_renderObjects( true ), m_messageHandler( messageHandler ),
-				m_pointInstancerCache( std::make_unique<PointInstancerCache>() )
+				m_renderObjects( true ), m_messageHandler( messageHandler )
 		{
 			if( renderType == SceneDescription )
 			{
@@ -1431,10 +1446,13 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 
 			IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
-			OpenGLObjectPtr result = new OpenGLObject(
-				name, m_pointInstancerCache->get( samples.front().get(), prototypes ), IECoreScene::PointInstancer::staticTypeId(),
-				static_cast<const OpenGLAttributes *>( attributes ), m_editQueue
-			);
+			IECoreGL::RenderablePtr renderable = convertPointInstancer( samples.front().get(), prototypes );
+			if( !renderable )
+			{
+				return nullptr;
+			}
+
+			OpenGLObjectPtr result = new OpenGLObject( name, renderable, PointInstancer::staticTypeId(), static_cast<const OpenGLAttributes *>( attributes ), m_editQueue );
 			m_editQueue.push( [this, result]() { m_objects.push_back( result ); } );
 			return result;
 		}
@@ -1502,7 +1520,6 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 
 			processQueue();
 			removeDeletedObjects();
-			m_pointInstancerCache->clearUnused();
 			CachedConverter::defaultCachedConverter()->clearUnused();
 
 			GLint prevProgram;
@@ -1555,7 +1572,6 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 			IECoreGL::init();
 
 			processQueue();
-			m_pointInstancerCache->clearUnused();
 			CachedConverter::defaultCachedConverter()->clearUnused();
 
 			OpenGLCameraPtr camera;
@@ -1837,8 +1853,6 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 		bool m_renderObjects;
 
 		IECore::MessageHandlerPtr m_messageHandler;
-
-		std::unique_ptr<PointInstancerCache> m_pointInstancerCache;
 
 		// Queue used to pass edits from background threads to the render thread.
 		EditQueue m_editQueue;
