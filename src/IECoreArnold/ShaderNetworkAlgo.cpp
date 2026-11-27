@@ -778,13 +778,17 @@ const std::vector<IECore::InternedString> g_surfaceShaderAttributeNames = {
 
 const string g_arnoldNamespace( "arnold:" );
 
+Color3f colorTemperatureTint( const Shader *usdShader )
+{
+	return parameterValue( usdShader, g_enableColorTemperatureParameter, false ) ?
+		blackbody( parameterValue( usdShader, g_colorTemperatureParameter, 6500.0f ) ) :
+		Color3f( 1.f )
+	;
+}
+
 void transferUSDLightParameters( ShaderNetwork *network, InternedString shaderHandle, const Shader *usdShader, Shader *shader )
 {
-	Color3f color = parameterValue( usdShader, g_colorParameter, Color3f( 1 ) );
-	if( parameterValue( usdShader, g_enableColorTemperatureParameter, false ) )
-	{
-		color *= blackbody( parameterValue( usdShader, g_colorTemperatureParameter, 6500.0f ) );
-	}
+	const Color3f color = parameterValue( usdShader, g_colorParameter, Color3f( 1 ) ) * colorTemperatureTint( usdShader );
 	shader->parameters()[g_colorParameter] = new Color3fData( color );
 
 	transferUSDParameter( network, shaderHandle, usdShader, g_diffuseParameter, shader, g_diffuseParameter, 1.0f );
@@ -1003,6 +1007,56 @@ std::pair<ShaderNetwork::Parameter, ShaderNetwork::Parameter> surfaceGlowParamet
 	}
 
 	return { emissionColorParameter, emissionColorInput };
+}
+
+using MultiplierVariant = std::variant<ShaderNetwork::Parameter, Color3f>;
+
+MultiplierVariant multiplierTree( ShaderNetwork *network, const std::vector<MultiplierVariant> &multipliers, const int start, const int end )
+{
+	if( end == start )
+	{
+		// Nothing to combine, return the multiplier as-is.
+		return multipliers[start];
+	}
+
+	MultiplierVariant left;
+	MultiplierVariant right;
+	if( end - start == 1 )
+	{
+		// Leaf node, combine the two multipliers.
+		left = multipliers[start];
+		right = multipliers[end];
+	}
+	else
+	{
+		// Subdivide left and right and recurse.
+		const int leftEnd = ( start + end ) / 2;
+		left = multiplierTree( network, multipliers, start, leftEnd );
+		right = multiplierTree( network, multipliers, leftEnd + 1, end );
+	}
+
+	ShaderPtr tintShader = new Shader( "multiply", "ai:surface" );
+	if( std::holds_alternative<Color3f>( left ) )
+	{
+		tintShader->parameters()[g_input1Parameter] = new Color3fData( std::get<Color3f>( left ) );
+	}
+	if( std::holds_alternative<Color3f>( right ) )
+	{
+		tintShader->parameters()[g_input2Parameter] = new Color3fData( std::get<Color3f>( right ) );
+	}
+
+	const InternedString tintHandle = network->addShader( InternedString( "tint" ), std::move( tintShader ) );
+
+	if( std::holds_alternative<ShaderNetwork::Parameter>( left ) )
+	{
+		network->addConnection( { std::get<ShaderNetwork::Parameter>( left ), { tintHandle, g_input1Parameter } } );
+	}
+	if( std::holds_alternative<ShaderNetwork::Parameter>( right ) )
+	{
+		network->addConnection( { std::get<ShaderNetwork::Parameter>( right ), { tintHandle, g_input2Parameter } } );
+	}
+
+	return ShaderNetwork::Parameter( { tintHandle, "out" } );
 }
 
 } // namespace
@@ -1293,8 +1347,8 @@ ConstCompoundObjectPtr convertUSDMeshLightAttributes( const CompoundObject *attr
 		return attributes;
 	}
 
-	const IECoreScene::Shader *outputShader = lightNetwork->outputShader();
-	if( !outputShader || outputShader->getName() != "MeshLight" )
+	const Shader *lightOutputShader = lightNetwork->outputShader();
+	if( !lightOutputShader || lightOutputShader->getName() != "MeshLight" )
 	{
 		return attributes;
 	}
@@ -1307,7 +1361,6 @@ ConstCompoundObjectPtr convertUSDMeshLightAttributes( const CompoundObject *attr
 	const auto &[emissionColorParameter, emissionColorInput] = surfaceGlowParameters( surfaceNetwork );
 
 	ShaderNetwork::Parameter lightOutputParameter = lightNetwork->getOutput();
-	const Shader *lightOutputShader = lightNetwork->outputShader();
 
 	ShaderPtr newLightShader = new Shader( "mesh_light", "ai:light" );
 	transferUSDLightParameters( newLightShaderNetwork.get(), lightOutputParameter.shader, lightOutputShader, newLightShader.get() );
@@ -1318,64 +1371,61 @@ ConstCompoundObjectPtr convertUSDMeshLightAttributes( const CompoundObject *attr
 	// C = light color x surface color. If 0 or 1 in parenthesis, it means it's known to be that value.
 	// TINT = A multiply shader combining the surface and light colors.
 	// Light / Emission Tex = the texture is connected directly without tint.
-	//                         | LightColor 0 | LightColor 0-1 | LightColor 1  | LightColor Textured
-	// EmissionColor 0         |      C(0)    |       C(0)     |     C(0)      |       C(0)
-	// EmissionColor 0-1       |      C(0)    |       C        |     C         |       TINT
-	// EmissionColor 1         |      C(0)    |       C        |     C(1)      |     Light Tex
-	// EmissionColor Textured  |      C(0)    |      TINT      |  Emission Tex |       TINT
+	//                         | LightColor 0 | LightColor 0-1 |                LightColor 1              | LightColor Textured
+	// EmissionColor 0         |      C(0)    |       C(0)     |                    C(0)                  |  C(0)
+	// EmissionColor 0-1       |      C(0)    |       C        |                    C                     |  TINT
+	// EmissionColor 1         |      C(0)    |       C        |                    C                     |  colorTemperature ? TINT : Light Tex
+	// EmissionColor Textured  |      C(0)    |      TINT      |  colorTemperature ? TINT : Emission Tex  |  TINT + TEMPERATURE TINT
 
-	const Color3f lightColor = parameterValue( lightOutputShader, g_colorParameter, Color3f( 1.f ) );
-	const Color3f emissionColor = emissionColorParameter ? parameterValue( surfaceNetwork->getShader( emissionColorParameter.shader ), emissionColorParameter.name, Color3f( 0.f ) ) : Color3f( 0.f );
-	if( emissionColorParameter )
-	{
-		newLightShader->parameters()[g_colorParameter] = new Color3fData( emissionColor * lightColor );
-	}
+	ShaderNetwork::Parameter meshLightColorInput = newLightShaderNetwork->input( { lightOutputParameter.shader, g_colorParameter } );
 
-	InternedString tintHandle;
-	const ShaderNetwork::Parameter meshLightColorParameter = { lightOutputParameter.shader, g_colorParameter };
-	ShaderNetwork::Parameter meshLightColorInput = newLightShaderNetwork->input( meshLightColorParameter );
-	// Remove the input to the light color. We will add it back later if needed.
-	removeInput( newLightShaderNetwork.get(), meshLightColorParameter );
+	Color3f constantMultiplier = Color3f( 1.f );
+	std::vector<MultiplierVariant> multipliers;
 
-	if( emissionColorInput && ( lightColor != Color3f( 0.f ) || meshLightColorInput ) )
+	if( emissionColorInput )
 	{
 		ShaderNetworkPtr glowNetwork = surfaceNetwork->copy();
 		glowNetwork->setOutput( emissionColorInput );
 		IECoreScene::ShaderNetworkAlgo::removeUnusedShaders( glowNetwork.get() );
 		ShaderNetwork::Parameter newGlowColorInput = IECoreScene::ShaderNetworkAlgo::addShaders( newLightShaderNetwork.get(), glowNetwork.get(), /* connections = */ true );
-
-		if( lightColor != Color3f( 1.f ) || meshLightColorInput )
-		{
-			ShaderPtr tintShader = new Shader( "multiply", "ai:surface", { { "input2", new Color3fData( lightColor ) } } );
-			tintHandle = newLightShaderNetwork->addShader( InternedString( "tint" ), std::move( tintShader ) );
-
-			newLightShaderNetwork->addConnection( { newGlowColorInput, { tintHandle, "input1" } } );
-			newLightShaderNetwork->addConnection( { { tintHandle, "out" }, meshLightColorParameter } );
-		}
-		else
-		{
-			newLightShaderNetwork->addConnection( { newGlowColorInput, meshLightColorParameter } );
-		}
+		multipliers.push_back( newGlowColorInput );
+	}
+	else if( emissionColorParameter )
+	{
+		constantMultiplier *= parameterValue( surfaceNetwork->getShader( emissionColorParameter.shader ), emissionColorParameter.name, Color3f( 0.f ) );
 	}
 
-	if( meshLightColorInput && ( emissionColor != Color3f( 0.f ) || emissionColorInput ) )
+	if( meshLightColorInput )
 	{
-		if( emissionColor != Color3f( 1.f ) || emissionColorInput )
-		{
-			if( tintHandle == g_emptyString )
-			{
-				ShaderPtr tintShader = new Shader( "multiply", "ai:surface", { { "input1", new Color3fData( emissionColor ) } } );
-				tintHandle = newLightShaderNetwork->addShader( InternedString( "tint" ), std::move( tintShader ) );
+		multipliers.push_back( meshLightColorInput );
+	}
+	else
+	{
+		constantMultiplier *= parameterValue( lightOutputShader, g_colorParameter, Color3f( 1.f ) );
+	}
 
-				newLightShaderNetwork->addConnection( { { tintHandle, "out" }, meshLightColorParameter } );
-			}
+	constantMultiplier *= colorTemperatureTint( lightOutputShader );
 
-			newLightShaderNetwork->addConnection( { meshLightColorInput, { tintHandle, "input2" } } );
-		}
-		else
+	const ShaderNetwork::Parameter meshLightColorParameter = { lightOutputParameter.shader, g_colorParameter };
+
+	// Remove the input to the light color. It will be replaced by the multiplier network.
+	removeInput( newLightShaderNetwork.get(), meshLightColorParameter );
+
+	newLightShader->parameters()[g_colorParameter] = new Color3fData( constantMultiplier );
+
+	if( constantMultiplier != Color3f( 0.f ) && !multipliers.empty() )
+	{
+		if( constantMultiplier != Color3f( 1.f ) )
 		{
-			newLightShaderNetwork->addConnection( { meshLightColorInput, meshLightColorParameter } );
+			multipliers.push_back( constantMultiplier );
 		}
+
+		MultiplierVariant terminalParameter = multiplierTree( newLightShaderNetwork.get(), multipliers, 0, (int)multipliers.size() - 1 );
+		// The only time `multipliers` will contain a non-`Parameter` element is if `constantMultiplier`
+		// is included, which will require at least one multiply shader. That guarantees the result
+		// is `Parameter`.
+		assert( std::holds_alternative<ShaderNetwork::Parameter>( terminalParameter ) );
+		newLightShaderNetwork->addConnection( { std::get<ShaderNetwork::Parameter>( terminalParameter ), meshLightColorParameter } );
 	}
 
 	replaceUSDShader( newLightShaderNetwork.get(), lightOutputParameter.shader, std::move( newLightShader ) );
