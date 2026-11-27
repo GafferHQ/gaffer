@@ -35,6 +35,7 @@
 #
 ##########################################################################
 
+import itertools
 import warnings
 import weakref
 
@@ -57,7 +58,10 @@ class PlugValueWidgetTest( GafferUITest.TestCase ) :
 
 			# And updates for computed values are done in the background, so we
 			# need to wait until they're done.
-			if any( isinstance( p, Gaffer.ValuePlug ) and Gaffer.PlugAlgo.dependsOnCompute( p ) for p in widget.getPlugs() ) :
+			if any(
+				isinstance( p, Gaffer.ValuePlug ) and Gaffer.PlugAlgo.dependsOnCompute( p )
+				for p in itertools.chain( widget.getPlugs(), *widget._PlugValueWidget__auxiliaryPlugs )
+			) :
 				handler.assertCalled()
 
 	def testContext( self ) :

@@ -89,3 +89,34 @@ class ImageViewTest( GafferUITest.TestCase ) :
 		view = GafferImageUI.ImageView( script )
 		self.assertIsInstance( view.imageGadget(), GafferImageUI.ImageGadget )
 		self.assertTrue( view.viewportGadget().isAncestorOf( view.imageGadget() ) )
+
+	def testChannelsMenuViewerOnlyItemsAreNotSearchable( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["constant"] = GafferImage.Constant()
+		script["shuffle"] = GafferImage.Shuffle()
+		script["shuffle"]["in"].setInput( script["constant"]["out"] )
+		for channel in "RGBA" :
+			script["shuffle"]["shuffles"].addChild( Gaffer.ShufflePlug( channel, f"diffuse.{channel}" ) )
+
+		view = GafferUI.View.create( script["shuffle"]["out"] )
+		widget = GafferImageUI.ImageViewUI._ChannelsPlugValueWidget( view["channels"] )
+		GafferUITest.PlugValueWidgetTest.waitForUpdate( widget )
+
+		searchable = {
+			path : getattr( item, "searchable", True )
+			for path, item in widget._menuDefinition().items()
+			if not item.divider
+		}
+
+		self.assertEqual(
+			searchable,
+			{
+				"/RGBA" : True,
+				"/diffuse" : True,
+				"/Denoised" : False,
+				"/Previous" : False,
+				"/Next" : False,
+				"/First" : False,
+			}
+		)

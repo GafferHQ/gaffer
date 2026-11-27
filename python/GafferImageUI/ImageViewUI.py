@@ -306,6 +306,7 @@ class _ChannelsPlugValueWidget( GafferImageUI.RGBAChannelsPlugValueWidget ) :
 				"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), value = denoiseValue ),
 				"shortCut" : "D",
 				"active" : denoiseValue is not None and denoiseValue != currentValue,
+				"searchable" : False,
 			}
 		)
 
@@ -318,6 +319,7 @@ class _ChannelsPlugValueWidget( GafferImageUI.RGBAChannelsPlugValueWidget ) :
 				"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), value = previousValue ),
 				"shortCut" : "PgUp",
 				"active" : previousValue is not None and previousValue != currentValue,
+				"searchable" : False,
 			}
 		)
 
@@ -328,6 +330,7 @@ class _ChannelsPlugValueWidget( GafferImageUI.RGBAChannelsPlugValueWidget ) :
 				"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), value = nextValue ),
 				"shortCut" : "PgDown",
 				"active" : nextValue is not None and nextValue != currentValue,
+				"searchable" : False,
 			}
 		)
 
@@ -338,6 +341,7 @@ class _ChannelsPlugValueWidget( GafferImageUI.RGBAChannelsPlugValueWidget ) :
 				"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), value = firstValue ),
 				"shortCut" : "Ctrl+PgUp",
 				"active" : firstValue is not None and firstValue != currentValue,
+				"searchable" : False,
 			}
 		)
 
